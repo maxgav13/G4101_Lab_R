@@ -1,0 +1,159 @@
+---
+title: "Lab 10: Estadistica Direccional"
+author: "Maximiliano Garnier Villarreal"
+output:
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    df_print: kable
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE, warning=F, message=FALSE}
+library(GMisc)
+library(CircStats)
+library(tidyverse)
+```
+
+# Analisis de una muestra
+
+## Vector de mediciones angulares
+```{r}
+theta0 = c(255, 239, 222, 231, 199, 271, 222, 274, 228, 246, 177, 199, 
+          257, 201, 237, 209, 216, 180, 182, 250, 219, 196, 197, 246, 
+          218, 235, 232, 243, 232, 180, 231, 254, 242, 149, 212, 210, 230, 205, 220, 268)
+```
+
+## Ajusta angulos para datos no-direccionales
+
+Si los datos son no-direccionales deben multiplicarse por 2 para convertirlos a direccionales y realizar los calculos sobre estos
+
+Direccion de datos: 
+
+* 0 para no-direccional
+* 1 para direccional
+
+```{r}
+d = 1
+
+if (d==0) {
+  theta = theta0*2
+} else {
+  theta = theta0
+}
+
+thetarad = theta*pi/180
+```
+
+## Componentes del vector medio
+```{r}
+x = sum(sin(thetarad))
+y = sum(cos(thetarad))
+meanrad = atan(x/y) # direccion media en radianes
+meandeg = degs(meanrad) # direccion media en grados
+```
+
+## Verdadera direccion media 
+
+Agregue aqui su codigo sobre *if statements* y asigne el resultado a la variable `meantrue`. Para datos no-direccionales hay que dividir por 2 la direccion verdadera.
+
+```{r}
+meantrue = meandeg + 180
+
+# verdadera direccion media de datos no-direccionales
+meantrue = ifelse(d == 0, meantrue/2, meantrue)
+```
+
+## Otras estadisticas
+
+* R: resultante media
+* $s_0$: varianza circular
+* k: parametro de concentracion
+
+```{r}
+(R = sqrt(x^2+y^2)/length(theta)) # resultante media
+(s0 = 1-R) # varianza circular
+(k = ifelse(R<0.65, 
+            R/6*(12+6*R^2+5*R^4), 
+            1/(2*(1-R)-(1-R)^2-(1-R)^3)))
+```
+
+## Test de aleatoriedad
+
+$$H_0: k = 0, \ los \ datos \ siguen \ una \ distribucion \ aleatoria$$
+
+```{r}
+R_crit(n = length(theta), conf.level = .95)
+R
+```
+
+## Test de tendencia (cono de confianza)
+
+Para datos no-direccionales el error estandar hay que dividirlo por 2
+
+$$H_0: \bar{\theta} = \theta_0$$
+
+```{r}
+a = 0.05
+se = (1/sqrt(length(theta)*R*k))*180/pi
+se = ifelse(d == 0, se/2, se) # True se for non-directional data
+(cono = qnorm(1-a/2)*se)
+cono_sup = meantrue + cono
+cono_inf = meantrue - cono
+cono_inf; meantrue; cono_sup
+```
+
+## Diagrama de rosas
+
+Diagrama de rosos mostrando la direccion media y cono de confianza
+
+```{r}
+rose_diag_2D(x = theta0, width = 30, dir = d, conf.level = .95)
+```
+
+
+# Analisis de dos muestras
+
+$$H_0: \bar{\theta}_1 = \bar{\theta}_2$$
+
+Recordar realizar los ajustes necesarios si se trabaja con datos no-direccionales
+
+```{r}
+theta_2 = c(225, 208, 172, 198, 204, 183, 190, 212, 247, 
+            127, 167, 234, 217, 192, 212, 171, 169, 210, 
+            245, 222, 185, 227, 193, 178, 187, 182, 194, 
+            217, 168, 211, 234, 204, 221, 198, 261, 228, 146, 201, 146, 231)
+theta_2rad = rads(theta_2)
+thetaall = c(theta0,theta_2)
+thetaallrad = rads(thetaall)
+(R1 = est.rho(thetarad)*length(theta))
+(R2 = est.rho(theta_2rad)*length(theta_2))
+(Rt = est.rho(thetaallrad)*length(thetaall))
+(kt = est.kappa(thetaallrad))
+(f = ifelse(kt > 10, 
+           ((length(thetaall) - 2)*(R1+R2-Rt))/(length(thetaall)-R1-R2),
+           (1+3/(8*kt))*((length(thetaall)-2)*(R1+R2-Rt))/(length(thetaall)-R1-R2)))
+(fcrit = qf(1-a,1,length(thetaall)-2))
+f > fcrit
+```
+
+
+
+
+
+

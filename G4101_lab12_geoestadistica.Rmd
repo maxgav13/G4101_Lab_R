@@ -1,0 +1,379 @@
+---
+title: "Lab 12: Geoestadistica"
+author: "Maximiliano Garnier Villarreal"
+output:
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    df_print: kable
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE, warning=F, message=FALSE}
+library(gstat)
+library(sp)
+library(sf)
+library(ggspatial)
+library(plotly)
+library(raster)
+library(stars)
+library(viridis)
+library(rgeos)
+library(rgdal)
+library(DescTools)
+library(mapview)
+library(RColorBrewer)
+library(ggrepel)
+library(tidyverse)
+
+# Opciones para ggplot
+theme_set(theme_bw())
+theme_update(legend.position='right')
+x_var = 'Distancia [m]'
+y_var = 'Semivarianza'
+x_map = 'X [m]'
+y_map = 'Y [m]'
+x_vmap = "Distancia E-W [m]"
+y_vmap = "Distancia N-S [m]"
+```
+
+
+# Datos
+
+## Importar datos
+
+```{r datos}
+datos <- rio::import("data/BroomsBarn.txt", setclass = 'tibble') %>% 
+  mutate(x = x*40, y = y*40, logK = log(K), logP = log(P))
+```
+
+
+## Exploracion de datos
+
+Importante realizar este paso para determinar si la variable esta normalmente distribuida o no; de no estarlo habria que transformarla.
+
+```{r AED}
+myvar = 'logK' # variable a modelar
+summary(datos)
+Desc(datos[[myvar]])
+(S = var(datos[[myvar]])) # varianza de la variable
+ggplot(datos, aes_string(myvar)) + 
+  geom_histogram(aes(y = stat(density)), bins = 10, 
+                 col = 'black', fill = 'blue', alpha = .5) + 
+  geom_vline(xintercept = mean(datos[[myvar]]), col = 'red') +
+  geom_density(col = 'blue') +
+  labs(y = 'Densidad')
+```
+
+
+# Datos espaciales
+
+## Transformar datos en objeto espacial
+
+Se le indica cuales son las columnas que tienen las coordenadas (X,Y) y de conocerse se le asiga el sistema de referencia de coordenadas (CRS)
+
+```{r datos-sf}
+datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>% 
+  mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) %>% 
+  select(X, Y, everything())
+datos_sp = as(datos_sf, 'Spatial')
+coordnames(datos_sp) = c('X','Y')
+```
+
+
+## Calculo de distancias
+
+Se calculan las distancias para tener una idea de la distancia maxima y por ende la distancia maxima a la cual calcular el variograma
+
+```{r distancias}
+dists = st_distance(datos_sf) %>% .[lower.tri(.)] %>% unclass()
+distancias = signif(c(min(dists), mean(dists), max(dists)),6) # rango de distancias
+names(distancias) = c('min', 'media', 'max') 
+distancias
+```
+
+
+## Poligono que contiene los datos
+```{r outline}
+outline = st_convex_hull(st_union(datos_sf))
+```
+
+
+## Grilla de interpolacion
+
+Grilla donde se quiere determinar la distribucion espacial de la variable de interes. Por lo general dentro del area de influencia de los datos.
+
+```{r grilla-interp}
+bb = st_bbox(datos_sf)
+dint = max(c(bb[3]-bb[1],bb[4]-bb[2])/nrow(datos_sf))
+dx = seq(bb[1],bb[3],dint) # coordenadas x
+dy = seq(bb[4],bb[2],-dint) # coordenadas y
+st_as_stars(matrix(0, length(dx), length(dy))) %>%
+  st_set_dimensions(1, dx) %>%
+  st_set_dimensions(2, dy) %>%
+  st_set_dimensions(names = c("X", "Y")) %>% 
+  st_set_crs(st_crs(datos_sf)) -> datosint
+
+datosint2 = st_crop(datosint, outline)
+```
+
+
+## Distribucion espacial
+
+Vista estatica y dinamica de los datos. El mapa dinamico solo se despliega en version HTML.
+
+```{r dist-espacial}
+ggplot() + 
+  geom_sf(data = outline, col = 'cyan', alpha = .1, size = .75) + 
+  geom_sf(data = datos_sf, aes_string(col = myvar), size = 3, alpha = 0.6) + 
+  scale_color_viridis_c() + 
+  labs(x = x_map, y = y_map) + 
+  if (!is.na(st_crs(datos_sf))) {
+    coord_sf(datum = st_crs(datos_sf))
+  }
+```
+
+```{r dist-espacial-int, eval=knitr::is_html_output()}
+mapview(outline, alpha.regions = 0, layer.name='Border', 
+        homebutton = F, legend = F, native.crs = T) + 
+  mapview(datos_sf, zcol = myvar, alpha=0.1, 
+          layer.name = myvar, native.crs = T)
+```
+
+
+# Analisis Geoestadistico
+
+## Variograma omnidireccional
+
+Creacion del variograma. La funcion base realiza un buen trabajo inicial, pero se puede mejorar modificando los argumentos:
+
+* `cutoff`: la distancia maxima a la cual calcular el variograma
+* `width`: el lag de cada cuanto calcular el variograma
+
+En general se recomienda que no haya pocos puntos representados en las diferentes distancias.
+
+```{r variog-omni}
+g = gstat(formula = as.formula(paste(myvar,'~1')), data = datos_sf) # objeto gstat para hacer geoestadistica
+
+dat.vgm = variogram(g) # variograma experimental
+
+head(dat.vgm)
+plot(dat.vgm)
+
+dat.vgm = variogram(g, cutoff = 600) # variograma experimental hasta cierta distancia (cutoff)
+
+plot(dat.vgm)
+plot(variogram(g, cutoff = 600, width = 120))
+plot(variogram(g, cutoff = 600, width = 20))
+
+ggplot(dat.vgm,aes(x = dist, y = gamma)) + 
+  geom_point(size = 2) + 
+  labs(x = x_var, y = y_var) +
+  geom_hline(yintercept = S, col = 'red', linetype = 2) +
+  ylim(0, max(dat.vgm$gamma)) +
+  xlim(0, max(dat.vgm$dist)) + 
+  geom_text_repel(aes(label = np), size = 3)
+```
+
+
+## Mapa de la superficie del variograma
+
+Representacion en 2D de la variable donde:
+
+* `width`: es el tamanho de celda
+* `cutoff`: es la extension lateral
+
+```{r variog-map}
+map.vgm <- variogram(g, width = 80, cutoff = 600, map = TRUE)
+
+ggplot(data.frame(map.vgm), aes(x = map.dx, y = map.dy, fill = map.var1)) +
+  geom_raster() + 
+  scale_fill_gradientn(colours = plasma(20)) +
+  labs(x = x_vmap, y = y_vmap, fill = "Semivarianza") +
+  coord_quickmap()
+```
+
+
+## Variogramas direccionales
+
+Variogramas en diferentes direcciones donde:
+
+* `alpha`: vector de direcciones sobre las cuales se va a calcular el variograma
+* `tol.hor`: tolerancia angular, susualmente 22.5
+
+```{r variog-dir}
+dat.vgm2 = variogram(g, alpha = c(0,45,90,135),
+                     tol.hor = 22.5, cutoff = 600) # con direcciones y tolerancia angular
+
+ggplot(dat.vgm2,aes(x = dist, y = gamma,
+                    col = factor(dir.hor), shape = factor(dir.hor))) + 
+  geom_point(size = 2) + 
+  # geom_line() +
+  labs(x = x_var, y = y_var, col = "Direccion", shape = 'Direccion') +
+  geom_hline(yintercept = S, col = 'red', linetype = 2) +
+  ylim(0, max(dat.vgm2$gamma)) +
+  xlim(0, max(dat.vgm2$dist)) + 
+  scale_color_brewer(palette = 'Dark2') +
+  facet_wrap(~dir.hor) + 
+  geom_text_repel(aes(label = np), size = 3, show.legend = F)
+```
+
+## Modelado
+
+### Valores iniciales para el variograma teorico
+
+Es buena practica interpretar el variograma experimenta y escoger un modelo apropiado, asi como valores iniciales para dicho modelo
+
+```{r params}
+meseta = 0.08
+mod = "Sph"
+rango = 400
+pep = 0.020
+```
+
+
+### Ajuste de variograma teorico
+
+```{r ajuste, cache=TRUE, dependson='params'}
+(dat.fit = fit.variogram(dat.vgm, model = vgm(meseta, mod, rango, pep)))
+(fit.rmse = sqrt(attributes(dat.fit)$SSErr/(nrow(datos)))) # error del ajuste
+plot(dat.vgm, dat.fit, xlab = x_var, ylab = y_var) # omnidireccional
+plot(dat.vgm2, dat.fit, as.table = T, xlab = x_var, ylab = y_var) # direccionales
+varmod = dat.fit # modelo ajustado
+```
+
+
+### Validacion cruzada
+
+Una vez escogido el modelo y ajustado a los datos se realiza la validacion cruzada para determinar si es aceptable. Tambien se pueden ajustar diferentes modelos y con los datos de validacion cruzada se determina el mejor.
+
+```{r xval, cache=TRUE, dependson='ajuste'}
+kcv.ok = krige.cv(as.formula(paste(myvar,'~1')), 
+                  locations = datos_sf, model = varmod)
+```
+
+```{r xval-metrics, dependson='xval'}
+summary(kcv.ok$residual)
+
+xval.rmse = sqrt(mean(kcv.ok$residual^2)) # RMSE - menor es mejor
+
+xval.msdr = mean(kcv.ok$residual^2/kcv.ok$var1.var) # MSDR - ~1 es mejor
+
+xval.mod = lm(observed ~ var1.pred, as.data.frame(kcv.ok))
+
+xval.r2 = xval.mod %>% broom::glance() %>% pull(r.squared)
+
+correl = signif(CorCI(cor(kcv.ok$observed, kcv.ok$var1.pred), nrow(kcv.ok)),3)
+
+metricas = tibble(metric = c('rmse','msdr','r','R2'), 
+                  estimate = c(xval.rmse,xval.msdr,correl[1],xval.r2))
+metricas
+
+CIbeta = signif(broom::tidy(xval.mod, conf.int=T)[2,c(2,6,7)],4)
+CIbeta
+```
+
+```{r xval-plots, dependson='xval'}
+ggplot(as.data.frame(kcv.ok), aes(var1.pred, observed)) + 
+  geom_point(col = "blue", shape = 1, size = 1.25) + 
+  coord_fixed() + 
+  geom_abline(slope = 1, col = "red", size = 1) + 
+  geom_smooth(se = F, method = 'lm', col = 'green', size = 1.25) +
+  labs(x = "Predecidos", y = "Observados", 
+       subtitle = 'Rojo: linea 1:1, Verde: regresion')
+
+ggplot(as.data.frame(kcv.ok), aes(residual)) + 
+  geom_histogram(bins = 15, col = 'black', fill = "blue") + 
+  labs(x = "Residuales", y = "Fecuencia") + 
+  geom_vline(xintercept = mean(kcv.ok$residual), col = 'red')
+```
+
+
+## Interpolacion usando kriging ordinario
+
+Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es caso mas sencillo y que aplica en la mayoria de las situaciones.
+
+```{r kriging, cache=TRUE}
+ok = krige(as.formula(paste(myvar,'~1')), locations = datos_sp,
+           newdata = datosint2, model = varmod)
+
+ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok), 
+                               data = data.frame(ok), 
+                               proj4string = CRS(proj4string(datos_sp)))
+```
+
+
+## Genera GeoTifs para usar en GIS
+
+```{r geotifs}
+writeGDAL(ok_sp['var1.pred'], 'figs/krige_pred.tif')
+writeGDAL(ok_sp['var1.var'], 'figs/krige_var.tif')
+```
+
+
+## Mapas de las predicciones y varianzas
+
+```{r mapas-resultados, dependson='kriging', warning=FALSE}
+p1 = ggplot() + 
+  geom_stars(data = ok, aes(fill = var1.pred, x = x, y = y)) + 
+  scale_fill_gradientn(colours = viridis(10), na.value = NA) + 
+  coord_sf() + 
+  labs(x = x_map, y = y_map, 
+       title = 'Prediccion', 
+       fill = myvar)
+
+p2 = ggplot() + 
+  geom_stars(data = ok, aes(fill = var1.var, x = x, y = y)) + 
+  scale_fill_gradientn(colours = brewer.pal(9,'RdPu'), na.value = NA) + 
+  coord_sf() + 
+  labs(x = x_map, y = y_map, 
+       title = 'Varianza',
+       fill = myvar)
+
+gridExtra::grid.arrange(p1,p2,ncol=2)
+```
+
+
+# Visualizacion 3D
+
+Visuzalicion 3D de los datos
+
+```{r 3D, eval=knitr::is_html_output()}
+okmat = matrix(ok[['var1.pred']],
+               nrow = length(dx),
+               ncol = length(dy))
+
+x <- abs(ncol(okmat) * dint - seq_len(ncol(okmat)) * dint)
+y <- seq_len(ncol(okmat)) * dint
+
+plot_ly() %>% 
+  add_surface(x = ~y, y = ~x, z = ~t(okmat), 
+              colors=bpy.colors(), colorbar=list(title='')) %>% 
+  layout(scene = list(xaxis=list(title=x_map), 
+                      yaxis=list(title=y_map), 
+                      zaxis=list(title=''),
+                      aspectmode = 'manual', 
+                      aspectratio = list(x = 1, y = 1, z = .5)))
+```
+
+
+
+
+
+
+

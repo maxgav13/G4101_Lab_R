@@ -1,0 +1,165 @@
+---
+title: "Intro a R Markdown"
+author: "Maximiliano Garnier Villarreal"
+output:
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+  pdf_document:
+    df_print: kable
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  word_document:
+    toc: yes
+always_allow_html: yes
+---
+
+# Introduccion
+
+Este es un [R Markdown](http://rmarkdown.rstudio.com) Notebook (Cuaderno R Markdown). Cuando ejecuta el codigo dentro del cuaderno el resultado aparece por debajo del codigo.
+
+Para ejecutar una seccion de codigo se puede hacer click en el boton de *Run* (flecha verde) dentro de la seccion o colocando el cursor dentro de la seccion y ejecutando *Ctrl+Shift+Enter* (Windows) o *Cmd+Shift+Enter* (Mac). Asi de facil!
+
+Se puede agregar una nueva seccion haciendo click en *Insert Chunk* o ejecutando *Ctrl+Alt+I* (Windows) o *Cmd+Option+I* (Mac).
+
+El primer bloque siempre se usa para definir paraemtros y paquetes a usar durante la sesion.
+
+```{r setup, include=TRUE, message=FALSE, warning=FALSE}
+library(MOTE)
+library(papaja)
+library(kableExtra)
+library(gt)
+library(flextable)
+library(plotly)
+library(dygraphs)
+library(rio)
+library(tidyverse)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE,
+  # fig.path = "figs/",
+  fig.retina = 3,
+  fig.width = 8,
+  fig.asp = 0.618,
+  fig.align = "center",
+  out.width = "90%"
+)
+
+```
+
+# Tipos de resultados
+
+## Consola
+
+Podemos crear diferentes objetos dentro de la seccion como sifuera la consola de R. Creemos un objeto que contenga los numeros del 1 al 15.
+
+```{r numeros}
+numeros <- seq_len(15)
+numeros
+```
+
+Podemos desplegar tablas. La apariencia va a cambiar dependiendo el formato de salida y va a estar sujeta (en principio) a la opcion `df_print` en el encabezado YAML.
+
+```{r tabla}
+mtcars
+```
+
+Tablas tambien se pueden usar diferentes paquetes para representarlas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento, **kableExtra** sirve para mas para *html* y *pdf*, y **gt** sirve para *html*.
+
+```{r}
+mtcars %>% 
+  head() %>% 
+  flextable()
+```
+
+```{r}
+mtcars %>% 
+  head() %>% 
+  kable()
+```
+
+```{r}
+mtcars %>% 
+  head() %>% 
+  gt()
+```
+
+## Graficos
+
+Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar. Opciones para el control sobre las figuras van a empezar con `fig.` en el encabezado del codigo (como se observa en el siguiente ejemplo donde se ajusta el ancho a 6 pulgadas)
+
+```{r grafico, fig.width=6}
+q = ggplot(mtcars, aes(wt,mpg,col=factor(cyl))) + 
+  geom_point(size=2,shape=1) + 
+  theme_bw() + 
+  labs(x='Peso',y='Millaje',col='Cilindros')
+q
+```
+
+## Widgets HTML
+
+Si el analisis en **R** involucra componentes interactivos, estos tambien son compatibles con los resultados en el cuaderno o archivo *html*. La opcion `eval=knitr::is_html_output()` se incluye para que el codigo sea evaluado unicamente cuando el formato de salida es *html*, ya que estos no pueden desplegarse en *pdf* o *word*.
+
+El siguiente codigo genera un grafico interactivo de una serie temporal.
+
+```{r widgets, eval=knitr::is_html_output()}
+dygraph(nhtemp, main = "Temperaturas de New Haven") %>% 
+  dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
+```
+
+Esta es la version interactiva del grafico de ggplot anteriormente generado.
+
+```{r plotly, eval=knitr::is_html_output()}
+ggplotly(q)
+```
+
+# Formulas
+
+Expresiones matematicas y formulas se pueden desplegar en linea, dentro del cuerpo del texto ($A = \pi*r^{2}$) o por separado $$E = mc^{2}$$ Para escribir estas expresiones se usa lenguaje `LaTeX`.
+
+# Importando datos
+
+Los documentos *R Markdown* usan una dirección relativa a la ubicación del archivo.
+
+Otro punto importante es que se pueden llamar funciones de paquetes sin necesidad de cargarlos usando la sintaxis `paquete::funcion()`. Por ejemplo en el bloque que sigue se usa `rio::import()`, siendo `rio` el paquete e `import()` la función a usar. **Esto puede evitar conflictos cuando se tienen funciones con el mismo nombre en diferentes paquetes**.
+
+```{r}
+dat <- rio::import("../data/PORPERM.csv")
+```
+
+# Desplegar/formatear valores
+
+Siempre que un valor exista dentro de un objeto guardado, este se puede acceder para ser desplegado en el cuerpo del documento. Por ejemplo: La porosidad media es de `r mean(dat$Porosity)`%, que se escribe de la siguiente manera: `` `r knitr::inline_expr('mean(dat$Porosity)')` ``.
+
+Para dar formato a valores se pueden usar funciones como `apa()` del paquete **MOTE**, `printnum` o `printp` (valores-*p*) del paquete **papaja**. Volviendo a desplegar la porosidad media se tiene `r apa(mean(dat$Porosity), 1)`%, usando `apa()` con 1 decimales.
+
+# Importando figuras
+
+La mejor manera es usando el paquete **knitr**. Aqui se ajusta no el ancho de la figura directamente sino que se le dice que se ajuste a un 50% del ancho disponible. Existen otras opciones que empiezan con `out.`.
+
+```{r fig.cap='R Rocks', out.width='50%'}
+knitr::include_graphics('imgs/r_rocks.jpg')
+```
+
+# Salvando y compartiendo
+
+Los documentos *R Markdown* tienen como extension `.Rmd`. Cuando se crea y se salva un cuaderno se crea un archivo adjunto con extension `.nb.html`. Este archivo contiene una copia renderizada del cuaderno, que puede ser visualizada en cualquier navegador. Cuando se abre el archivo `.nb.html` en un navegador se va a tener la opcion de descargar el codigo original (`.Rmd`).
+
+Para previsualizar el cuaderno renderizado (`.nb.html`) haga click en *Preview*. La previsualizacion le muestra una copia renderizada del *html*. A diferencia de *Knit* (para otros documentos R Markdown), *Preview* no ejecuta ninguna seccion de codigo, por lo que si una seccion no se ha ejecutado en el editor (cuaderno) el *Preview* no va a mostrar ningun resultado. La previsualizacion se actualiza cada vez que se salva el documento `.Rmd`.
+
+## Otros formatos
+
+El cuaderno es un documento *R Markdown*. Se puede cambiar el formato de salida cambiando el orden en el encabezado YAML. En ese caso el *Preview* es reemplazado por *Knit*. Tambien se puede generar desplegando el menu contextual haciendo click en la flecha junto a *Preview*. Tambien se pueden crear documentos *pdf* o *word*.

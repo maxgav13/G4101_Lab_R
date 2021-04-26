@@ -1,0 +1,181 @@
+---
+title: "Lab 11: Secuencias"
+author: "Maximiliano Garnier Villarreal"
+output:
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    df_print: kable
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE, warning=F, message=FALSE}
+library(GMisc)
+library(ggeffects)
+library(DescTools)
+library(broom)
+library(tidyverse)
+```
+
+
+# Prueba de tendencia (Spearman)
+
+Se determina si la longitud de los intervalos varia en el tiempo/espacio
+
+```{r}
+x = c(0.5,2.3,3.2,4.2,4.9,7,11.4,12.7,14.6,16,21.5,22.5,25.8,30.3,31.9,36.2,42.8)
+n = length(x)
+i = seq(1,n-1,1)
+h = NULL
+for (j in 1:n-1) {
+  h[j] = x[j+1]-x[j]
+}
+rankh = rank(h,ties.method = "average")
+(rs = 1-(6*sum((i-rankh)^2))/(length(i)*(length(i)^2-1)))
+cor.test(i,h,method = "spearman") %>% tidy()
+cor.test(i,rankh) %>% tidy()
+```
+
+
+# Prueba de corridas
+
+Se determina si la secuencia es aleatoria o no
+
+```{r}
+dens = c(3.57,3.63,2.86,2.94,3.42,2.85,3.67,3.78,3.86,
+         4.02,4.56,4.62,4.31,4.58,5.02,4.68,4.37,4.88,
+         4.52,4.80,4.55,4.62,4.93,4.60,4.51,3.98,4.22,
+         3.52,2.91,3.87,3.52,3.77,3.84,3.92,4.09,3.86,
+         4.13,3.92,3.54)
+
+(dens2 = dichotomy(dens, criteria = 'median')) # dicotomiza los datos
+
+RunsTest(dens2,correct = F) %>% tidy() # test de corridas
+```
+
+
+# Regresion
+
+La idea es determinar si un modelo es significativo o no, o sea si los coeficientes (especialmente la pendiente $\bar{b}_1$) son significativos
+
+En el caso de un modelo mas complejo de uno lineal la idea es determinar si la adicion de los nuevos terminos es significativa y explica (se ajusta) mejor (a) los datos
+
+```{r}
+alpha = 0.05
+
+depth = seq(0,35,5) # profundidad
+moist = c(124,78,54,35,30,21,22,18) # contenico de humedad
+
+mod2 = lm(moist~depth) # modelo lineal
+
+tidy(mod2, conf.int = T,conf.level = .95) # resumen modelo lineal
+glance(mod2) # ajuste del modelo lineal
+
+mod3 = lm(moist~depth+I(depth^2)) # modelo cuadratico
+
+tidy(mod3, conf.int = T,conf.level = .95) # resumen modelo cuadratico
+glance(mod3) # ajuste del modelo cuadratico
+
+anova(mod2,mod3) # comparacion de modelos
+
+(rmse1 = RMSE(mod2)) # error del modelo lineal
+(rmse2 = RMSE(mod3)) # error del modelo cuadratico
+sjstats::cv(mod2) # coef var modelo lineal
+sjstats::cv(mod3) # coef var modelo cuadratico
+
+TMod(mod2,mod3)
+
+DF3 = tibble(depth, moist)
+ggplot(DF3, aes(depth, moist)) + 
+  geom_point() +
+  geom_smooth(method = 'lm', aes(col = 'Lineal')) + 
+  geom_smooth(method = 'lm', aes(col = 'Cuadratico'), formula = y ~ poly(x,2)) +
+  theme_classic()
+
+plot(ggpredict(mod2))
+plot(ggpredict(mod2),rawdata = T)
+plot(ggpredict(mod3),rawdata = T)
+
+```
+
+
+## Como remover una tendencia de una serie de datos
+
+Pasos:
+
+1. Determinar si hay una tendencia
+    a. Construir modelo lineal
+    a. Determinar si la pendiente es significativa
+
+2. Si hay tendencia, calcular los residuos
+
+```{r}
+set.seed(1248)
+x = 1:50
+y = 1.5*x + 10*rnorm(50)
+
+DF = tibble(x,y)
+
+ggplot(DF, aes(x,y)) +
+  geom_point() +
+  geom_smooth(method = 'lm') + theme_classic()
+
+mod = lm(y~x, data = DF)
+
+tidy(mod) # resumen del modelo
+glance(mod) # ajuste del modelo
+
+DF2 = augment(mod)  # data frame incluyendo residuales 
+
+ggplot(DF2, aes(x,.resid)) +
+  geom_line() + 
+  geom_hline(yintercept = 0, col = 2) +
+  theme_classic()
+```
+
+
+# Autocorrelacion
+
+Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados equidistantemente en el espacio/tiempo.
+
+```{r}
+lh
+length(lh)
+ac1 = acf(lh)
+ac1 = acf(lh,lag.max = length(lh)/2)
+lagt = ac1$acf[ac1$acf<0]
+(rtau1 = max(ac1$acf[which(ac1$acf==lagt[1]):length(ac1$acf)])) # valor maximo de autocorrelacion
+(tau1 = ac1$lag[ac1$acf==rtau1]) # lag donde ocurre el valor maximo de autocorrelacion
+(z1 = rtau1*sqrt(length(lh)-tau1+3)) # test de significancia de autocorrelacion
+
+ldeaths
+length(ldeaths)
+frequency(ldeaths)
+ac2 = acf(ldeaths)
+ac2 = acf(ldeaths,lag.max = length(ldeaths)/3)
+lagt = ac2$acf[ac2$acf<0]
+(rtau2 = max(ac2$acf[which(ac2$acf==lagt[1]):length(ac2$acf)])) # valor maximo de autocorrelacion
+(tau2 = ac2$lag[ac2$acf==rtau2] )# lag donde ocurre el valor maximo de autocorrelacion
+(z2 = rtau2*sqrt(length(ldeaths)-tau2+3)) # test de significancia de autocorrelacion
+```
+
+
+
+
+
+

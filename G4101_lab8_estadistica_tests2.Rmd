@@ -1,0 +1,350 @@
+---
+title: "Lab 8: Estadistica Inferencial - Pruebas 2"
+author: "Maximiliano Garnier Villarreal"
+output:
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    df_print: kable
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE, warning=F, message=FALSE}
+library(MOTE) # tamanho del efecto
+library(papaja)
+library(DescTools) # tamanho del efecto
+library(rstatix) # pruebas y tamanho efecto
+library(effectsize) # tamanho del efecto
+library(ggmosaic) # mosaico en ggplot
+library(vcd) # variables categoricas
+library(vroom) # importar datos
+library(janitor)
+library(tidymodels) # datos ordenados y mas
+library(tidyverse)
+
+theme_set(theme_minimal())
+```
+
+# ANOVA
+
+$$H_0 : \mu_1 = \mu_2 = \mu_3 = \dotsb = \mu_n$$ 
+
+## EDA
+
+```{r}
+# Ho: Media es igual para todos los grupos (muestras)
+
+dat1 = vroom('data/anova MgO.csv')
+a = .05
+myvar = 'MgO (%)'
+
+G1 = c(7,8,10,11) # Mt Mica
+G2 = c(4,5,7,8) # Sebago Bath
+G3 = c(1,2,4,5) # Black Mt
+
+Stacked = stack(list(G1=G1,
+                     G2=G2,
+                     G3=G3))
+
+Stacked = Stacked %>% 
+  mutate(ind = factor(ind,
+                      levels = levels(Stacked$ind),
+                      labels = c('Mt Mica', 'Sebago Bath', 'Black Mt')))
+
+Stacked %>% 
+  group_by(ind) %>% 
+  summarise_all(list(N = ~n(),
+                     Avg = ~mean(.),
+                     SD = ~sd(.))) # resumen por grupo
+
+ggplot(Stacked, aes(ind, values)) + 
+  stat_summary(fun.data = mean_cl_normal, 
+               fun.args = list(conf.int = 1-a), 
+               geom = 'pointrange', size = .75) + 
+  labs(x='', y = myvar)
+```
+
+## Prueba de igualdad de varianzas
+
+```{r}
+# Levene Test
+LeveneTest(values ~ ind, data = Stacked, center = mean) %>% 
+  tidy()
+
+# Brown-Forsythe
+LeveneTest(values ~ ind, data = Stacked, center = median) %>% 
+  tidy()
+
+# Bartlett
+bartlett.test(values ~ ind, data = Stacked) %>% 
+  tidy()
+```
+
+```{r}
+var.igual = T
+```
+
+## ANOVA
+
+```{r}
+# con igualdad de varianzas
+mod = lm(values ~ ind, data = Stacked)
+
+mod %>%
+  anova() %>% 
+  tidy()
+
+mod %>% 
+  tidy(conf.int=T, conf.level=1-a)
+
+mod %>% 
+  glance()
+
+# sin igualdad de varianzas
+oneway.test(values ~ ind, Stacked, var.equal = F) %>% 
+  tidy()
+```
+
+## ES
+
+```{r}
+# EtaSq(mod) # DescTools
+
+unlist(eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = a)[1:3]) %>% 
+  as_tibble_row() # MOTE
+
+effectsize::eta_squared(mod,ci = 1-a) # solo cuando varianzas son iguales
+```
+
+## *Post-hoc*
+
+```{r}
+
+if (var.igual == T) {
+  CI = Stacked %>% mutate(ind = fct_rev(ind)) %>% 
+    tukey_hsd(values ~ ind,
+              conf.level = 1-a) %>% 
+    select(-c(1,4)) %>% 
+    mutate(contrast = str_c(group2,group1,sep = ' - '),
+           method = 'Tukey') %>% 
+    relocate(contrast) %>% 
+    select(-contains('group')) %>% 
+    arrange(contrast)
+} else {
+  CI = Stacked %>% mutate(ind = fct_rev(ind)) %>% 
+    games_howell_test(values ~ ind,
+                      conf.level = 1-a) %>% 
+    select(-1) %>% 
+    mutate(contrast = str_c(group2,group1,sep = ' - '),
+           method = 'Games-Howell') %>% 
+    relocate(contrast) %>% 
+    select(-contains('group')) %>% 
+    arrange(contrast) 
+}
+CI
+
+ggplot(CI, aes(contrast, estimate, ymin = conf.low, ymax = conf.high)) +
+  geom_pointrange(size = 1) + 
+  geom_hline(yintercept = 0, col = 'red') +
+  coord_flip() +
+  labs(y = 'Diferencia en medias', x = 'Contraste')
+
+contrastes = combn(levels(Stacked %>% pull(ind)), 2) %>% 
+  as.data.frame() %>% 
+  as.list()
+
+ES = map_dfr(contrastes, 
+             ~ effectsize::cohens_d(values ~ ind, data = Stacked %>% 
+                                      filter(ind %in% .x) %>% 
+                                      mutate(ind=fct_drop(ind)),
+                                    pooled_sd = var.igual,
+                                    ci = 1-a) %>%
+               as_tibble()) %>% 
+  mutate(contrast = map_chr(contrastes, 
+                            ~ str_flatten(.x, collapse = ' - '))) %>%
+  select(contrast, everything(),-CI) %>% 
+  arrange(contrast)
+ES
+
+CI %>% inner_join(ES, by = 'contrast')
+```
+
+# Datos categoricos
+
+## $\chi^2$ Bondad de ajuste
+
+```{r}
+# Ho: Datos observados siguen la distribucion/proporcion propuesta
+a = .05
+obs = c(90, 110) %>% 
+  set_names(c('N','S')) # conteos observados
+p = c(.5, .5) # proporciones esperadas
+chisq.test(obs,p=p) %>% 
+  tidy()
+v.chi.sq(x2 = 2, n = 200, r = 2, c = 2, a = a)[1:3] %>% 
+  as_tibble_row() # MOTE
+
+binom.test(x = 110, n = 200, p = .5, conf.level = 1-a) # binomial test
+
+ncomp.gof = (length(obs)*(length(obs)-1))/2
+new.a.gof = a/ncomp.gof
+z.crit.gof = qnorm(new.a.gof/2) %>% abs()
+z.crit.gof
+
+chisq_descriptives(rstatix::chisq_test(obs)) %>% 
+  left_join(pairwise_chisq_test_against_p(obs,
+                                          p = p,
+                                          p.adjust.method = 'BH')
+            ) %>% 
+  select(-c(group,n))
+```
+
+## $\chi^2$ Homogeneidad
+
+```{r}
+# Ho: Proporcion de items es homogenea entre muestras
+a = .05
+dat2 = vroom('data/chi2 homogeneidad clastos.csv')
+dat2 = dat2 %>% 
+  mutate(Clasto = fct_inorder(Clasto),
+         Capa = fct_inorder(as.factor(Capa)))
+
+clastos = matrix(data = c(23,10,17,32,8,10,16,16,18,20,14,16), 
+                 ncol=4, 
+                 dimnames = list(Clasto=c('cuarzo','pedernal','basalto'),
+                                 Capa=1:4)) %>% 
+  as.table()
+
+table2d_summary(clastos)
+
+N = sum(clastos)
+
+ncomp.h = prod(dim(clastos))
+new.a.h = a/ncomp.h
+z.crit.h = qnorm(new.a.h/2) %>% abs()
+z.crit.h
+
+CHI.h = chisq.test(clastos)
+CHI.h %>% tidy()
+CramerV(clastos,conf.level = 1-a,method = 'ncchisqadj') # DescTools
+chisq_to_cramers_v(chisq = CHI.h$statistic,
+                   n = N,
+                   nrow = nrow(clastos),
+                   ncol = ncol(clastos),
+                   ci = 1-a) # effectsize
+
+chisq_descriptives(rstatix::chisq_test(clastos)) %>% 
+  left_join(pairwise_chisq_test_against_p(clastos,
+                                          p = ((CHI.h$expected)/N),
+                                          p.adjust.method = "BH")
+  ) %>% 
+  select(-c(group,n))
+
+ggplot(dat2, aes(Capa,fill=Clasto)) + 
+  geom_bar(position = 'fill')
+
+ggplot(data = dat2) + 
+    geom_mosaic(aes(x=product(Capa), 
+                    fill=Clasto), offset = 0.02) + 
+    labs(x='Capa',y='Clasto',fill='Clasto')
+
+mosaic(t(clastos), 
+       direction = 'v',
+       gp = shading_hcl(lty = 1,
+                        interpolate = z.crit.h,
+                        observed = CHI.h$observed),
+       spacing = spacing_equal(sp = unit(.5,'lines')),
+       residuals = t(CHI.h$stdres), 
+       residuals_type = "Residuales \nestandarizados", 
+       labeling = labeling_border(rot_labels = c(60, 0, 0, 0),
+                                  just_labels = "center",
+                                  offset_labels = c(.25, 0, 0, .25),
+                                  offset_varnames = c(.1, 0, 0, .1),
+                                  abbreviate_labs = F,
+                                  gp_labels = gpar(fontsize = 8)))
+
+# Desc(clastos)
+```
+
+## $\chi^2$ Independencia/asociacion
+
+```{r}
+# Ho: No hay relacion entre variables
+# Ho: Las variables son independientes entre si
+a = .05
+dat3 = vroom('data/chi2 independencia.csv')
+dat3 = dat3 %>% 
+  mutate(Redondez = fct_inorder(Redondez),
+         Distancia = fct_inorder(Distancia))
+
+
+round.dist = matrix(data = c(28,23,5,0,21,23,8,2,11,14,
+                             12,8,1,8,14,12,0,9,18,29), 
+                    ncol=5, 
+                    dimnames = list(Redondez=c('Angular','Sub-angular',
+                                          'Sub-redondeado','Redondeado'),
+                                    Distancia=c('0-5','5-10','10-20',
+                                                '20-30','30-40'))) %>% 
+  as.table()
+
+table2d_summary(round.dist)
+
+N = sum(round.dist)
+
+ncomp.i = prod(dim(round.dist))
+new.a.i = a/ncomp.i
+z.crit.i = qnorm(new.a.i/2) %>% abs()
+z.crit.i
+
+CHI.i = chisq.test(round.dist)
+CHI.i %>% tidy()
+CramerV(round.dist,conf.level = 1-a,method = 'ncchisqadj') # DescTools
+cramers_v(round.dist,ci = 1-a)
+
+chisq_descriptives(rstatix::chisq_test(round.dist)) %>% 
+  left_join(pairwise_chisq_test_against_p(round.dist,
+                                          p = ((CHI.i$expected)/N),
+                                          p.adjust.method = "BH")
+  ) %>% 
+  select(-c(group,n))
+
+ggplot(dat3, aes(Distancia,fill=Redondez)) + 
+  geom_bar(position = 'fill')
+
+ggplot(data = dat3) + 
+  geom_mosaic(aes(x=product(Distancia), 
+                  fill=Redondez), offset = 0.02) + 
+  labs(x='Distancia',y='Redondez',fill='Redondez')
+
+mosaic(t(round.dist), 
+       direction = 'v',
+       gp = shading_hcl(lty = 1,
+                        interpolate = z.crit.i,
+                        observed = CHI.i$observed),
+       spacing = spacing_equal(sp = unit(.5,'lines')),
+       residuals = t(CHI.i$stdres), 
+       residuals_type = "Residuales \nestandarizados", 
+       labeling = labeling_border(rot_labels = c(60, 0, 0, 0),
+                                  just_labels = "center",
+                                  offset_labels = c(.25, 0, 0, .25),
+                                  offset_varnames = c(.1, 0, 0, .1),
+                                  abbreviate_labs = F,
+                                  gp_labels = gpar(fontsize = 8)))
+
+# Desc(round.dist)
+```

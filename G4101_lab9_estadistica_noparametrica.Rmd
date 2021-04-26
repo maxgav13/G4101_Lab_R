@@ -1,0 +1,325 @@
+---
+title: "Lab 9: Estadistica Inferencial - No Parametrica"
+author: "Maximiliano Garnier Villarreal"
+output:
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    df_print: kable
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+always_allow_html: yes
+---
+
+```{r setup, include=FALSE, warning=F, message=FALSE}
+library(MOTE)
+library(papaja)
+library(DescTools) # tamanho del efecto
+library(effectsize)
+library(rstatix) # pruebas y tamanho del efecto
+library(rio) # importar datos
+library(tidymodels)
+library(tidyverse)
+options(digits = 3)
+
+theme_set(theme_minimal())
+```
+
+> Para las pruebas no parametricas se trabaja con los datos **rankeados**
+
+# Correlacion de Spearman
+
+$$H_0 : r_s = 0$$
+
+```{r}
+a = c(8,16,12,13,16,14,16,11,15,13)
+b = c(7,8,10,12,14,9,13,6,9,10)
+c = c(3,5,9,5,5,8,13,3,9,9)
+alfa = .1
+
+cordat = tibble(a,b,c)
+
+cor.test(a,b,method = "spearman",conf = 1-alfa) %>% 
+  tidy()
+
+SpearmanRho(a,b,conf.level = 1-alfa) # DescTools
+
+cor.test(rank(a),rank(b),conf = 1-alfa) %>% 
+  tidy()
+
+correlation::cor_test(cordat,'a','b',
+                      method = 'spearman',
+                      ci = 1-alfa)
+```
+
+# Prueba de Kolmogorov-Smirnov
+
+```{r}
+# Ho: muestras tienen igual forma, o, muestra sigue forma propuesta
+set.seed(4101)
+x = rnorm(100, 1, 3)
+y = rnorm(100, 2, 10)
+ks.test(x, y) %>% tidy()
+ks.test(x, 'pnorm', 1, 3) %>% 
+  tidy()
+ks.test(y, 'pnorm', 2, 10) %>% 
+  tidy()
+dat <- tibble(x = c(x, y), g = rep(c('1','2'), each = 100))
+ggplot(dat, aes(x, colour = g)) + 
+  stat_ecdf(size=1) +
+  theme(legend.position = c(.8,.3)) +
+  labs(col='Muestra')
+```
+
+# Prueba de rango con signo de Wilcoxon
+
+$$H_0 : mediana \ muestra = mediana \ hipotetica$$
+
+```{r}
+# Ho: Meadiana es igual a valor propuesto, o, mediana de las diferencias es igual a cero
+verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
+alfa = .05
+n = length(verm)
+
+wilcox.test(x = verm, mu=7, conf.int = T) %>% 
+  tidy()
+
+set.seed(101)
+wilcox_effsize(enframe(verm), value~1, mu = 7,
+               ci = T,conf.level = 1-alfa)
+
+rank_biserial(verm, mu = 7,ci = 1-alfa)
+```
+
+# Prueba de suma de rangos de Wilcoxon
+
+$$H_0 : mediana_1 = mediana_2$$
+
+```{r}
+# Ho: Mediana de A es igual a mediana de B
+A = c(25, 40, 34, 37, 38, 35, 29, 32, 35, 44, 27, 33, 37, 38, 36)
+B = c(45, 37, 36, 38, 49, 47, 32, 41, 38, 45, 33, 39, 46, 47, 40)
+alfa = .05
+
+mol = stack(list(A=A,B=B)) %>% 
+  as_tibble()
+
+N = nrow(mol)
+
+mol = mol %>% 
+  mutate(pos = rank(values))
+
+mol %>% 
+  group_by(ind) %>% 
+  summarise(mean(values),
+            median(values),
+            mean(pos),
+            median(pos))
+
+wilcox.test(values ~ ind, data = mol, conf.int = T) %>% 
+  tidy()
+
+set.seed(101)
+wilcox_effsize(mol, values ~ ind,
+               ci = T,conf.level = 1-alfa)
+
+rank_biserial(values ~ ind, data = mol, ci = 1-alfa)
+```
+
+# Prueba de Kruskal-Wallis
+
+$$H_0 : mediana_1 = mediana_2 = mediana_3 = \dotsb = mediana_n$$
+
+```{r}
+# Ho: Toda las medianas son iguales
+G1 = c(7,8,10,11) # Mt Mica
+G2 = c(4,5,7,8) # Sebago Bath
+G3 = c(1,2,4,5) # Black Mt
+alfa = .05
+
+Stacked = stack(list(G1=G1,G2=G2,G3=G3)) %>% 
+  as_tibble() %>% 
+  mutate(pos = rank(values))
+
+Stacked %>% 
+  group_by(ind) %>% 
+  summarise(mean(values),
+            median(values),
+            mean(pos),
+            median(pos))
+
+kruskal.test(values ~ ind, data = Stacked) %>% 
+  tidy()
+
+# ES
+# (H - k + 1) / (N - k)
+(7.65 - 3 + 1) / (12 - 3) # eta-cuadrado
+
+set.seed(101)
+kruskal_effsize(Stacked,values~ind,ci = T,conf.level = 1-alfa)
+
+rank_epsilon_squared(values ~ ind, data = Stacked, ci = 1-alfa)
+
+DunnTest(values~ind, Stacked) # DescTools
+
+KW.post = dunn_test(Stacked,values ~ ind) %>%
+  as_tibble() %>%
+  left_join(sjstats::mwu(Stacked,values,ind)$df %>% 
+              rename(group1 = grp1.label, group2 = grp2.label) %>%
+              select(contains('group'),r)) %>%
+  mutate(r.low = map2_dbl(.x = r, .y = (n1 + n2),
+                          ~CorCI(.x, n = .y, conf.level = 1-alfa)[2]),
+         r.high = map2_dbl(.x = r, .y = (n1 + n2),
+                           ~CorCI(.x, n = .y, conf.level = 1-alfa)[3]))
+KW.post
+```
+
+# Bootstrap con `rsample`
+
+Remuestreo con remplazamiento, a cada una de la muestras se le calcula el estadistico o dato de interes. El intervalo de confianza es a partir de cuantiles, por lo general 2.5% y 97.5% para un $1 - \alpha = 95 \%$
+
+## Media ($\bar{x}$)
+
+```{r}
+mu = 7
+alfa = .05
+n = length(verm)
+
+set.seed(4101)
+m = bootstraps(data = tibble(verm), times = 1000)
+
+avg = function(split) {
+  split %>% 
+    analysis() %>% 
+    pull(1) %>% 
+    mean()
+}
+
+d = function(split) {
+  vec = split %>% 
+    analysis() %>% 
+    pull(1)  
+  d = (mean(vec) - mu) / sd(vec)
+  return(d)
+}
+
+# avg2 = as_mapper(~ .x %>% analysis %>% pull(1) %>% mean)
+# avg3 = compose(mean, partial(pull, var=1), analysis)
+
+m = m %>% 
+  mutate(avg = map_dbl(splits, ~avg(.)),
+         d = map_dbl(splits, ~d(.)),
+         )
+```
+
+```{r}
+m.s = m %>% 
+  summarise_if(is.numeric,
+               .funs = list(media=~mean(.),
+                            sd=~sd(.),
+                            q1=~quantile(.,alfa/2),
+                            q2=~quantile(.,.5),
+                            q3=~quantile(.,1-alfa/2)))
+m.s %>% 
+  pivot_longer(cols = everything(),
+               names_to = c('param','stat'),
+               names_sep = '_',
+               values_to = 'value') %>% 
+  arrange(param)
+
+myvar = 'avg' # variable a graficar: avg, d
+
+ggplot(m, aes(get(myvar))) +
+  geom_histogram(bins = 20, col = 'black', fill = 'grey80') +
+  geom_vline(xintercept = unlist(m.s %>% select(starts_with(str_glue('{myvar}_q')))), 
+             col = c('blue','red','blue')) +
+  labs(x = myvar)
+
+```
+
+## $R^2$
+
+```{r}
+set.seed(4101)
+moluscos = tibble(A,B) %>% 
+  pivot_longer(1:2,names_to = 'aflor',values_to = 'longitud')
+alfa = .05
+R2 = bootstraps(data = moluscos, times = 1000, strata = 'aflor')
+
+r2 = function(split) {
+  split %>% 
+    analysis() %>% 
+    lm(longitud ~ aflor, data = .) %>% 
+    glance() %>% 
+    pull(r.squared)
+}
+
+R2 = R2 %>% 
+  mutate(r2 = map_dbl(splits, ~r2(.)))
+```
+
+```{r}
+R2.s = R2 %>% 
+  summarise_if(is.numeric,
+               .funs = list(media=~mean(.),
+                            q1=~quantile(.,alfa/2),
+                            q2=~quantile(.,.5),
+                            q3=~quantile(.,1-alfa/2)))
+R2.s
+
+ggplot(R2, aes(r2)) +
+  geom_histogram(bins = 20, col = 'black', fill = 'grey80') +
+  geom_vline(xintercept = R2.s[-1] %>% unlist(), 
+             col = c('blue','red','blue'))
+```
+
+## $\eta^2$
+
+```{r}
+set.seed(4101)
+alfa = .05
+eta2 = bootstraps(data = Stacked, times = 1000, strata = 'ind')
+
+eta = function(split) {
+  dat = split %>% 
+    analysis() 
+  H = kruskal.test(values ~ ind, data=dat) %>% 
+    tidy() %>% 
+    pull(statistic)
+  N = nrow(dat)
+  k = nlevels(dat$ind)
+  eta = (H - k + 1) / (N - k)
+  return(eta)
+}
+
+eta2 = eta2 %>% 
+  mutate(eta2 = map_dbl(splits, ~eta(.)))
+```
+
+```{r}
+eta2.s = eta2 %>% 
+  summarise_if(is.numeric,
+               .funs = list(media=~mean(.),
+                            q1=~quantile(.,alfa/2),
+                            q2=~quantile(.,.5),
+                            q3=~quantile(.,1-alfa/2)))
+eta2.s
+
+ggplot(eta2, aes(eta2)) +
+  geom_histogram(bins = 20, col = 'black', fill = 'grey80') +
+  geom_vline(xintercept = eta2.s[-1] %>% unlist(), 
+             col = c('blue','red','blue'))
+```

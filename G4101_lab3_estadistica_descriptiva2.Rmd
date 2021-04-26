@@ -1,0 +1,163 @@
+---
+title: "Lab 3: Estadistica Descriptiva 2"
+author: "Maximiliano Garnier Villarreal"
+output:
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    df_print: kable
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
+    number_sections: yes
+    theme: spacelab
+    toc: yes
+always_allow_html: yes
+---
+
+# Estadistica descriptiva
+
+```{r setup, include=FALSE, warning=F, message=FALSE}
+library(DescTools)
+library(janitor)
+library(highcharter)
+library(tidymodels)
+library(tidyverse)
+library(rio)
+
+mytheme = theme(panel.grid.major = element_blank(),
+                panel.grid.minor = element_blank(),
+                panel.background = element_blank(),
+                axis.line = element_line(color = "black"),
+                legend.key = element_rect(fill = "white"))
+```
+
+
+Aqui estoy generando dos set de datos aleatorios (x,y), y pesos aleatorios para luego usarlos en los calculos.
+
+```{r}
+set.seed(10)
+x = rnorm(100, mean=50, sd=5)
+y = 20 * x + rnorm(100, mean=50, sd=40) + 10
+w = floor(runif(100,min=5,max=10)) # crea 100 valores aleatorios y los redondea para abajo
+
+DF = tibble(x,y,w)
+DF
+```
+
+## Bivariable
+
+Las funciones covarianza (`cov`) y correlacion (`cor`) pueden actual sobre vectors o sobre DataFrames. En estos ultimos el resultado va a ser una matriz de covarianza o correlacion.
+
+```{r}
+cov(x,y) # covarianza
+cor(x,y,method = "pearson") # coeficiente de correlacion de Pearson
+cor(x,y,method = "spearman") # coeficiente de correlacion de Spearman
+
+cov(DF) # matriz de varianza-covarianza
+cor(DF) # matriz de coeficientes de correlacion
+
+GGally::ggcorr(DF, label = T) # grafico estatico de coeficientes de correlacion
+```
+
+El siguiente codigo genera un grafico interactivo de la matriz de correlacion (Solo se despliega en formato HTML).
+
+```{r eval=knitr::is_html_output()}
+hchart(cor(DF)) # grafico interactivo de coeficientes de correlacion
+```
+
+## Regresion
+
+Para presentar caracteristicas de los modelos de forma mas estetica y ordenada se usan las funciones `tidy` y `glance` del paquete *broom*. `tidy` genera la tabla resumen de los coeficientes y sus estadisticas y `glance` genera una tabla con medidas de ajuste, incluyendo el $R^2$.
+
+### Lineal
+
+$y \thicksim \hat{b}_0 + x\hat{b}_1 + \epsilon$
+
+```{r}
+mod1 = lm(y~x, data = DF) # modelo de regresion lineal
+coef = mod1$coefficients # obtiene los coeficientes del modelo de regresion
+mod1 %>% tidy()
+mod1 %>% glance()
+summary(mod1) # resumen del modelo
+sjstats::rmse(mod1) # rmse
+sjstats::cv(mod1) # cv
+performance::r2(mod1) # R2
+plot(mod1) # graficos diagnostico
+```
+
+### Cuadratica
+
+$y \thicksim \hat{b}_0 + x\hat{b}_1 + x^2\hat{b}_2 + \epsilon$
+
+```{r}
+mod2 = lm(y~x+I(x^2), data = DF) # modelo de regresion cuadratica
+coef2 = mod2$coefficients
+mod2 %>% tidy()
+mod2 %>% glance()
+summary(mod2) # resumen del modelo
+sjstats::rmse(mod2) # rmse
+sjstats::cv(mod2) # cv
+performance::r2(mod2) # R2
+plot(mod2) # graficos diagnostico
+```
+
+### Compara modelos
+```{r}
+DescTools::TMod(mod1,mod2)
+```
+
+### Graficos
+
+Para agregar lineas de tendencia en *ggplot2* se usa la funcion `geom_smooth`. Por defecto ajusta una curva loess, pero para cambiarlo se usa `method = 'lm'`, y para especificar una ecuacion diferente a la regresion simple se usa `formula`, donde `y` y `x` son genericos, **NO** hay que poner el nombre de las variables que se esta graficando.
+
+```{r}
+ggplot(DF, aes(x,y)) + 
+  geom_point() + 
+  mytheme
+
+ggplot(DF, aes(x,y)) + 
+  geom_point() + 
+  geom_smooth() + 
+  mytheme
+
+# grafico regresion lineal
+ggplot(DF, aes(x,y)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm') + 
+  mytheme
+
+# grafico regresion cuadratica
+ggplot(DF, aes(x,y)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm', formula = y~poly(x, 2)) + 
+  mytheme
+
+# grafico regresion lineal y cuadratica
+ggplot(DF, aes(x,y)) + 
+  geom_point() + 
+  geom_smooth(method = 'lm', aes(col='Lineal')) + 
+  geom_smooth(method = 'lm', formula = y~poly(x, 2), aes(col='Cuadratica')) + 
+  mytheme
+```
+
+
+# Probabilidad
+
+```{r}
+A = matrix(data = c(15,24,23,14,11,13),nrow = 2)
+colnames(A) = c('A','B','C')
+row.names(A) = c('X','Y')
+PercTable(A)
+PercTable(A, margins = c(1,2))
+```
+
