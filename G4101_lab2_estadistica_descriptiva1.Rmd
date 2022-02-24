@@ -29,14 +29,24 @@ always_allow_html: yes
 ```{r setup, include=FALSE, warning=F, message=FALSE}
 library(DescTools)
 library(janitor)
+library(gtsummary)
 library(tidyverse)
 library(rio)
 
-mytheme = theme(panel.grid.major = element_blank(),
-                panel.grid.minor = element_blank(),
-                panel.background = element_blank(),
-                axis.line = element_line(color = "black"),
-                legend.key = element_rect(fill = "white"))
+theme_set(theme_minimal())
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE,
+  # fig.path = "figs/",
+  fig.retina = 3,
+  fig.width = 8,
+  fig.asp = 0.618,
+  fig.align = "center",
+  out.width = "90%"
+)
 ```
 
 
@@ -47,14 +57,13 @@ Se habia mencionado antes que el paquete `purrr` permite iterar sobre vectores, 
 La funcion basica de `purrr` es `map(.x, .f, ...)`, donde `.x` es el objeto sobre el cual iterar, `.f` es la funcion o tarea a realizar durante la iteracion, y `...` son argumentos extra dependiendo de la funcion. Esta funcion siempre va a resultar en una lista; las variaciones de esta son especificas para cuando se conoce cual va a ser el tipo de dato de salida. `map_dbl` (como en el ejemplo) se usa cuando el resultado de la funcion es un numero con decimales.
 
 ```{r}
-# Aqui estoy generando dos set de datos aleatorios (x,y)
-set.seed(10)
-x = rnorm(n = 100, mean=50, sd=5)
-y = 20 * x + rnorm(n = 100, mean=50, sd=40) + 10
-DF = tibble(x,y) # tabla de datos
-map_dbl(.x = DF,.f = sum) # suma de cada columna
-map_dbl(DF,mean) # media de cada columna
-map_dbl(DF,sd) # desviacion estandar de cada columna
+rock %>% head()
+
+map_dbl(.x = rock,.f = sum) # suma de cada columna
+
+map_dbl(rock,mean) # media de cada columna
+
+map_dbl(rock,sd) # desviacion estandar de cada columna
 ```
 
 
@@ -62,39 +71,42 @@ map_dbl(DF,sd) # desviacion estandar de cada columna
 
 ### Tabla de frecuencias
 
-La forma numerica de resumir datoa categoricos es por medio de tablas de frecuencias o tablas de contingencia. Hay diferentes funciones para realizar estas tareas, aqui se muestran 2: `ftable` del paquete basico y `tabyl` del paquete *janitor*. Este ultimo paquete permite generar tablas mas esteticas y con gran detalle.
+La forma numerica de resumir datos categoricos es por medio de tablas de frecuencias o tablas de contingencia. Hay diferentes funciones para realizar estas tareas, aqui se muestran 3: `ftable` del paquete basico, `tabyl` del paquete *janitor*, y `tbl_cross` del paquete *gtsummary*. Estos ultimos 2 paquetes permiten generar tablas mas esteticas y con gran detalle.
 
 ```{r}
 dat1 = import("data/LungCapData2.csv")
-tabyl(dat = dat1,var1 = Gender,var2 = Smoke) %>% adorn_title()
+
+tabyl(dat = dat1,var1 = Gender,var2 = Smoke) %>% 
+  adorn_title()
+
 ftable(Smoke~Gender,dat1)
+
 tabyl(dat1,Smoke)
+
 tabyl(dat1,Gender,Smoke) %>% 
   adorn_percentages('col') %>% 
   adorn_title()
+
 tabyl(dat1,Gender,Smoke) %>% 
-  adorn_percentages('row') %>% 
-  adorn_title()
-tabyl(dat1,Gender,Smoke) %>% 
-  adorn_percentages('col') %>%
+  adorn_percentages('all') %>%
   adorn_pct_formatting(digits = 2) %>% 
   adorn_title()
+
+tbl_cross(dat1,Gender,Smoke,percent = 'cell')
 ```
 
 ### Graficos
 
 #### Barras
 
-Para `geom_bar` el argumento *position* puede tener cualquiera de estos tres valores: stack, dodge o fill.
+Para `geom_bar` el argumento *position* puede tener cualquiera de estos tres valores: 'stack', 'dodge' o 'fill.'
 
 ```{r}
 ggplot(data = dat1, aes(x = Gender)) +
-  geom_bar() +
-  mytheme
+  geom_bar()
 
 ggplot(data = dat1, aes(x = Gender,fill=Smoke)) +
-  geom_bar(position = 'stack') +
-  mytheme
+  geom_bar(position = 'stack')
 ```
 
 
@@ -103,9 +115,14 @@ ggplot(data = dat1, aes(x = Gender,fill=Smoke)) +
 ```{r}
 data("airquality")
 head(airquality)
+
 map_dbl(.x = airquality,.f = mean)
+
 map_dbl(airquality,mean,na.rm=T)
+
 airquality %>% map_dbl(~ mean(.x,na.rm = T))
+
+airquality %>% map_df(~ mean(.x,na.rm = T))
 ```
 
 ### Tabla de Frecuencias
@@ -114,7 +131,9 @@ Para tablas de frecuencias con datos numericos estos deben ser separados en clas
 
 ```{r}
 Freq(x = airquality$Temp)
+
 Freq(airquality$Temp, breaks = 6)
+
 Freq(airquality$Temp, breaks = seq(50,100,10))
 ```
 
@@ -128,18 +147,30 @@ Dentro de `geom_histogram` hay 3 opciones para definir la discretizacion:
 * binwidth = El ancho de las clases
 * breaks = Un vector con los puntos donde separar los datos
 
+*Frecuencias absolutas*
+
 ```{r}
 ggplot(data = airquality, aes(x = Temp)) + 
-  geom_histogram(binwidth = 10) + 
-  mytheme
+  geom_histogram(binwidth = 5, col='black', fill='lightblue')
+```
+
+*Frecuencias relativas*
+
+```{r}
+ggplot(data = airquality, aes(x = Temp)) + 
+  geom_histogram(binwidth = 5, aes(y=stat(count/sum(count))), 
+                 col='black', fill='lightblue')
 ```
 
 ```{r}
 tabyl(airquality,Month)
+
 airq = airquality %>% 
   mutate(Month = factor(Month,
                         levels = 5:9,
-                        labels = c("Mayo", "Junio", "Julio", "Agosto", "Setiembre")))
+                        labels = c("Mayo", "Junio", "Julio", 
+                                   "Agosto", "Setiembre")))
+
 tabyl(airq,Month)
 ```
 
@@ -147,8 +178,11 @@ tabyl(airq,Month)
 
 ```{r}
 ggplot(data = airq, aes(x = Month, y = Temp)) +
+  geom_boxplot()
+
+ggplot(data = airq, aes(x = Month, y = Temp)) +
   geom_boxplot() +
-  mytheme
+  stat_summary(fun = mean, geom = 'point', shape=3)
 ``` 
 
 ### Medidas de tendencia central
@@ -156,13 +190,13 @@ ggplot(data = airq, aes(x = Month, y = Temp)) +
 Se muestran diferentes funciones para caracterizar la tendencia central en un vector corriente, uno con un valor atipico y otro con un valor faltante, para ver como se ven afectadas las diferentes estadisticas.
 
 ```{r}
-myvector = c(22,10,10,16,15,15,24,19,15,19,18,16,18,12,17,17,11,18)
+myvector = c(22,10,10,16,15,15,24,19,15,
+             19,18,16,18,12,17,17,11,18)
 summary(myvector)
 mean(myvector)
 median(myvector)
 DescTools::Gmean(myvector) # media geometrica
 DescTools::Mode(myvector) # moda
-GMisc::mode_val(myvector) # moda
 
 outlier = c(myvector,200)
 summary(outlier)
@@ -170,7 +204,6 @@ mean(outlier)
 median(outlier)
 DescTools::Gmean(outlier)
 DescTools::Mode(outlier)
-GMisc::mode_val(outlier)
 
 miss = c(myvector,NA)
 summary(miss)
@@ -178,7 +211,6 @@ mean(miss, na.rm = T)
 median(miss, na.rm = T)
 DescTools::Gmean(miss, na.rm = T)
 DescTools::Mode(miss, na.rm = T)
-GMisc::mode_val(miss)
 ```
 
 ### Medidas de dispersion
@@ -189,7 +221,7 @@ range(myvector)
 diff(range(myvector))
 var(myvector) # varianza
 sd(myvector) # desviacion estandar
-GMisc::coef_var(myvector) # coeficiente de variacion
+DescTools::CoefVar(myvector) # coeficiente de variacion
 IQR(myvector) # rango intercuartil
 mad(myvector) # desviacion absoluta de la mediana
 sd(outlier)
@@ -213,5 +245,6 @@ Se muestran varias funciones que generan un resumen general de un DataFrame depe
 skimr::skim(myvector)
 psych::describe(myvector)
 DescTools::Desc(myvector)
+summarytools::descr(myvector)
 ```
 

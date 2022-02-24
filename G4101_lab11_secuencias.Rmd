@@ -29,7 +29,11 @@ library(GMisc)
 library(ggeffects)
 library(DescTools)
 library(broom)
+library(timetk)
 library(tidyverse)
+library(easystats)
+
+theme_set(theme_minimal(base_size = 12))
 ```
 
 
@@ -38,7 +42,8 @@ library(tidyverse)
 Se determina si la longitud de los intervalos varia en el tiempo/espacio
 
 ```{r}
-x = c(0.5,2.3,3.2,4.2,4.9,7,11.4,12.7,14.6,16,21.5,22.5,25.8,30.3,31.9,36.2,42.8)
+x = c(0.5,2.3,3.2,4.2,4.9,7,11.4,12.7,14.6,
+      16,21.5,22.5,25.8,30.3,31.9,36.2,42.8)
 n = length(x)
 i = seq(1,n-1,1)
 h = NULL
@@ -81,31 +86,46 @@ alpha = 0.05
 depth = seq(0,35,5) # profundidad
 moist = c(124,78,54,35,30,21,22,18) # contenico de humedad
 
+DF3 = tibble(depth, moist)
+
 mod2 = lm(moist~depth) # modelo lineal
 
-tidy(mod2, conf.int = T,conf.level = .95) # resumen modelo lineal
+tidy(mod2, conf.int = T, conf.level = .95) # resumen modelo lineal
 glance(mod2) # ajuste del modelo lineal
 
 mod3 = lm(moist~depth+I(depth^2)) # modelo cuadratico
 
-tidy(mod3, conf.int = T,conf.level = .95) # resumen modelo cuadratico
+tidy(mod3, conf.int = T, conf.level = .95) # resumen modelo cuadratico
 glance(mod3) # ajuste del modelo cuadratico
 
-anova(mod2,mod3) # comparacion de modelos
-
-(rmse1 = RMSE(mod2)) # error del modelo lineal
-(rmse2 = RMSE(mod3)) # error del modelo cuadratico
+rmse(mod2) # error del modelo lineal
+rmse(mod3) # error del modelo cuadratico
 sjstats::cv(mod2) # coef var modelo lineal
 sjstats::cv(mod3) # coef var modelo cuadratico
 
+anova(mod2,mod3) # comparacion de modelos
+
+comp.mods = compare_performance(mod2,mod3,rank = T) # performance
+comp.mods
+plot(comp.mods)
+
 TMod(mod2,mod3)
 
-DF3 = tibble(depth, moist)
+sjPlot::plot_models(mod2,mod3,
+                    std.est = NULL, # 'std', NULL
+                    show.values = T,
+                    show.p = T,
+                    m.labels = c('Lineal','Cuadrático'),
+                    legend.title = 'Modelo')
+
+ggstatsplot::ggcoefstats(mod3,exclude.intercept = T)
+
 ggplot(DF3, aes(depth, moist)) + 
   geom_point() +
   geom_smooth(method = 'lm', aes(col = 'Lineal')) + 
-  geom_smooth(method = 'lm', aes(col = 'Cuadratico'), formula = y ~ poly(x,2)) +
-  theme_classic()
+  geom_smooth(method = 'lm', aes(col = 'Cuadratico'), 
+              formula = y ~ poly(x,2)) + 
+  scale_color_brewer('Modelo', palette = 'Dark2')
 
 plot(ggpredict(mod2))
 plot(ggpredict(mod2),rawdata = T)
@@ -125,27 +145,33 @@ Pasos:
 2. Si hay tendencia, calcular los residuos
 
 ```{r}
-set.seed(1248)
-x = 1:50
-y = 1.5*x + 10*rnorm(50)
+AirPassengers
+zoo::autoplot.zoo(AirPassengers) # estatico
+AirPassengers %>% tidy() %>% dygraphs::dygraph() # interactivo
+AirPassengers %>% highcharter::hchart() # interactivo
 
-DF = tibble(x,y)
+DF = AirPassengers %>% 
+  tidy() %>% 
+  mutate(log.value = log(value))
 
-ggplot(DF, aes(x,y)) +
-  geom_point() +
-  geom_smooth(method = 'lm') + theme_classic()
+DF %>% 
+  plot_time_series(index,value,
+                   .interactive = F) # estatico o interactivo
 
-mod = lm(y~x, data = DF)
+ggplot(DF, aes(index,value)) +
+  geom_line() +
+  geom_smooth(method = 'lm')
 
-tidy(mod) # resumen del modelo
-glance(mod) # ajuste del modelo
+mod = lm(value ~ index, data = DF)
+
+model_parameters(mod) # resumen del modelo
+model_performance(mod) # ajuste del modelo
 
 DF2 = augment(mod)  # data frame incluyendo residuales 
 
-ggplot(DF2, aes(x,.resid)) +
+ggplot(DF2, aes(index,.resid)) +
   geom_line() + 
-  geom_hline(yintercept = 0, col = 2) +
-  theme_classic()
+  geom_hline(yintercept = 0, col = 2)
 ```
 
 
@@ -153,26 +179,60 @@ ggplot(DF2, aes(x,.resid)) +
 
 Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados equidistantemente en el espacio/tiempo.
 
-```{r}
-lh
-length(lh)
-ac1 = acf(lh)
-ac1 = acf(lh,lag.max = length(lh)/2)
-lagt = ac1$acf[ac1$acf<0]
-(rtau1 = max(ac1$acf[which(ac1$acf==lagt[1]):length(ac1$acf)])) # valor maximo de autocorrelacion
-(tau1 = ac1$lag[ac1$acf==rtau1]) # lag donde ocurre el valor maximo de autocorrelacion
-(z1 = rtau1*sqrt(length(lh)-tau1+3)) # test de significancia de autocorrelacion
+Sin remover tendencia
 
-ldeaths
-length(ldeaths)
-frequency(ldeaths)
-ac2 = acf(ldeaths)
-ac2 = acf(ldeaths,lag.max = length(ldeaths)/3)
-lagt = ac2$acf[ac2$acf<0]
-(rtau2 = max(ac2$acf[which(ac2$acf==lagt[1]):length(ac2$acf)])) # valor maximo de autocorrelacion
-(tau2 = ac2$lag[ac2$acf==rtau2] )# lag donde ocurre el valor maximo de autocorrelacion
-(z2 = rtau2*sqrt(length(ldeaths)-tau2+3)) # test de significancia de autocorrelacion
+```{r}
+DF %>% plot_acf_diagnostics(index,value,
+                            .lags = nrow(.)/3,
+                            .show_white_noise_bars = T,
+                            .interactive = T)
 ```
+
+Despues de remover tendencia
+
+```{r}
+DF2 %>% plot_acf_diagnostics(index,.resid,
+                             .lags = nrow(.)/3,
+                             .show_white_noise_bars = T,
+                             .interactive = T)
+```
+
+## Objeto dataframe
+
+```{r}
+ac.1 = DF2 %>% tk_acf_diagnostics(index, .resid, .lags = nrow(.)/3)
+ac.1
+```
+
+```{r}
+lag.t = ac.1 %>% filter(ACF<0)
+
+(rtau.1 = max(ac.1[which(ac.1$lag==pull(lag.t[1,1])):nrow(ac.1),2])) # valor maximo de autocorrelacion
+
+(tau.1 = ac.1$lag[ac.1$ACF==rtau.1]) # lag donde ocurre el valor maximo de autocorrelacion
+
+(z.1 = rtau.1*sqrt(nrow(DF2)-tau.1+3)) # test de significancia de autocorrelacion
+```
+
+## Objeto serie temporal
+
+```{r}
+DF.ts = zoo::zoo(DF2$.resid,DF2$index)
+DF.ts = lh
+
+(n = length(DF.ts))
+(f = frequency(DF.ts))
+
+ac1 = acf(DF.ts,lag.max = length(DF.ts)/3)
+lagt = ac1$acf[ac1$acf<0]
+
+(rtau1 = max(ac1$acf[which(ac1$acf==lagt[1]):length(ac1$acf)])) # valor maximo de autocorrelacion
+
+(tau1 = ac1$lag[ac1$acf==rtau1]*f) # lag donde ocurre el valor maximo de autocorrelacion
+
+(z1 = rtau1*sqrt(n-tau1+3)) # test de significancia de autocorrelacion
+```
+
 
 
 
