@@ -33,7 +33,27 @@ library(gtsummary)
 library(tidyverse)
 library(rio)
 
-theme_set(theme_minimal())
+theme_set(theme_minimal(base_size = 12))
+
+formato.salida = case_when(
+  knitr::is_html_output() ~ 'html',
+  knitr::is_latex_output() ~ 'latex',
+  T  ~ 'simple',
+)
+
+options(
+  knitr.table.format = formato.salida
+  # OutDec = ','
+  , digits = 3
+)
+
+theme_gtsummary_language(
+  language = "es",
+  # decimal.mark = ',',
+  # big.mark = '.',
+  iqr.sep = NULL,
+  ci.sep = NULL
+)
 
 knitr::opts_chunk$set(
   echo = TRUE,
@@ -74,7 +94,7 @@ map_dbl(rock,sd) # desviacion estandar de cada columna
 La forma numerica de resumir datos categoricos es por medio de tablas de frecuencias o tablas de contingencia. Hay diferentes funciones para realizar estas tareas, aqui se muestran 3: `ftable` del paquete basico, `tabyl` del paquete *janitor*, y `tbl_cross` del paquete *gtsummary*. Estos ultimos 2 paquetes permiten generar tablas mas esteticas y con gran detalle.
 
 ```{r}
-dat1 = import("data/LungCapData2.csv")
+dat1 = import("data/LungCapData2.csv", setclass = 'tbl')
 
 tabyl(dat = dat1,var1 = Gender,var2 = Smoke) %>% 
   adorn_title()

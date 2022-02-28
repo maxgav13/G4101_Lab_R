@@ -26,14 +26,48 @@ always_allow_html: yes
 
 ```{r setup, include=FALSE, warning=F, message=FALSE}
 library(GMisc)
+library(flextable)
 library(ggeffects)
 library(DescTools)
+library(modelsummary)
 library(broom)
 library(timetk)
 library(tidyverse)
 library(easystats)
 
 theme_set(theme_minimal(base_size = 12))
+
+formato.salida = case_when(
+  knitr::is_html_output() ~ 'html',
+  knitr::is_latex_output() ~ 'latex',
+  T  ~ 'simple',
+)
+
+options(
+  knitr.table.format = formato.salida,
+  modelsummary_get = 'all'
+  # OutDec = ','
+  , digits = 3
+)
+
+set_flextable_defaults(
+  # decimal.mark = ',',
+  # big.mark = '.',
+  digits = 3
+)
+
+knitr::opts_chunk$set(
+  echo = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  error = FALSE,
+  # fig.path = "figs/",
+  fig.retina = 3,
+  fig.width = 8,
+  fig.asp = 0.618,
+  # fig.align = "center",
+  out.width = "90%"
+)
 ```
 
 
@@ -109,7 +143,29 @@ comp.mods = compare_performance(mod2,mod3,rank = T) # performance
 comp.mods
 plot(comp.mods)
 
-TMod(mod2,mod3)
+modelsummary(list(Lineal=mod2,Cuadratico=mod3),
+             title = 'Comparasion de modelos',
+             statistic = 'conf.int',
+             coef_omit = NULL, # 'Int'
+             gof_omit = '^(?!R|Num|A)',
+             stars = T,
+             fmt = 4)
+
+sjPlot::tab_model(mod2,mod3,
+                  title = 'Comparasion de modelos',
+                  show.std = NULL, # 'std', NULL
+                  show.est = T,
+                  show.intercept = T,
+                  show.ci = .95,
+                  collapse.ci = F,
+                  ci.hyphen = ', ',
+                  show.stat = F,
+                  show.p = T,
+                  p.style = "stars",
+                  show.aic = T,
+                  dv.labels = c('Lineal','Cuadrático'),
+                  digits = 4,
+                  file = 'sjplot_models_lab11.doc')
 
 sjPlot::plot_models(mod2,mod3,
                     std.est = NULL, # 'std', NULL
