@@ -2,12 +2,9 @@
 title: "Lab 3: Estadistica Descriptiva 2"
 author: "Maximiliano Garnier Villarreal"
 output:
-  html_document:
-    df_print: paged
-    highlight: textmate
-    keep_md: yes
+  word_document:
+    df_print: kable
     number_sections: yes
-    theme: spacelab
     toc: yes
   pdf_document:
     df_print: kable
@@ -20,9 +17,12 @@ output:
     number_sections: yes
     theme: flatly
     toc: yes
-  word_document:
-    df_print: kable
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
     number_sections: yes
+    theme: spacelab
     toc: yes
 always_allow_html: yes
 ---
@@ -30,9 +30,9 @@ always_allow_html: yes
 # Estadistica descriptiva bivariable
 
 ```{r setup, include=FALSE, warning=F, message=FALSE}
-library(flextable)
 library(kableExtra)
 library(gtsummary)
+library(flextable)
 library(DescTools)
 library(janitor)
 library(highcharter)
@@ -103,19 +103,17 @@ airq = airquality %>%
                 .names = '{.col}_{.fn}')
                 )
 
-airq 
-# %>% head() %>% 
-#   flextable() %>%
-#   colformat_double(j = 7:14) %>%
-#   fit_to_width(max_width = 7)
+airq %>% head() %>%
+  flextable() %>%
+  colformat_double(j = 7:14) %>%
+  fit_to_width(max_width = 7)
 ```
 
 ```{r datos-num}
 airq2 = airq %>% 
   select(where(is.numeric) & !ends_with(c('_c','_z')))
 
-airq2 
-# %>% head() %>% flextable()
+airq2 %>% head() %>% flextable()
 ```
 
 ## Covarianza & Correlacion
@@ -140,18 +138,17 @@ cor(airq2, use = 'pairwise.complete.obs') # matriz de correlacion de Pearson
 
 ```{r cor-tb}
 corrr::correlate(airq2, diagonal = 1, 
-                 method = 'pearson') 
-# %>% 
-#   flextable() %>% 
-#   colformat_double()
+                 method = 'pearson') %>%
+  flextable() %>%
+  colformat_double()
 ```
 
 ```{r cor-pairs}
-correlation(airq2, method = 'pearson') 
-# %>% 
-#   tibble() %>% 
-#   flextable() %>% 
-#   colformat_double()
+correlation(airq2, method = 'pearson') %>%
+  tibble() %>%
+  flextable() %>%
+  colformat_double() %>% 
+  fit_to_width(max_width = 7)
 ```
 
 Grafico estatico de coeficientes de correlacion
@@ -178,17 +175,18 @@ Usando variables estandarizadas
 
 ```{r cor-z-mod}
 lm(Temp_z ~ Wind_z, data = airq) %>% 
-  tidy() 
-# %>% 
-#   flextable() %>% 
-#   colformat_double()
+  tidy() %>%
+  flextable() %>%
+  colformat_double()
 ```
 
 Estandarizando el modelo con variables originales
 
 ```{r cor-mod-z}
 lm(Temp ~ Wind, data = airq) %>% 
-  standardize_parameters(method = 'refit')
+  standardize_parameters(method = 'refit') %>%
+  flextable() %>%
+  colformat_double()
 ```
 
 Correlacion y covarianza entre variables estandarizadas
@@ -209,13 +207,23 @@ mod1 = lm(Temp ~ Solar.R, data = airq) # modelo de regresion lineal
 ```
 
 ```{r mod-lin-param}
-mod1 %>% tidy()
-mod1 %>% model_parameters()
+mod1 %>% tidy() %>%
+  flextable() %>%
+  colformat_double()
+mod1 %>% model_parameters() %>%
+  flextable() %>%
+  colformat_double()
 ```
 
 ```{r mod-lin-fit}
-mod1 %>% glance()
-mod1 %>% model_performance()
+mod1 %>% glance() %>%
+  flextable() %>%
+  colformat_double() %>% 
+  fit_to_width(max_width = 7)
+
+mod1 %>% model_performance() %>%
+  flextable() %>%
+  colformat_double()
 ```
 
 ```{r mod-lin-cv}

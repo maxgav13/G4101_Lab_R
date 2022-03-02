@@ -2,8 +2,10 @@
 title: "Lab 11: Secuencias"
 author: "Maximiliano Garnier Villarreal"
 output:
-  html_notebook:
+  html_document:
+    df_print: paged
     highlight: pygments
+    keep_md: yes
     number_sections: yes
     theme: flatly
     toc: yes
@@ -14,12 +16,10 @@ output:
     keep_tex: yes
     number_sections: yes
     toc: yes
-  html_document:
-    df_print: paged
-    highlight: textmate
-    keep_md: yes
+  html_notebook:
+    highlight: pygments
     number_sections: yes
-    theme: spacelab
+    theme: flatly
     toc: yes
 always_allow_html: yes
 ---
@@ -110,85 +110,141 @@ RunsTest(dens2,correct = F) %>% tidy() # test de corridas
 
 # Regresion
 
-La idea es determinar si un modelo es significativo o no, o sea si los coeficientes (especialmente la pendiente $\bar{b}_1$) son significativos
+La idea es determinar si un modelo es significativo o no, o sea si los coeficientes (especialmente la pendiente $\hat{b}_1$) son significativos
 
 En el caso de un modelo mas complejo de uno lineal la idea es determinar si la adicion de los nuevos terminos es significativa y explica (se ajusta) mejor (a) los datos
 
-```{r}
+```{r reg-data}
 alpha = 0.05
 
-depth = seq(0,35,5) # profundidad
-moist = c(124,78,54,35,30,21,22,18) # contenico de humedad
+depth = seq(1,36,5) # profundidad
+moist = c(124,78,54,35,30,21,22,18) # contenido de humedad
 
 DF3 = tibble(depth, moist)
+```
 
-mod2 = lm(moist~depth) # modelo lineal
+```{r}
+ggplot(DF3, aes(depth,moist)) + 
+  geom_point()
+```
 
-tidy(mod2, conf.int = T, conf.level = .95) # resumen modelo lineal
-glance(mod2) # ajuste del modelo lineal
+```{r reg-lin}
+fit1 = lm(moist~depth) # modelo lineal
 
-mod3 = lm(moist~depth+I(depth^2)) # modelo cuadratico
+tidy(fit1, conf.int = T, conf.level = .95) # resumen modelo lineal
+model_performance(fit1) # ajuste del modelo lineal
 
-tidy(mod3, conf.int = T, conf.level = .95) # resumen modelo cuadratico
-glance(mod3) # ajuste del modelo cuadratico
+sjstats::cv(fit1) # coef var modelo lineal
 
-rmse(mod2) # error del modelo lineal
-rmse(mod3) # error del modelo cuadratico
-sjstats::cv(mod2) # coef var modelo lineal
-sjstats::cv(mod3) # coef var modelo cuadratico
+check_model(fit1,panel = F)
+```
 
-anova(mod2,mod3) # comparacion de modelos
+```{r reg-cuad}
+fit2 = lm(moist~depth+I(depth^2)) # modelo cuadratico
 
-comp.mods = compare_performance(mod2,mod3,rank = T) # performance
+tidy(fit2, conf.int = T, conf.level = .95) # resumen modelo cuadratico
+model_performance(fit2) # ajuste del modelo cuadratico
+
+sjstats::cv(fit2) # coef var modelo cuadratico
+
+check_model(fit2,panel = F)
+```
+
+```{r reg-log}
+fit3 = lm(moist~log(depth)) # modelo logaritmico
+
+tidy(fit3, conf.int = T, conf.level = .95) # resumen modelo cuadratico
+model_performance(fit3) # ajuste del modelo cuadratico
+
+sjstats::cv(fit3) # coef var modelo logaritmico
+
+check_model(fit3,panel = F)
+```
+
+```{r reg-plots}
+ggplot(DF3, aes(depth, moist)) + 
+  geom_point(size=3) +
+  geom_smooth(method = 'lm', aes(col = 'Lineal'), se = F) + 
+  geom_smooth(method = 'lm', aes(col = 'Cuadratico'), se = F,
+              formula = y ~ poly(x,2)) +
+  geom_smooth(method = 'lm', aes(col = 'Logaritmico'), se = F,
+              formula = y ~ log(x)) +
+  scale_color_brewer('Modelo', palette = 'Dark2')
+```
+
+```{r reg-lin-plot}
+plot(ggpredict(fit1),rawdata = T)
+```
+
+```{r reg-cuad-plot}
+plot(ggpredict(fit2),rawdata = T)
+```
+
+```{r reg-log-plot}
+plot(ggpredict(fit3),rawdata = T)
+```
+
+## Comparacion de modelos
+
+```{r comp-anova}
+anova(fit1,fit2,fit3) %>% parameters() %>% tibble()
+```
+
+```{r comp-performance}
+comp.mods = compare_performance(fit1,fit2,fit3,rank = T) # performance
 comp.mods
 plot(comp.mods)
+```
 
-modelsummary(list(Lineal=mod2,Cuadratico=mod3),
+```{r comp-modsum}
+modelsummary(list(Lineal=fit1,Cuadratico=fit2,Logaritmico=fit3),
              title = 'Comparasion de modelos',
              statistic = 'conf.int',
              coef_omit = NULL, # 'Int'
              gof_omit = '^(?!R|Num|A)',
              stars = T,
-             fmt = 4)
+             fmt = 2)
+```
 
-sjPlot::tab_model(mod2,mod3,
+```{r comp-sjtab}
+sjPlot::tab_model(fit1,fit2,fit3,
                   title = 'Comparasion de modelos',
                   show.std = NULL, # 'std', NULL
                   show.est = T,
                   show.intercept = T,
                   show.ci = .95,
-                  collapse.ci = F,
+                  collapse.ci = T,
                   ci.hyphen = ', ',
                   show.stat = F,
                   show.p = T,
                   p.style = "stars",
                   show.aic = T,
-                  dv.labels = c('Lineal','Cuadrático'),
-                  digits = 4,
+                  dv.labels = c('Lineal','Cuadrático','Logaritmico'),
+                  digits = 2,
                   file = 'sjplot_models_lab11.doc')
+```
 
-sjPlot::plot_models(mod2,mod3,
+```{r comp-sjplot}
+sjPlot::plot_models(fit1,fit2,fit3,
                     std.est = NULL, # 'std', NULL
                     show.values = T,
                     show.p = T,
-                    m.labels = c('Lineal','Cuadrático'),
+                    m.labels = c('Lineal','Cuadrático','Logaritmico'),
                     legend.title = 'Modelo')
-
-ggstatsplot::ggcoefstats(mod3,exclude.intercept = T)
-
-ggplot(DF3, aes(depth, moist)) + 
-  geom_point() +
-  geom_smooth(method = 'lm', aes(col = 'Lineal')) + 
-  geom_smooth(method = 'lm', aes(col = 'Cuadratico'), 
-              formula = y ~ poly(x,2)) + 
-  scale_color_brewer('Modelo', palette = 'Dark2')
-
-plot(ggpredict(mod2))
-plot(ggpredict(mod2),rawdata = T)
-plot(ggpredict(mod3),rawdata = T)
-
 ```
 
+```{r cuad-stats-plot}
+ggstatsplot::ggcoefstats(fit2,exclude.intercept = T)
+```
+
+```{r log-stats-plot}
+ggstatsplot::ggcoefstats(fit3,exclude.intercept = T)
+```
+
+
+# Autocorrelacion
+
+Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados equidistantemente en el espacio/tiempo.
 
 ## Como remover una tendencia de una serie de datos
 
@@ -200,12 +256,20 @@ Pasos:
 
 2. Si hay tendencia, calcular los residuos
 
-```{r}
+```{r ts-data}
 AirPassengers
 zoo::autoplot.zoo(AirPassengers) # estatico
-AirPassengers %>% tidy() %>% dygraphs::dygraph() # interactivo
-AirPassengers %>% highcharter::hchart() # interactivo
+```
 
+```{r ts-int1}
+AirPassengers %>% tidy() %>% dygraphs::dygraph() # interactivo
+```
+
+```{r ts-int2}
+AirPassengers %>% highcharter::hchart() # interactivo
+```
+
+```{r ts-tb}
 DF = AirPassengers %>% 
   tidy() %>% 
   mutate(log.value = log(value))
@@ -213,31 +277,32 @@ DF = AirPassengers %>%
 DF %>% 
   plot_time_series(index,value,
                    .interactive = F) # estatico o interactivo
+```
 
+```{r ts-plot}
 ggplot(DF, aes(index,value)) +
   geom_line() +
   geom_smooth(method = 'lm')
+```
 
+```{r ts-mod}
 mod = lm(value ~ index, data = DF)
 
 model_parameters(mod) # resumen del modelo
 model_performance(mod) # ajuste del modelo
 
 DF2 = augment(mod)  # data frame incluyendo residuales 
+```
 
+```{r ts-resid}
 ggplot(DF2, aes(index,.resid)) +
   geom_line() + 
   geom_hline(yintercept = 0, col = 2)
 ```
 
-
-# Autocorrelacion
-
-Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados equidistantemente en el espacio/tiempo.
-
 Sin remover tendencia
 
-```{r}
+```{r acf-trend}
 DF %>% plot_acf_diagnostics(index,value,
                             .lags = nrow(.)/3,
                             .show_white_noise_bars = T,
@@ -246,7 +311,7 @@ DF %>% plot_acf_diagnostics(index,value,
 
 Despues de remover tendencia
 
-```{r}
+```{r acf-no-trend}
 DF2 %>% plot_acf_diagnostics(index,.resid,
                              .lags = nrow(.)/3,
                              .show_white_noise_bars = T,
@@ -255,12 +320,12 @@ DF2 %>% plot_acf_diagnostics(index,.resid,
 
 ## Objeto dataframe
 
-```{r}
+```{r acf-diag}
 ac.1 = DF2 %>% tk_acf_diagnostics(index, .resid, .lags = nrow(.)/3)
 ac.1
 ```
 
-```{r}
+```{r acf-test}
 lag.t = ac.1 %>% filter(ACF<0)
 
 (rtau.1 = max(ac.1[which(ac.1$lag==pull(lag.t[1,1])):nrow(ac.1),2])) # valor maximo de autocorrelacion
