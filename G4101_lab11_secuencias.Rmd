@@ -187,7 +187,8 @@ plot(ggpredict(fit3),rawdata = T)
 ## Comparacion de modelos
 
 ```{r comp-anova}
-anova(fit1,fit2,fit3) %>% parameters() %>% tibble()
+anova(fit1,fit2)
+anova(fit3,fit2)
 ```
 
 ```{r comp-performance}

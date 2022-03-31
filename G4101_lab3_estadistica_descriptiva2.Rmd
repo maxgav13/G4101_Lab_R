@@ -2,9 +2,12 @@
 title: "Lab 3: Estadistica Descriptiva 2"
 author: "Maximiliano Garnier Villarreal"
 output:
-  word_document:
-    df_print: kable
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
     number_sections: yes
+    theme: spacelab
     toc: yes
   pdf_document:
     df_print: kable
@@ -17,12 +20,9 @@ output:
     number_sections: yes
     theme: flatly
     toc: yes
-  html_document:
-    df_print: paged
-    highlight: textmate
-    keep_md: yes
+  word_document:
+    df_print: kable
     number_sections: yes
-    theme: spacelab
     toc: yes
 always_allow_html: yes
 ---
@@ -366,10 +366,30 @@ ggplot(airq, aes(Solar.R,Temp)) +
 # Probabilidad
 
 ```{r prob}
-A = matrix(data = c(15,24,23,14,11,13),nrow = 2)
-colnames(A) = c('A','B','C')
-row.names(A) = c('X','Y')
-PercTable(A)
-PercTable(A, margins = c(1,2))
+A = matrix(data = c(15,24,23,14,11,13),nrow = 2,
+           dimnames = list(Tipo=c('X','Y'),
+                           Capa=c('A','B','C')))
+
+A.tb = Untable(A) %>% tibble()
+
+tbl_cross(A.tb)
+tbl_cross(A.tb, percent = 'cell')
+tbl_cross(A.tb, percent = 'column')
+tbl_cross(A.tb, percent = 'row')
+tbl_cross(A.tb, percent = 'row', digits = c(0,1))
+
+A.tb %>% 
+  tabyl(Tipo,Capa) %>% 
+  adorn_totals(where = c('row','col')) %>% 
+  adorn_percentages(denominator = 'all') %>% 
+  adorn_pct_formatting()
+A.tb %>% 
+  tabyl(Tipo,Capa) %>% 
+  adorn_totals(where = c('row','col')) %>% 
+  adorn_percentages(denominator = 'col') %>% 
+  adorn_pct_formatting()
+
+A.tb %>% filter(Capa=='A') %>% tabyl(Tipo)
+A.tb %>% filter(Tipo=='Y') %>% tabyl(Capa)
 ```
 
