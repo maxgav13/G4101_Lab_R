@@ -2,10 +2,12 @@
 title: "Lab 2: Estadistica Descriptiva 1"
 author: "Maximiliano Garnier Villarreal"
 output:
-  html_notebook:
-    highlight: pygments
+  html_document:
+    df_print: paged
+    highlight: textmate
+    keep_md: yes
     number_sections: yes
-    theme: flatly
+    theme: spacelab
     toc: yes
   word_document:
     toc: yes
@@ -14,12 +16,10 @@ output:
     keep_tex: yes
     number_sections: yes
     toc: yes
-  html_document:
-    df_print: paged
-    highlight: textmate
-    keep_md: yes
+  html_notebook:
+    highlight: pygments
     number_sections: yes
-    theme: spacelab
+    theme: flatly
     toc: yes
 always_allow_html: yes
 ---

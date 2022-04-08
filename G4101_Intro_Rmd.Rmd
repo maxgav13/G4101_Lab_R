@@ -2,17 +2,17 @@
 title: "Intro a R Markdown"
 author: "Maximiliano Garnier Villarreal"
 output:
-  html_notebook:
-    highlight: pygments
-    number_sections: yes
-    theme: flatly
-    toc: yes
   html_document:
     df_print: paged
     highlight: textmate
     keep_md: yes
     number_sections: yes
     theme: spacelab
+    toc: yes
+  html_notebook:
+    highlight: pygments
+    number_sections: yes
+    theme: flatly
     toc: yes
   pdf_document:
     df_print: kable
@@ -32,7 +32,7 @@ Para ejecutar una seccion de codigo se puede hacer click en el boton de *Run* (f
 
 Se puede agregar una nueva seccion haciendo click en *Insert Chunk* o ejecutando *Ctrl+Alt+I* (Windows) o *Cmd+Option+I* (Mac).
 
-El primer bloque siempre se usa para definir paraemtros y paquetes a usar durante la sesion.
+El primer bloque siempre se usa para definir parametros y paquetes a usar durante la sesion.
 
 ```{r setup, include=TRUE, message=FALSE, warning=FALSE}
 library(MOTE)
@@ -77,7 +77,7 @@ Podemos desplegar tablas. La apariencia va a cambiar dependiendo el formato de s
 mtcars
 ```
 
-Tablas tambien se pueden usar diferentes paquetes para representarlas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento, **kableExtra** sirve para mas para *html* y *pdf*, y **gt** sirve para *html*.
+Tablas tambien se pueden usar diferentes paquetes para representarlas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento, **kableExtra** sirve mas para *html* y *pdf*, y **gt** sirve para *html*.
 
 ```{r}
 mtcars %>% 
