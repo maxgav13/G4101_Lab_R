@@ -1,40 +1,40 @@
 ---
 title: "Intro a R Markdown"
 author: "Maximiliano Garnier Villarreal"
-output:
-  html_document:
-    df_print: paged
-    highlight: textmate
-    keep_md: yes
-    number_sections: yes
-    theme: spacelab
-    toc: yes
-  html_notebook:
-    highlight: pygments
-    number_sections: yes
-    theme: flatly
-    toc: yes
-  pdf_document:
-    df_print: kable
-    keep_tex: yes
-    number_sections: yes
-    toc: yes
-  word_document:
-    toc: yes
-always_allow_html: yes
+lang: es
+toc: true
+toc-depth: 2
+toc-title: Contenidos
+number-sections: true
+highlight-style: pygments
+theme: quartz
+format:
+  html:
+    code-fold: true
+    html-math-method: katex
+  pdf: default
+  docx: default
+execute:
+  message: false
+  warning: false
+  error: false
+  echo: true
 ---
 
 # Introduccion
 
-Este es un [R Markdown](http://rmarkdown.rstudio.com) Notebook (Cuaderno R Markdown). Cuando ejecuta el codigo dentro del cuaderno el resultado aparece por debajo del codigo.
+Este es un documento [Quarto](http://quarto.org). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis.
 
-Para ejecutar una seccion de codigo se puede hacer click en el boton de *Run* (flecha verde) dentro de la seccion o colocando el cursor dentro de la seccion y ejecutando *Ctrl+Shift+Enter* (Windows) o *Cmd+Shift+Enter* (Mac). Asi de facil!
+Los bloques de codigo se encuentran separados por `{r}`. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (flecha verde) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows). Asi de facil!
 
-Se puede agregar una nueva seccion haciendo click en *Insert Chunk* o ejecutando *Ctrl+Alt+I* (Windows) o *Cmd+Option+I* (Mac).
+Se puede agregar un nuev bloque haciendo click en *Insert Chunk*, o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
 
-El primer bloque siempre se usa para definir parametros y paquetes a usar durante la sesion.
+El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion. Los bloques pueden llevar una etiqueta (label) pero no es necesario, si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
 
-```{r setup, include=TRUE, message=FALSE, warning=FALSE}
+```{r}
+#| label: setup
+#| include: false
+
 library(MOTE)
 library(papaja)
 library(kableExtra)
@@ -44,20 +44,6 @@ library(plotly)
 library(dygraphs)
 library(rio)
 library(tidyverse)
-
-knitr::opts_chunk$set(
-  echo = TRUE,
-  message = FALSE,
-  warning = FALSE,
-  error = FALSE,
-  # fig.path = "figs/",
-  fig.retina = 3,
-  fig.width = 8,
-  fig.asp = 0.618,
-  fig.align = "center",
-  out.width = "90%"
-)
-
 ```
 
 # Tipos de resultados
@@ -71,27 +57,33 @@ numeros <- seq_len(15)
 numeros
 ```
 
-Podemos desplegar tablas. La apariencia va a cambiar dependiendo el formato de salida y va a estar sujeta (en principio) a la opcion `df_print` en el encabezado YAML.
+Podemos desplegar tablas.
 
 ```{r tabla}
 mtcars
 ```
 
-Tablas tambien se pueden usar diferentes paquetes para representarlas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento, **kableExtra** sirve mas para *html* y *pdf*, y **gt** sirve para *html*.
+Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento (*html*, *pdf*, *word*), **kableExtra** sirve mas para *html* y *pdf*, y **gt** sirve para *html*.
 
 ```{r}
+#| label: tbl-flex
+#| tbl-cap: "Tabla usando el paquete **flextable**"
 mtcars %>% 
   head() %>% 
   flextable()
 ```
 
 ```{r}
+#| label: tbl-kb
+#| tbl-cap: "Tabla usando el paquete **kableExtra**"
 mtcars %>% 
   head() %>% 
   kable()
 ```
 
 ```{r}
+#| label: tbl-gt
+#| tbl-cap: "Tabla usando el paquete **gt**"
 mtcars %>% 
   head() %>% 
   gt()
