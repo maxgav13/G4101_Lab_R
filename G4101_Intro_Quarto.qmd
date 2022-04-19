@@ -1,5 +1,5 @@
 ---
-title: "Intro a R Markdown"
+title: "Intro a Quarto"
 author: "Maximiliano Garnier Villarreal"
 lang: es
 toc: true
@@ -7,7 +7,7 @@ toc-depth: 2
 toc-title: Contenidos
 number-sections: true
 highlight-style: pygments
-theme: quartz
+theme: sandstone
 format:
   html:
     code-fold: true
@@ -15,7 +15,6 @@ format:
   pdf: default
   docx: default
 execute:
-  message: false
   warning: false
   error: false
   echo: true
@@ -23,17 +22,18 @@ execute:
 
 # Introduccion
 
-Este es un documento [Quarto](http://quarto.org). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis.
+Este es un documento [Quarto](http://quarto.org). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Render* (![](imgs/rstudio-render-button.png){width="20" height="17"}).
 
-Los bloques de codigo se encuentran separados por `{r}`. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (flecha verde) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows). Asi de facil!
+Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en formato YAML que empiezan con `#|` al inicio de cada bloque. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (![](imgs/notebook-run-chunk.png){width="20"}) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows).
 
-Se puede agregar un nuev bloque haciendo click en *Insert Chunk*, o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
+Se puede agregar un nuevo bloque haciendo click en *Insert Chunk*, o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
 
-El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion. Los bloques pueden llevar una etiqueta (label) pero no es necesario, si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
+El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
 
 ```{r}
-#| label: setup
+#| label: paquetes
 #| include: false
+#| message: false
 
 library(MOTE)
 library(papaja)
@@ -50,7 +50,7 @@ library(tidyverse)
 
 ## Consola
 
-Podemos crear diferentes objetos dentro de la seccion como sifuera la consola de R. Creemos un objeto que contenga los numeros del 1 al 15.
+Podemos crear diferentes objetos dentro del bloque como si fuera la consola de **R**. Creemos un objeto que contenga los numeros del 1 al 15.
 
 ```{r numeros}
 numeros <- seq_len(15)
@@ -60,14 +60,15 @@ numeros
 Podemos desplegar tablas.
 
 ```{r tabla}
-mtcars
+head(mtcars)
 ```
 
-Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento (*html*, *pdf*, *word*), **kableExtra** sirve mas para *html* y *pdf*, y **gt** sirve para *html*.
+Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable` (@tbl-flext), `kable` (@tbl-kb), y `gt` (@tbl-gt), respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento (*html*, *pdf*, *word*), **kableExtra** sirve mas para *html* y *pdf*, y **gt** sirve para *html*.
 
 ```{r}
-#| label: tbl-flex
-#| tbl-cap: "Tabla usando el paquete **flextable**"
+#| label: tbl-flext
+#| tbl-cap: "Tabla usando el paquete **flextable**."
+
 mtcars %>% 
   head() %>% 
   flextable()
@@ -75,7 +76,8 @@ mtcars %>%
 
 ```{r}
 #| label: tbl-kb
-#| tbl-cap: "Tabla usando el paquete **kableExtra**"
+#| tbl-cap: "Tabla usando el paquete **kableExtra**."
+
 mtcars %>% 
   head() %>% 
   kable()
@@ -83,7 +85,8 @@ mtcars %>%
 
 ```{r}
 #| label: tbl-gt
-#| tbl-cap: "Tabla usando el paquete **gt**"
+#| tbl-cap: "Tabla usando el paquete **gt**."
+
 mtcars %>% 
   head() %>% 
   gt()
@@ -91,9 +94,12 @@ mtcars %>%
 
 ## Graficos
 
-Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar. Opciones para el control sobre las figuras van a empezar con `fig.` en el encabezado del codigo (como se observa en el siguiente ejemplo donde se ajusta el ancho a 6 pulgadas)
+Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar (@fig-disp).
 
-```{r grafico, fig.width=6}
+```{r}
+#| label: fig-disp
+#| fig-cap: "Grafico de dispersion creado con **ggplot2**."
+
 q = ggplot(mtcars, aes(wt,mpg,col=factor(cyl))) + 
   geom_point(size=2,shape=1) + 
   theme_bw() + 
@@ -103,28 +109,36 @@ q
 
 ## Widgets HTML
 
-Si el analisis en **R** involucra componentes interactivos, estos tambien son compatibles con los resultados en el cuaderno o archivo *html*. La opcion `eval=knitr::is_html_output()` se incluye para que el codigo sea evaluado unicamente cuando el formato de salida es *html*, ya que estos no pueden desplegarse en *pdf* o *word*.
+Si el analisis en **R** involucra componentes interactivos, estos tambien son compatibles con los resultados en el archivo *html*. La opcion `eval=knitr::is_html_output()` se incluye para que el codigo sea evaluado unicamente cuando el formato de salida es *html*, ya que estos no pueden desplegarse en *pdf* o *word*.
 
-El siguiente codigo genera un grafico interactivo de una serie temporal.
+La @fig-dygraph muestra un grafico interactivo de una serie temporal, creado con el siguiente codigo.
 
-```{r widgets, eval=knitr::is_html_output()}
+```{r eval=knitr::is_html_output()}
+#| label: fig-dygraph
+#| fig-cap: "Grafico interactivo creado con **dygraph**."
+
 dygraph(nhtemp, main = "Temperaturas de New Haven") %>% 
   dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
 ```
 
-Esta es la version interactiva del grafico de ggplot anteriormente generado.
+La @fig-plotly es la version interactiva del grafico de ggplot anteriormente generado (@fig-disp).
 
-```{r plotly, eval=knitr::is_html_output()}
+```{r eval=knitr::is_html_output()}
+#| label: fig-plotly
+#| fig-cap: "Grafico interactivo creado con **plotly**."
+
 ggplotly(q)
 ```
 
 # Formulas
 
-Expresiones matematicas y formulas se pueden desplegar en linea, dentro del cuerpo del texto ($A = \pi*r^{2}$) o por separado $$E = mc^{2}$$ Para escribir estas expresiones se usa lenguaje `LaTeX`.
+Expresiones matematicas y formulas se pueden desplegar en linea, dentro del cuerpo del texto ($A = \pi*r^{2}$) o por separado
+
+$$E = mc^{2}$$ Para escribir estas expresiones se usa lenguaje `LaTeX`.
 
 # Importando datos
 
-Los documentos *R Markdown* usan una dirección relativa a la ubicación del archivo.
+Los documentos *Quarto* usan una dirección relativa a la ubicación del archivo.
 
 Otro punto importante es que se pueden llamar funciones de paquetes sin necesidad de cargarlos usando la sintaxis `paquete::funcion()`. Por ejemplo en el bloque que sigue se usa `rio::import()`, siendo `rio` el paquete e `import()` la función a usar. **Esto puede evitar conflictos cuando se tienen funciones con el mismo nombre en diferentes paquetes**.
 
@@ -136,22 +150,24 @@ dat <- rio::import("data/PORPERM.csv")
 
 Siempre que un valor exista dentro de un objeto guardado, este se puede acceder para ser desplegado en el cuerpo del documento. Por ejemplo: La porosidad media es de `r mean(dat$Porosity)`%, que se escribe de la siguiente manera: `` `r knitr::inline_expr('mean(dat$Porosity)')` ``.
 
-Para dar formato a valores se pueden usar funciones como `apa()` del paquete **MOTE**, `printnum` o `printp` (valores-*p*) del paquete **papaja**. Volviendo a desplegar la porosidad media se tiene `r apa(mean(dat$Porosity), 1)`%, usando `apa()` con 1 decimales.
+Para dar formato a valores se pueden usar funciones como `apa()` del paquete **MOTE**, `printnum` o `printp` (valores-*p*) del paquete **papaja**. Volviendo a desplegar la porosidad media se tiene `r apa(mean(dat$Porosity), 1)`%, usando `apa()` con 1 decimal.
 
 # Importando figuras
 
-La mejor manera es usando el paquete **knitr**. Aqui se ajusta no el ancho de la figura directamente sino que se le dice que se ajuste a un 50% del ancho disponible. Existen otras opciones que empiezan con `out.`.
+La mejor manera es usando el paquete **knitr**. Aqui se ajusta no el ancho de la figura directamente sino que se le dice que se ajuste a un 70% del ancho disponible. Existen otras opciones que empiezan con `out-`.
 
-```{r fig.cap='R Rocks', out.width='50%'}
+```{r}
+#| label: fig-rocks
+#| fig-cap: "R-Rocks"
+#| out-width: '70%'
+
 knitr::include_graphics('imgs/r_rocks.jpg')
 ```
 
 # Salvando y compartiendo
 
-Los documentos *R Markdown* tienen como extension `.Rmd`. Cuando se crea y se salva un cuaderno se crea un archivo adjunto con extension `.nb.html`. Este archivo contiene una copia renderizada del cuaderno, que puede ser visualizada en cualquier navegador. Cuando se abre el archivo `.nb.html` en un navegador se va a tener la opcion de descargar el codigo original (`.Rmd`).
-
-Para previsualizar el cuaderno renderizado (`.nb.html`) haga click en *Preview*. La previsualizacion le muestra una copia renderizada del *html*. A diferencia de *Knit* (para otros documentos R Markdown), *Preview* no ejecuta ninguna seccion de codigo, por lo que si una seccion no se ha ejecutado en el editor (cuaderno) el *Preview* no va a mostrar ningun resultado. La previsualizacion se actualiza cada vez que se salva el documento `.Rmd`.
+Los documentos *Quarto* tienen como extension `.qmd`. Cuando se crea y se salva un cuaderno se crea un archivo adjunto con extension `.html` por defecto. Este archivo contiene una copia renderizada del documento, que puede ser visualizada en cualquier navegador.
 
 ## Otros formatos
 
-El cuaderno es un documento *R Markdown*. Se puede cambiar el formato de salida cambiando el orden en el encabezado YAML. En ese caso el *Preview* es reemplazado por *Knit*. Tambien se puede generar desplegando el menu contextual haciendo click en la flecha junto a *Preview*. Tambien se pueden crear documentos *pdf* o *word*.
+El documento *Quarto* se puede renderizar a diferentes formatos de salida, dependiendo de las opciones especificadas en `format` en el encabezado YAML.
