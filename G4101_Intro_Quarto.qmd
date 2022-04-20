@@ -24,11 +24,11 @@ execute:
 
 Este es un documento [Quarto](http://quarto.org). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Render* (![](imgs/rstudio-render-button.png){width="20" height="17"}).
 
-Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en formato YAML que empiezan con `#|` al inicio de cada bloque. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (![](imgs/notebook-run-chunk.png){width="20"}) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows).
+Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en formato YAML que empiezan con `#|` al inicio de cada bloque. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (![](imgs/rstudio-run-chunk.png){width="20"}) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows).
 
-Se puede agregar un nuevo bloque haciendo click en *Insert Chunk*, o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
+Se puede agregar un nuevo bloque haciendo click en *Insert Chunk* (![](imgs/rstudio-insert-chunk-button.png){width="25" height="15"}), o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
 
-El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
+El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, así como parametros opcionales globales. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
 
 ```{r}
 #| label: paquetes
@@ -44,6 +44,14 @@ library(plotly)
 library(dygraphs)
 library(rio)
 library(tidyverse)
+
+set_flextable_defaults(
+  # decimal.mark = ',',
+  # big.mark = '.',
+  digits = 3
+)
+
+theme_set(theme_minimal(base_size = 12))
 ```
 
 # Tipos de resultados
@@ -94,7 +102,7 @@ mtcars %>%
 
 ## Graficos
 
-Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar (@fig-disp).
+Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegardentro del coumento (@fig-disp).
 
 ```{r}
 #| label: fig-disp
@@ -102,7 +110,6 @@ Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se 
 
 q = ggplot(mtcars, aes(wt,mpg,col=factor(cyl))) + 
   geom_point(size=2,shape=1) + 
-  theme_bw() + 
   labs(x='Peso',y='Millaje',col='Cilindros')
 q
 ```
@@ -166,7 +173,7 @@ knitr::include_graphics('imgs/r_rocks.jpg')
 
 # Salvando y compartiendo
 
-Los documentos *Quarto* tienen como extension `.qmd`. Cuando se crea y se salva un cuaderno se crea un archivo adjunto con extension `.html` por defecto. Este archivo contiene una copia renderizada del documento, que puede ser visualizada en cualquier navegador.
+Los documentos *Quarto* tienen como extension `.qmd`. Cuando se compila (renderiza) se crea un archivo adjunto con extension `.html` por defecto. Este archivo contiene una copia renderizada del documento, que puede ser visualizada en cualquier navegador.
 
 ## Otros formatos
 
