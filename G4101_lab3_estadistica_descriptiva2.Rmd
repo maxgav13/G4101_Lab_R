@@ -9,19 +9,11 @@ output:
     number_sections: yes
     theme: spacelab
     toc: yes
+  word_document:
+    toc: yes
   pdf_document:
     df_print: kable
     keep_tex: yes
-    number_sections: yes
-    toc: yes
-  html_notebook:
-    df_print: paged
-    highlight: pygments
-    number_sections: yes
-    theme: flatly
-    toc: yes
-  word_document:
-    df_print: kable
     number_sections: yes
     toc: yes
 always_allow_html: yes

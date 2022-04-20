@@ -4,10 +4,10 @@ author: "Maximiliano Garnier Villarreal"
 output:
   html_document:
     df_print: paged
-    highlight: pygments
+    highlight: textmate
     keep_md: yes
     number_sections: yes
-    theme: flatly
+    theme: spacelab
     toc: yes
   word_document:
     toc: yes
@@ -15,11 +15,6 @@ output:
     df_print: kable
     keep_tex: yes
     number_sections: yes
-    toc: yes
-  html_notebook:
-    highlight: pygments
-    number_sections: yes
-    theme: flatly
     toc: yes
 always_allow_html: yes
 ---

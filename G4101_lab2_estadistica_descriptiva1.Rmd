@@ -16,11 +16,6 @@ output:
     keep_tex: yes
     number_sections: yes
     toc: yes
-  html_notebook:
-    highlight: pygments
-    number_sections: yes
-    theme: flatly
-    toc: yes
 always_allow_html: yes
 ---
 
