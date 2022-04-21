@@ -1,0 +1,83 @@
+---
+title: "Lab 5: Estadistica Inferencial"
+author: "Maximiliano Garnier Villarreal"
+lang: es
+toc: true
+toc-depth: 2
+toc-title: Contenidos
+number-sections: true
+highlight-style: pygments
+theme: sandstone
+format:
+  html:
+    code-fold: true
+    html-math-method: katex
+  pdf: default
+  docx: default
+execute:
+  warning: false
+  error: false
+  echo: true
+---
+
+```{r setup, include=FALSE, warning=F, message=FALSE}
+library(DescTools)
+library(tidyverse)
+```
+
+Para $\chi^2$, $t$ y $F$, el parametro *df* corresponde con los grados de libertad. Para todas el parametro *q* se refiere al estadistico, o en el caso de la distribucion normal el valor de la media a comparar.
+
+En general *lower.tail=F* quiere decir la probabilidad a la derecha o mayor que.
+
+# Normal
+
+Inferencia sobre una media con respecto a una teorica, conociendo $\sigma^2$
+
+```{r}
+# media=3.5, sigma=0.2, n=8
+pnorm(q = 3.7,mean = 3.5,sd = 0.2/sqrt(8),lower.tail = F) # probabilidad de X > 3.7 con n=8
+```
+
+Inferencia sobre dos medias, conociendo $\sigma^2$
+
+```{r}
+muA = 6.5
+muB = 6
+sA = 0.9
+sB = 0.8
+nA = 36
+nB = 49
+dx = 1
+(z = (dx - (muA-muB)) / (sqrt(sA^2/nA + sB^2/nB)))
+pnorm(z,lower.tail = F)
+```
+
+
+# $\chi^2$
+
+Inferencia sobre una $s^2$ con respecto a $\sigma^2$
+
+```{r}
+# sigma2=0.8, s2=1.2, n=6
+(chi=((6-1)*1.2)/0.8)
+pchisq(q = chi,df = 6-1,lower.tail = F) # probabilidad de s2 > 1.2
+```
+
+
+# T
+
+Inferencia sobre la media sin conocer $\sigma^2$
+
+```{r}
+pt(q = 2.25, df = 24, lower.tail = F) # probabilidad de t > 2.25 con 24 grados de libertad
+```
+
+
+# F
+
+Inferencia sobre dos $s^2$
+
+```{r}
+pf(q = 2, df1 = 5, df2 = 8, lower.tail = F) # probabilidad de F > 2 con 5 y 8 grados de libertad
+```
+
