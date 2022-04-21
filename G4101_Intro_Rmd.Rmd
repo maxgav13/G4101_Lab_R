@@ -113,7 +113,7 @@ mtcars %>%
 
 ## Graficos
 
-Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar dentro del coumento. Opciones para el control sobre las figuras van a empezar con `fig.` en el encabezado del codigo (como se observa en el siguiente ejemplo donde se ajusta el ancho a 6 pulgadas)
+Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar dentro del documento. Opciones para el control sobre las figuras van a empezar con `fig.` en el encabezado del codigo (como se observa en el siguiente ejemplo donde se ajusta el ancho a 6 pulgadas)
 
 ```{r fig-disp}
 #| fig.width: 6

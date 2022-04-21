@@ -102,10 +102,9 @@ mtcars %>%
 
 ## Graficos
 
-Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegardentro del coumento (@fig-disp).
+Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar dentro del documento (@fig-disp).
 
-```{r}
-#| label: fig-disp
+```{r fig-disp}
 #| fig-cap: "Grafico de dispersion creado con **ggplot2**."
 
 q = ggplot(mtcars, aes(wt,mpg,col=factor(cyl))) + 
