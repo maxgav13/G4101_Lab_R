@@ -71,7 +71,13 @@ Podemos desplegar tablas.
 head(mtcars)
 ```
 
-Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable` (@tbl-flext), `kable` (@tbl-kb), y `gt` (@tbl-gt), respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento (*html*, *pdf*, *word*), **kableExtra** sirve mas para *html* y *pdf*, y **gt** sirve para *html*.
+Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable` (@tbl-flext), `kable` (@tbl-kb), y `gt` (@tbl-gt), respectivamente. **flextable** y **kableExtra** permiten crear tablas para todo tipo de documento (*html*, *pdf*, *word*), mientras que **gt** sirve para *html*.
+
+::: callout-note
+
+Se recomienda que cada tabla vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado
+
+:::
 
 ```{r}
 #| label: tbl-flext
@@ -104,6 +110,12 @@ mtcars %>%
 
 Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar dentro del documento (@fig-disp).
 
+::: callout-note
+
+Se recomienda que cada grafico vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado a la figura
+
+:::\
+
 ```{r fig-disp}
 #| fig-cap: "Grafico de dispersion creado con **ggplot2**."
 
@@ -111,6 +123,29 @@ q = ggplot(mtcars, aes(wt,mpg,col=factor(cyl))) +
   geom_point(size=2,shape=1) + 
   labs(x='Peso',y='Millaje',col='Cilindros')
 q
+```
+
+::: callout-tip
+
+Si se quieren mostrar varios graficos, que tengan alguna relacion, en una sola figura se pueden generar en un mismo bloque y definir un encabezado general para la figura y sub-encabezados para cada grafico, así como el numero de filas o columnas
+
+:::\
+
+```{r}
+#| label: fig-airq
+#| fig-cap: "Relacion de la temperatura con un par de variables"
+#| fig-subcap:
+#|   - "Relacion con la velocidad del viento"
+#|   - "Relacion con la intensidad de radiacion solar" 
+#| layout-ncol: 2
+
+ggplot(airquality, aes(Wind, Temp)) + 
+  geom_point(size=2, shape=1, col='dodgerblue') + 
+  labs(x='Viento', y='Temperatura')
+
+ggplot(airquality, aes(Solar.R, Temp)) + 
+  geom_point(size=2, shape=2, col='firebrick') + 
+  labs(x='Viento', y='Temperatura')
 ```
 
 ## Widgets HTML

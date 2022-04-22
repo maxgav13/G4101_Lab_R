@@ -22,25 +22,22 @@ execute:
 
 # Estadistica descriptiva
 
-```{r setup, include=FALSE, warning=F, message=FALSE}
+```{r}
+#| label: setup
+#| include: flase
+
 library(DescTools)
 library(janitor)
+library(summarytools)
 library(gtsummary)
 library(tidyverse)
 library(rio)
 
 theme_set(theme_minimal(base_size = 12))
 
-formato.salida = case_when(
-  knitr::is_html_output() ~ 'html',
-  knitr::is_latex_output() ~ 'latex',
-  T  ~ 'simple',
-)
-
 options(
-  knitr.table.format = formato.salida
-  # OutDec = ','
-  , digits = 3
+  # OutDec = ',',
+  digits = 3
 )
 
 theme_gtsummary_language(
@@ -50,79 +47,42 @@ theme_gtsummary_language(
   iqr.sep = NULL,
   ci.sep = NULL
 )
-
-knitr::opts_chunk$set(
-  echo = TRUE,
-  message = FALSE,
-  warning = FALSE,
-  error = FALSE,
-  # fig.path = "figs/",
-  fig.retina = 3,
-  fig.width = 8,
-  fig.asp = 0.618,
-  fig.align = "center",
-  out.width = "90%"
-)
 ```
-
-
-## Calculos rapidos
-
-Se habia mencionado antes que el paquete `purrr` permite iterar sobre vectores, listas o DataFrames. En el caso de este ultimo objeto lo que hace es iterar sobre las columnas.
-
-La funcion basica de `purrr` es `map(.x, .f, ...)`, donde `.x` es el objeto sobre el cual iterar, `.f` es la funcion o tarea a realizar durante la iteracion, y `...` son argumentos extra dependiendo de la funcion. Esta funcion siempre va a resultar en una lista; las variaciones de esta son especificas para cuando se conoce cual va a ser el tipo de dato de salida. `map_dbl` (como en el ejemplo) se usa cuando el resultado de la funcion es un numero con decimales.
-
-```{r}
-rock %>% head()
-
-map_dbl(.x = rock,.f = sum) # suma de cada columna
-
-map_dbl(rock,mean) # media de cada columna
-
-map_dbl(rock,sd) # desviacion estandar de cada columna
-```
-
 
 ## Datos categoricos
 
 ### Tabla de frecuencias
 
-La forma numerica de resumir datos categoricos es por medio de tablas de frecuencias o tablas de contingencia. Hay diferentes funciones para realizar estas tareas, aqui se muestran 3: `ftable` del paquete basico, `tabyl` del paquete *janitor*, y `tbl_cross` del paquete *gtsummary*. Estos ultimos 2 paquetes permiten generar tablas mas esteticas y con gran detalle.
+La forma numerica de resumir datos categoricos es por medio de tablas de frecuencias (1 variable) o tablas de contingencia (2 variables). Hay diferentes funciones para realizar estas tareas, aqui se muestran 3: `tabyl` del paquete **janitor**, `freq` del paquete **summarytools**, y `tbl_cross` del paquete **gtsummary**. Los paquetes **janitor** y **gtsummary** permiten generar tablas esteticas y con gran detalle.
 
 ```{r}
-dat1 = import("data/LungCapData2.csv", setclass = 'tbl')
+gss_cat %>% glimpse()
 
-tabyl(dat = dat1,var1 = Gender,var2 = Smoke) %>% 
-  adorn_title()
+tabyl(dat = gss_cat, var1 = marital)
 
-ftable(Smoke~Gender,dat1)
+tabyl(gss_cat, race)
 
-tabyl(dat1,Smoke)
+freq(gss_cat, race)
 
-tabyl(dat1,Gender,Smoke) %>% 
-  adorn_percentages('col') %>% 
-  adorn_title()
+freq(gss_cat, race) %>% 
+  as_tibble(rownames = 'race') %>% 
+  clean_names()
 
-tabyl(dat1,Gender,Smoke) %>% 
-  adorn_percentages('all') %>%
-  adorn_pct_formatting(digits = 2) %>% 
-  adorn_title()
-
-tbl_cross(dat1,Gender,Smoke,percent = 'cell')
+tbl_cross(gss_cat, marital, race, percent = 'cell')
 ```
 
 ### Graficos
 
 #### Barras
 
-Para `geom_bar` el argumento *position* puede tener cualquiera de estos tres valores: 'stack', 'dodge' o 'fill.'
+Para `geom_bar` el argumento *position* puede tener cualquiera de estos tres valores: 'stack', 'dodge' o 'fill', para cuando se visualizan 2 variables categoricas.
 
 ```{r}
-ggplot(data = dat1, aes(x = Gender)) +
+ggplot(data = gss_cat, aes(x = race, fill = race)) +
   geom_bar()
 
-ggplot(data = dat1, aes(x = Gender,fill=Smoke)) +
-  geom_bar(position = 'stack')
+ggplot(data = gss_cat, aes(x = race, fill = marital)) +
+  geom_bar(position = 'fill')
 ```
 
 
@@ -131,19 +91,11 @@ ggplot(data = dat1, aes(x = Gender,fill=Smoke)) +
 ```{r}
 data("airquality")
 head(airquality)
-
-map_dbl(.x = airquality,.f = mean)
-
-map_dbl(airquality,mean,na.rm=T)
-
-airquality %>% map_dbl(~ mean(.x,na.rm = T))
-
-airquality %>% map_df(~ mean(.x,na.rm = T))
 ```
 
 ### Tabla de Frecuencias
 
-Para tablas de frecuencias con datos numericos estos deben ser separados en clases (*breaks*) y sobre estas clases se genera la tabla de frecuencias.
+Para tablas de frecuencias con datos numericos estos deben ser separados en clases (*breaks*) y sobre estas clases se genera la tabla de frecuencias. La funcion `Freq` requiere el vector de la variable.
 
 ```{r}
 Freq(x = airquality$Temp)
@@ -167,14 +119,16 @@ Dentro de `geom_histogram` hay 3 opciones para definir la discretizacion:
 
 ```{r}
 ggplot(data = airquality, aes(x = Temp)) + 
-  geom_histogram(binwidth = 5, col='black', fill='lightblue')
+  geom_histogram(breaks = seq(50,100,10), 
+                 col='black', fill='lightblue')
 ```
 
 *Frecuencias relativas*
 
 ```{r}
-ggplot(data = airquality, aes(x = Temp)) + 
-  geom_histogram(binwidth = 5, aes(y=stat(count/sum(count))), 
+ggplot(airquality, aes(Temp)) + 
+  geom_histogram(breaks = seq(50,100,10), 
+                 aes(y=stat(count/sum(count))), 
                  col='black', fill='lightblue')
 ```
 
@@ -183,7 +137,6 @@ tabyl(airquality,Month)
 
 airq = airquality %>% 
   mutate(Month = factor(Month,
-                        levels = 5:9,
                         labels = c("Mayo", "Junio", "Julio", 
                                    "Agosto", "Setiembre")))
 
@@ -196,7 +149,7 @@ tabyl(airq,Month)
 ggplot(data = airq, aes(x = Month, y = Temp)) +
   geom_boxplot()
 
-ggplot(data = airq, aes(x = Month, y = Temp)) +
+ggplot(airq, aes(Temp, Month)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape=3)
 ``` 
@@ -255,12 +208,22 @@ DescTools::Kurt(myvector)
 
 ### Descripciones mas generales
 
-Se muestran varias funciones que generan un resumen general de un DataFrame dependiendo del tipo de variable presente.
+Se muestran varias funciones que generan un resumen general de un vector o DataFrame, para este ultimo dependiendo del tipo de variable presente.
+
+Vector
 
 ```{r}
 skimr::skim(myvector)
 psych::describe(myvector)
 DescTools::Desc(myvector)
 summarytools::descr(myvector)
+```
+
+DataFrame
+
+```{r}
+skimr::skim(airq)
+DescTools::Desc(airq)
+summarytools::descr(airq)
 ```
 

@@ -20,7 +20,10 @@ execute:
   echo: true
 ---
 
-```{r setup, include=FALSE, warning=F, message=FALSE}
+```{r}
+#| label: setup
+#| include: flase
+
 library(tidyverse)
 ```
 
@@ -29,9 +32,9 @@ En general existen 4 fucniones basicas para todas las distribuciones, empiezan c
 * `d`: Para encontrar la probabilidad puntual 
 * `p`: Para encontrar la probabilidad acumulada
 * `q`: Para encontrar el cuantil (valor de la variable) a una dada probabilidad
-* `r`: Para generar un vector de datos de la distribucion
+* `r`: Para generar un vector de datos aleatorios de la distribucion
 
-En el caso de generar datos aleatorios (`r`) es recomendable definir un punto de partida para asegurar siempre el mismo resultado, esto se logra definiendo lo que se llama la semilla (seed) por medio de `set.seed(numero)` y escribiendo un numero dentro de la funcion (ejemplo: `set.seed(4101)`).
+En el caso de generar datos aleatorios (`r`) es recomendable definir un punto de partida para asegurar siempre el mismo resultado, esto se logra definiendo lo que se llama la semilla (seed) por medio de `set.seed(numero)` y escribiendo un numero entero dentro de la funcion (por ejemplo: `set.seed(4101)`).
 
 # Binomial
 

@@ -22,7 +22,10 @@ execute:
 
 # Estadistica descriptiva bivariable
 
-```{r setup, include=FALSE, warning=F, message=FALSE}
+```{r}
+#| label: setup
+#| include: flase
+
 library(kableExtra)
 library(gtsummary)
 library(flextable)
@@ -37,14 +40,7 @@ library(rio)
 
 theme_set(theme_minimal(base_size = 12))
 
-formato.salida = case_when(
-  knitr::is_html_output() ~ 'html',
-  knitr::is_latex_output() ~ 'latex',
-  T  ~ 'simple',
-)
-
 options(
-  knitr.table.format = formato.salida,
   modelsummary_get = 'all'
   # OutDec = ','
   , digits = 3
@@ -64,18 +60,6 @@ theme_gtsummary_language(
   ci.sep = NULL
 )
 
-knitr::opts_chunk$set(
-  echo = TRUE,
-  message = FALSE,
-  warning = FALSE,
-  error = FALSE,
-  # fig.path = "figs/",
-  fig.retina = 3,
-  fig.width = 8,
-  fig.asp = 0.618,
-  # fig.align = "center",
-  out.width = "90%"
-)
 ```
 
 
@@ -86,8 +70,6 @@ airq = airquality %>%
   as_tibble() %>% 
   mutate(Month = as_factor(Month),
          Day = as_factor(Day)) %>% 
-  # sjmisc::std_if(is.numeric) %>% 
-  # sjmisc::center_if(is.numeric)
   mutate(across(.cols = where(is.numeric),
                 # .cols = 1:4,
                 .fns = list(c = center, z = standardize),
@@ -158,11 +140,11 @@ hchart(cor(airq2,use = 'pairwise.complete.obs')) # grafico interactivo de coefic
 
 ## Regresion
 
-Para presentar caracteristicas de los modelos de forma mas estetica y ordenada se pueden usar las funciones `tidy` y `glance` del paquete *broom*, o `model_parameter` y `model_performance` de los paquetes *parameters* y *performance*. `tidy` y `model_parameter` genera la tabla resumen de los coeficientes y sus estadisticas, mientras que `glance` y `model_performance` genera una tabla con medidas de ajuste, incluyendo el $R^2$.
+Para presentar caracteristicas de los modelos de forma mas estetica y ordenada se pueden usar las funciones `tidy` y `glance` del paquete **broom**, o `model_parameter` y `model_performance` de los paquetes **parameters** y **performance**. `tidy` y `model_parameter` generan la tabla resumen de los coeficientes y sus estadisticas, mientras que `glance` y `model_performance` generan una tabla con medidas de ajuste, incluyendo el $R^2$.
 
 ### Relacion entre correlacion y regresion simple
 
-En una regresion simple (y ~ x, un predictor) el coeficiente de correlacion (y covarianza) entre ambas variables va a ser igual a la pendiente de la regresion cuando se usan variables estandarizadas ($z \sim N(0,1)$) o se estandariza el modelo con las variables originales.
+En una regresion simple ($y \sim x$, un predictor) el coeficiente de correlacion (y covarianza) entre ambas variables va a ser igual a la pendiente de la regresion cuando se usan variables estandarizadas ($z \sim N(0,1)$) o se estandariza el modelo con las variables originales.
 
 Usando variables estandarizadas
 
@@ -203,6 +185,7 @@ mod1 = lm(Temp ~ Solar.R, data = airq) # modelo de regresion lineal
 mod1 %>% tidy() %>%
   flextable() %>%
   colformat_double()
+
 mod1 %>% model_parameters() %>%
   flextable() %>%
   colformat_double()
@@ -225,6 +208,7 @@ sjstats::cv(mod1) # cv
 
 ```{r mod-lin-gts}
 tbl_regression(mod1,
+               # intercept = T
                estimate_fun = purrr::partial(style_sigfig, digits = 3),
                pvalue_fun = ~papaja::printp(.x, digits = 3)) %>%
   modify_header(list(label ~ "",estimate ~ "**Coeficiente**",
@@ -264,6 +248,7 @@ sjstats::cv(mod2) # cv
 
 ```{r mod-cuad-gts}
 tbl_regression(mod2,
+               # intercept = T
                estimate_fun = purrr::partial(style_sigfig, digits = 3),
                pvalue_fun = ~papaja::printp(.x, digits = 3)) %>%
   modify_header(list(label ~ "",estimate ~ "**Coeficiente**",
@@ -319,7 +304,7 @@ plot(comp.mods)
 
 ## Graficos
 
-Para agregar lineas de tendencia en *ggplot2* se usa la funcion `geom_smooth`. Por defecto ajusta una curva loess, pero para cambiarlo se usa `method = 'lm'`, y para especificar una ecuacion diferente a la regresion simple se usa `formula`, donde `y` y `x` son genericos, **NO** hay que poner el nombre de las variables que se esta graficando.
+Para agregar lineas de tendencia en **ggplot2** se usa la funcion `geom_smooth`. Por defecto ajusta una curva loess, pero para cambiarlo se usa `method = 'lm'`, y para especificar una ecuacion diferente a la regresion simple se usa `formula`, donde `y` y `x` son genericos, **NO** hay que poner el nombre de las variables que se esta graficando.
 
 ```{r dispersion}
 ggplot(airq, aes(Solar.R,Temp)) + 
@@ -376,6 +361,7 @@ A.tb %>%
   adorn_totals(where = c('row','col')) %>% 
   adorn_percentages(denominator = 'all') %>% 
   adorn_pct_formatting()
+
 A.tb %>% 
   tabyl(Tipo,Capa) %>% 
   adorn_totals(where = c('row','col')) %>% 

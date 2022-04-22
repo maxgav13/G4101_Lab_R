@@ -22,28 +22,17 @@ execute:
 
 # Algebra
 
-```{r setup, include=FALSE}
-library(rio)
-```
-
-
 ## Vectores
 
 Para sumar (`+`), restar (`-`) o multiplicar (`*`) vectores elemento por elemento o para el producto punto (`%*%`) recordar que se requiere que los vectores tengan la misma dimension.
 
 ```{r}
 (a = 1:20)          # numeros enteros consecutivos
-(b = seq(from = 0,to = 20,by = 4))   # numeros del 0 al 20 cada 4
-(c = seq(from = 30,to = 50,by = 4))
-(d = seq(from = 50,to = 20,by = -5)) # numeros del 50 al 20 cada 5 (decreciente)
-(e = rep(12,8))     # numero 12 repetido 8 veces
-(f = c(1,3,5,7))    # vector de datos con c()
-
-(a = 1:20)          # numeros enteros consecutivos
 (b = seq(0,20,4))   # numeros del 0 al 20 cada 4
 (c = seq(30,50,4))
 (d = seq(50,20,-5)) # numeros del 50 al 20 cada 5 (decreciente)
 (e = rep(12,8))     # numero 12 repetido 8 veces
+(f = c(1,3,5,7))    # numeros cualquiera
 
 a * 5
 a + 5
@@ -60,9 +49,8 @@ Para matrices recordar que para sumar o restar deben tener las mismas dimensione
 matrix(data = 1:9,nrow = 3,ncol = 3)
 matrix(data = 1:15,nrow = 3)
 matrix(data = 1:15,ncol=3,byrow=TRUE)
-?matrix   # ayuda sobre funcion matrix
 
-A = matrix(f,nrow = 2,byrow = F)
+A = matrix(c(1,3,5,7),nrow = 2,byrow = F)
 A
 
 det(A)    # determinante de matriz
@@ -82,7 +70,7 @@ A + B   # suma de matrices
 A %*% B # multiplicacion de matrices
 A %*% c(2,5) # multplicacion de matriz y vector
  
-datos <- import("data/ABOC.csv")
+datos <- rio::import("data/ABOC.csv")
  
 (C = as.matrix(datos)) # convierte dataframe en matriz
 ```

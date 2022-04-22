@@ -202,6 +202,7 @@ mod1 = lm(Temp ~ Solar.R, data = airq) # modelo de regresion lineal
 mod1 %>% tidy() %>%
   flextable() %>%
   colformat_double()
+
 mod1 %>% model_parameters() %>%
   flextable() %>%
   colformat_double()
@@ -224,6 +225,7 @@ sjstats::cv(mod1) # cv
 
 ```{r mod-lin-gts}
 tbl_regression(mod1,
+               # intercept = T,
                estimate_fun = purrr::partial(style_sigfig, digits = 3),
                pvalue_fun = ~papaja::printp(.x, digits = 3)) %>%
   modify_header(list(label ~ "",estimate ~ "**Coeficiente**",
@@ -263,6 +265,7 @@ sjstats::cv(mod2) # cv
 
 ```{r mod-cuad-gts}
 tbl_regression(mod2,
+               # intercept = T
                estimate_fun = purrr::partial(style_sigfig, digits = 3),
                pvalue_fun = ~papaja::printp(.x, digits = 3)) %>%
   modify_header(list(label ~ "",estimate ~ "**Coeficiente**",

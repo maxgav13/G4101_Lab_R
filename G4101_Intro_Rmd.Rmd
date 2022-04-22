@@ -91,7 +91,7 @@ mtcars %>%
   head()
 ```
 
-Tablas tambien se pueden usar diferentes paquetes para representarlas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** es el mas versatil y permite crear tablas para todo tipo de documento, **kableExtra** sirve mas para *html* y *pdf*, y **gt** sirve para *html*.
+Tablas tambien se pueden usar diferentes paquetes para representarlas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable`, `kable`, y `gt`, respectivamente. **flextable** y **kableExtra** permiten crear tablas para todo tipo de documento (*html*, *pdf*, *word*), mientras que **gt** sirve para *html*.
 
 ```{r}
 mtcars %>% 
