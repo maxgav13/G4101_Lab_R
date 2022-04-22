@@ -22,7 +22,7 @@ execute:
 
 ```{r}
 #| label: setup
-#| include: flase
+#| include: false
 
 library(tidyverse)
 ```

@@ -28,7 +28,7 @@ Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en for
 
 Se puede agregar un nuevo bloque haciendo click en *Insert Chunk* (![](imgs/rstudio-insert-chunk-button.png){width="25" height="15"}), o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
 
-El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, así como parametros opcionales globales. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
+El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, asi como parametros opcionales globales. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
 
 ```{r}
 #| label: paquetes
@@ -74,9 +74,7 @@ head(mtcars)
 Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el documento final. Dentro de las opciones tipicas estan los paquetes **flextable**, **kableExtra**, y **gt**, con las funciones `flextable` (@tbl-flext), `kable` (@tbl-kb), y `gt` (@tbl-gt), respectivamente. **flextable** y **kableExtra** permiten crear tablas para todo tipo de documento (*html*, *pdf*, *word*), mientras que **gt** sirve para *html*.
 
 ::: callout-note
-
 Se recomienda que cada tabla vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado
-
 :::
 
 ```{r}
@@ -111,10 +109,8 @@ mtcars %>%
 Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se pueden desplegar dentro del documento (@fig-disp).
 
 ::: callout-note
-
 Se recomienda que cada grafico vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado a la figura
-
-:::\
+:::
 
 ```{r fig-disp}
 #| fig-cap: "Grafico de dispersion creado con **ggplot2**."
@@ -126,10 +122,8 @@ q
 ```
 
 ::: callout-tip
-
-Si se quieren mostrar varios graficos, que tengan alguna relacion, en una sola figura se pueden generar en un mismo bloque y definir un encabezado general para la figura y sub-encabezados para cada grafico, así como el numero de filas o columnas
-
-:::\
+Si se quieren mostrar varios graficos, que tengan alguna relacion, en una sola figura se pueden generar en un mismo bloque y definir un encabezado general para la figura y sub-encabezados para cada grafico, asi como el numero de filas o columnas
+:::
 
 ```{r}
 #| label: fig-airq
@@ -145,7 +139,7 @@ ggplot(airquality, aes(Wind, Temp)) +
 
 ggplot(airquality, aes(Solar.R, Temp)) + 
   geom_point(size=2, shape=2, col='firebrick') + 
-  labs(x='Viento', y='Temperatura')
+  labs(x='Radiacion solar', y='Temperatura')
 ```
 
 ## Widgets HTML
@@ -179,9 +173,9 @@ $$E = mc^{2}$$ Para escribir estas expresiones se usa lenguaje `LaTeX`.
 
 # Importando datos
 
-Los documentos *Quarto* usan una dirección relativa a la ubicación del archivo.
+Los documentos *Quarto* usan una direccion relativa a la ubicación del archivo.
 
-Otro punto importante es que se pueden llamar funciones de paquetes sin necesidad de cargarlos usando la sintaxis `paquete::funcion()`. Por ejemplo en el bloque que sigue se usa `rio::import()`, siendo `rio` el paquete e `import()` la función a usar. **Esto puede evitar conflictos cuando se tienen funciones con el mismo nombre en diferentes paquetes**.
+Otro punto importante es que se pueden llamar funciones de paquetes sin necesidad de cargarlos usando la sintaxis `paquete::funcion()`. Por ejemplo en el bloque que sigue se usa `rio::import()`, siendo `rio` el paquete e `import()` la funcion a usar. **Esto puede evitar conflictos cuando se tienen funciones con el mismo nombre en diferentes paquetes**.
 
 ```{r}
 dat <- rio::import("data/PORPERM.csv")
