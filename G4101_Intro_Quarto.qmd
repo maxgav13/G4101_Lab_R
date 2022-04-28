@@ -24,6 +24,10 @@ execute:
 
 Este es un documento [Quarto](http://quarto.org). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Render* (![](imgs/rstudio-render-button.png){width="20" height="17"}).
 
+Los documentos se pueden crear en modo *Source* o *Visual*. En modo *Visual* (@fig-visual-opts) se puede trabajar el documento como un editor de texto clasico.
+
+![Opciones del editor *Visual*](imgs/rstudio-visual-options.png){#fig-visual-opts}
+
 Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en formato YAML que empiezan con `#|` al inicio de cada bloque. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (![](imgs/rstudio-run-chunk.png){width="20"}) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows).
 
 Se puede agregar un nuevo bloque haciendo click en *Insert Chunk* (![](imgs/rstudio-insert-chunk-button.png){width="25" height="15"}), o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
@@ -77,6 +81,8 @@ Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el d
 Se recomienda que cada tabla vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado
 :::
 
+Para poder referencias tablas en el texto la etiqueta del bloque donde se genera la tabla debe empezar con "tbl-".
+
 ```{r}
 #| label: tbl-flext
 #| tbl-cap: "Tabla usando el paquete **flextable**."
@@ -112,12 +118,14 @@ Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se 
 Se recomienda que cada grafico vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado a la figura
 :::
 
+Para poder referencias figuras en el texto la etiqueta del bloque donde se genera la figura debe empezar con "fig-".
+
 ```{r fig-disp}
 #| fig-cap: "Grafico de dispersion creado con **ggplot2**."
 
-q = ggplot(mtcars, aes(wt,mpg,col=factor(cyl))) + 
-  geom_point(size=2,shape=1) + 
-  labs(x='Peso',y='Millaje',col='Cilindros')
+q = ggplot(mtcars, aes(wt, mpg, col=factor(cyl))) + 
+  geom_point(size=2, shape=1) + 
+  labs(x='Peso', y='Millaje', col='Cilindros')
 q
 ```
 

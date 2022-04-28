@@ -23,6 +23,10 @@ always_allow_html: yes
 
 Este es un documento [R Markdown](http://rmarkdown.rstudio.com). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Knit* (![](imgs/rstudio-knit-button.png){width="39" height="15"}).
 
+Los documentos se pueden crear en modo *Source* o *Visual*. En modo *Visual* (@fig-visual-opts) se puede trabajar el documento como un editor de texto clasico.
+
+![Opciones del editor \*Visual\*](imgs/rstudio-visual-options.png){#fig-visual-opts}
+
 Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en formato YAML que empiezan con `#|` al inicio de cada bloque o dentro de `{r}`. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (![](imgs/rstudio-run-chunk.png){width="20"}) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows).
 
 Se puede agregar una nueva seccion haciendo click en *Insert Chunk* (![](imgs/rstudio-insert-chunk-button.png){width="25" height="15"}), o ejecutando *Ctrl+Alt+I* (Windows) o *Cmd+Option+I* (Mac).
