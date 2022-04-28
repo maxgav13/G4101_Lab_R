@@ -26,14 +26,14 @@ execute:
 #| label: setup
 #| include: false
 
-library(kableExtra)
-library(gtsummary)
-library(flextable)
-library(DescTools)
-library(janitor)
-library(highcharter)
-library(modelsummary)
-library(tidymodels)
+library(kableExtra)     # tablas
+library(gtsummary)      # tablas
+library(flextable)      # tablas
+library(DescTools)      # funciones estadisticas
+library(janitor)        # tablas
+library(highcharter)    # graficos interactivos
+library(modelsummary)   # modelos
+library(tidymodels)     # modelos
 library(tidyverse)
 library(easystats)
 library(rio)
@@ -130,6 +130,12 @@ Grafico estatico de coeficientes de correlacion
 
 ```{r cor-mat-fig}
 ggstatsplot::ggcorrmat(airq2)
+```
+
+```{r}
+corrplot::corrplot(cor(airq2,method = 'pearson',
+                       use = 'pairwise.complete.obs'),
+                   method = 'ellipse')
 ```
 
 El siguiente codigo genera un grafico interactivo de la matriz de correlacion (Solo se despliega en formato HTML).

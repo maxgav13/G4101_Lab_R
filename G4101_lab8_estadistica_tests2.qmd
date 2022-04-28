@@ -20,18 +20,22 @@ execute:
   echo: true
 ---
 
-```{r setup, include=FALSE, warning=F, message=FALSE}
-library(MOTE) # tamanho del efecto
-library(papaja)
-library(DescTools) # tamanho del efecto
-library(rstatix) # pruebas y tamanho efecto
-library(effectsize) # tamanho del efecto
-library(ggmosaic) # mosaico en ggplot
-library(vcd) # variables categoricas
-library(vroom) # importar datos
-library(janitor)
-library(tidymodels) # datos ordenados y mas
+```{r}
+#| label: setup
+#| include: false
+
+library(MOTE)           # tamanho del efecto
+library(papaja)         # presentacion datos
+library(DescTools)      # pruebas
+library(rstatix)        # pruebas y tamanho efecto
+library(ggmosaic)       # mosaico en ggplot
+library(vcd)            # variables categoricas
+library(vroom)          # importar datos
+library(janitor)        # tablas
+library(ggstatsplot)    # graficos de pruebas
+library(tidymodels)     # resumenes tidy y otros
 library(tidyverse)
+library(easystats)
 
 theme_set(theme_minimal())
 ```
@@ -43,8 +47,6 @@ $$H_0 : \mu_1 = \mu_2 = \mu_3 = \dotsb = \mu_n$$
 ## EDA
 
 ```{r}
-# Ho: Media es igual para todos los grupos (muestras)
-
 dat1 = vroom('data/anova MgO.csv')
 a = .05
 myvar = 'MgO (%)'
@@ -64,9 +66,7 @@ Stacked = Stacked %>%
 
 Stacked %>% 
   group_by(ind) %>% 
-  summarise_all(list(N = ~n(),
-                     Avg = ~mean(.),
-                     SD = ~sd(.))) # resumen por grupo
+  get_summary_stats()
 
 ggplot(Stacked, aes(ind, values)) + 
   stat_summary(fun.data = mean_cl_normal, 
@@ -123,14 +123,16 @@ oneway.test(values ~ ind, Stacked, var.equal = F) %>%
 
 unlist(eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = a)[1:3]) %>% 
   as_tibble_row() # MOTE
+unlist(omega.F(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = a)[1:3]) %>% 
+  as_tibble_row() # MOTE
 
-effectsize::eta_squared(mod,ci = 1-a) # solo cuando varianzas son iguales
+effectsize::eta_squared(mod, ci = 1-a)
+effectsize::omega_squared(mod, ci = 1-a)
 ```
 
 ## *Post-hoc*
 
 ```{r}
-
 if (var.igual == T) {
   CI = Stacked %>% mutate(ind = fct_rev(ind)) %>% 
     tukey_hsd(values ~ ind,
@@ -163,7 +165,10 @@ ggplot(CI, aes(contrast, estimate, ymin = conf.low, ymax = conf.high)) +
 contrastes = combn(levels(Stacked %>% pull(ind)), 2) %>% 
   as.data.frame() %>% 
   as.list()
+```
 
+
+```{r}
 ES = map_dfr(contrastes, 
              ~ effectsize::cohens_d(values ~ ind, data = Stacked %>% 
                                       filter(ind %in% .x) %>% 
@@ -176,22 +181,42 @@ ES = map_dfr(contrastes,
   select(contrast, everything(),-CI) %>% 
   arrange(contrast)
 ES
+```
 
+
+```{r}
 CI %>% inner_join(ES, by = 'contrast')
+```
+
+```{r}
+ggbetweenstats(Stacked, ind, values,
+               var.equal = T,
+               type = 'p',
+               effsize.type = 'unbiased',
+               conf.level = 1-alfa,
+               p.adjust.method = "holm",
+               pairwise.display = 's', # s, ns, all
+               bf.message = F)
 ```
 
 # Datos categoricos
 
 ## $\chi^2$ Bondad de ajuste
 
+$H_o$: Datos observados siguen la distribucion/proporcion propuesta
+
 ```{r}
-# Ho: Datos observados siguen la distribucion/proporcion propuesta
 a = .05
 obs = c(90, 110) %>% 
   set_names(c('N','S')) # conteos observados
+
+obs.tb = Untable(obs) %>% tibble()
+
 p = c(.5, .5) # proporciones esperadas
+
 chisq.test(obs,p=p) %>% 
   tidy()
+
 v.chi.sq(x2 = 2, n = 200, r = 2, c = 2, a = a)[1:3] %>% 
   as_tibble_row() # MOTE
 
@@ -201,7 +226,10 @@ ncomp.gof = (length(obs)*(length(obs)-1))/2
 new.a.gof = a/ncomp.gof
 z.crit.gof = qnorm(new.a.gof/2) %>% abs()
 z.crit.gof
+```
 
+
+```{r}
 chisq_descriptives(rstatix::chisq_test(obs)) %>% 
   left_join(pairwise_chisq_test_against_p(obs,
                                           p = p,
@@ -210,12 +238,25 @@ chisq_descriptives(rstatix::chisq_test(obs)) %>%
   select(-c(group,n))
 ```
 
+```{r}
+ggpiestats(obs.tb, Var1,
+           type = 'p',
+           ratio = p,
+           label = 'both',
+           proportion.test = T,
+           conf.level = 1-a,
+           bf.message = F)
+```
+
 ## $\chi^2$ Homogeneidad
 
+$H_o$: Proporcion de items es homogenea entre muestras
+
 ```{r}
-# Ho: Proporcion de items es homogenea entre muestras
 a = .05
+
 dat2 = vroom('data/chi2 homogeneidad clastos.csv')
+
 dat2 = dat2 %>% 
   mutate(Clasto = fct_inorder(Clasto),
          Capa = fct_inorder(as.factor(Capa)))
@@ -234,23 +275,34 @@ ncomp.h = prod(dim(clastos))
 new.a.h = a/ncomp.h
 z.crit.h = qnorm(new.a.h/2) %>% abs()
 z.crit.h
+```
 
+
+```{r}
 CHI.h = chisq.test(clastos)
 CHI.h %>% tidy()
+
 CramerV(clastos,conf.level = 1-a,method = 'ncchisqadj') # DescTools
+
 chisq_to_cramers_v(chisq = CHI.h$statistic,
                    n = N,
                    nrow = nrow(clastos),
                    ncol = ncol(clastos),
                    ci = 1-a) # effectsize
+```
 
+
+```{r}
 chisq_descriptives(rstatix::chisq_test(clastos)) %>% 
   left_join(pairwise_chisq_test_against_p(clastos,
                                           p = ((CHI.h$expected)/N),
                                           p.adjust.method = "BH")
   ) %>% 
   select(-c(group,n))
+```
 
+
+```{r}
 ggplot(dat2, aes(Capa,fill=Clasto)) + 
   geom_bar(position = 'fill')
 
@@ -258,7 +310,10 @@ ggplot(data = dat2) +
     geom_mosaic(aes(x=product(Capa), 
                     fill=Clasto), offset = 0.02) + 
     labs(x='Capa',y='Clasto',fill='Clasto')
+```
 
+
+```{r}
 mosaic(t(clastos), 
        direction = 'v',
        gp = shading_hcl(lty = 1,
@@ -277,13 +332,39 @@ mosaic(t(clastos),
 # Desc(clastos)
 ```
 
-## $\chi^2$ Independencia/asociacion
+```{r}
+corrplot::corrplot(CHI.h$stdres, 
+                   is.corr = F,
+                   method = 'ellipse',
+                   addgrid.col = F,
+                   p.mat = abs(1/CHI.h$stdres),
+                   sig.level = 1/z.crit.h,
+                   pch.cex = 2,
+                   bg = 'grey80')
+```
 
 ```{r}
-# Ho: No hay relacion entre variables
-# Ho: Las variables son independientes entre si
+ggbarstats(dat2, Clasto, Capa,
+           type = 'p',
+           label = 'both',
+           proportion.test = F,
+           sampling.plan = 'indepMulti',
+           fixed.margin = 'cols',
+           conf.level = 1-a,
+           bf.message = F)
+```
+
+
+## $\chi^2$ Independencia/asociacion
+
+$H_o$: No hay relacion entre variables
+$H_o$: Las variables son independientes entre si
+
+```{r}
 a = .05
+
 dat3 = vroom('data/chi2 independencia.csv')
+
 dat3 = dat3 %>% 
   mutate(Redondez = fct_inorder(Redondez),
          Distancia = fct_inorder(Distancia))
@@ -306,19 +387,30 @@ ncomp.i = prod(dim(round.dist))
 new.a.i = a/ncomp.i
 z.crit.i = qnorm(new.a.i/2) %>% abs()
 z.crit.i
+```
 
+
+```{r}
 CHI.i = chisq.test(round.dist)
 CHI.i %>% tidy()
-CramerV(round.dist,conf.level = 1-a,method = 'ncchisqadj') # DescTools
-cramers_v(round.dist,ci = 1-a)
 
+CramerV(round.dist,conf.level = 1-a,method = 'ncchisqadj') # DescTools
+
+cramers_v(round.dist,ci = 1-a)
+```
+
+
+```{r}
 chisq_descriptives(rstatix::chisq_test(round.dist)) %>% 
   left_join(pairwise_chisq_test_against_p(round.dist,
                                           p = ((CHI.i$expected)/N),
                                           p.adjust.method = "BH")
   ) %>% 
   select(-c(group,n))
+```
 
+
+```{r}
 ggplot(dat3, aes(Distancia,fill=Redondez)) + 
   geom_bar(position = 'fill')
 
@@ -326,7 +418,10 @@ ggplot(data = dat3) +
   geom_mosaic(aes(x=product(Distancia), 
                   fill=Redondez), offset = 0.02) + 
   labs(x='Distancia',y='Redondez',fill='Redondez')
+```
 
+
+```{r}
 mosaic(t(round.dist), 
        direction = 'v',
        gp = shading_hcl(lty = 1,
@@ -343,4 +438,26 @@ mosaic(t(round.dist),
                                   gp_labels = gpar(fontsize = 8)))
 
 # Desc(round.dist)
+```
+
+```{r}
+corrplot::corrplot(CHI.i$stdres, 
+                   is.corr = F,
+                   method = 'ellipse',
+                   addgrid.col = F,
+                   p.mat = abs(1/CHI.i$stdres),
+                   sig.level = 1/z.crit.i,
+                   pch.cex = 2,
+                   bg = 'grey80')
+```
+
+
+```{r}
+ggbarstats(dat2, Clasto, Capa,
+           type = 'p',
+           label = 'both',
+           proportion.test = T,
+           sampling.plan = 'jointMulti',
+           conf.level = 1-a,
+           bf.message = F)
 ```

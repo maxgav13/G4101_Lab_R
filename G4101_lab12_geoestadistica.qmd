@@ -20,7 +20,10 @@ execute:
   echo: true
 ---
 
-```{r setup, include=FALSE, warning=F, message=FALSE}
+```{r}
+#| label: setup
+#| include: false
+
 library(gstat)
 library(sp)
 library(sf)

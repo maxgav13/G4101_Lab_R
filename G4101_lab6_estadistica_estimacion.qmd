@@ -20,10 +20,13 @@ execute:
   echo: true
 ---
 
-```{r setup, include=FALSE, warning=F, message=FALSE}
-library(GMisc)
-library(OneTwoSamples)
-library(DescTools)
+```{r}
+#| label: setup
+#| include: false
+
+library(GMisc)          # intervalos de confianza
+library(OneTwoSamples)  # intervalos de confianza
+library(DescTools)      # funciones estadisticas
 library(tidyverse)
 ```
 

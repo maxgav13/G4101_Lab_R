@@ -63,14 +63,18 @@ dbinom(x2,n2,p2)
 pbinom(x2,n2,p2)
 ```
 
-```{r}
-# funcion de probabilidad
+```{r fig-dist-binom}
+#| fig-cap: 'Distribucion binomial'
+#| fig-subcap:
+#|   - 'Funcion de probabilidad'
+#|   - 'Funcion de probabilidad acumulada'
+#| layout-ncol: 2
+
 data.frame(x=x2,y=dbinom(x2,n2,p)) %>% 
   ggplot(aes(x,y))+
   geom_col(width = .5,fill='blue')+
   theme_bw()
 
-# funcion de probabilidad acumulada
 data.frame(x=x2,y=pbinom(x2,n2,p)) %>% 
   ggplot(aes(x,y))+
   geom_col(width = .5,fill='blue')+
@@ -101,7 +105,13 @@ dpois(x4,lambda)
 ppois(x4,lambda)
 ```
 
-```{r}
+```{r fig-dist-pois}
+#| fig-cap: 'Distribucion de Poisson'
+#| fig-subcap:
+#|   - 'Funcion de probabilidad'
+#|   - 'Funcion de probabilidad acumulada'
+#| layout-ncol: 2
+
 data.frame(x=x4,y=dpois(x4,lambda)) %>% 
   ggplot(aes(x,y))+
   geom_col(width = .5,fill='orange')+
@@ -123,16 +133,54 @@ Para esta distribucion los parametros son:
 
 ```{r}
 pnorm(q = 1.84,lower.tail = F) # probabilidad de Z mayor a 1.84
+
+ggplot() + 
+    xlim(-3,3) +
+    stat_function(geom = 'line', fun = dnorm, args = list(mean=0,sd=1)) + 
+    stat_function(geom = 'area', fun = dnorm, args = list(mean=0,sd=1), 
+                  xlim = c(1.84,3), fill = 'dodgerblue')
+```
+
+
+```{r}
 pnorm(q = 0.86) - pnorm(q = -1.97) # probabilidad de Z entre -1.97 y 0.86
 
+ggplot() + 
+    xlim(-3,3) +
+    stat_function(geom = 'line', fun = dnorm, args = list(mean=0,sd=1)) + 
+    stat_function(geom = 'area', fun = dnorm, args = list(mean=0,sd=1), 
+                  xlim = c(-1.97,.86), fill = 'dodgerblue')
+```
+
+
+```{r}
 # media=50, sigma=10
 pnorm(q = 62,mean = 50,sd = 10) - pnorm(q = 45,mean = 50,sd = 10) # probabilidad de 45 < X < 62
+
+ggplot() + 
+    xlim(20,80) +
+    stat_function(geom = 'line', fun = dnorm, args = list(mean=50,sd=10)) + 
+    stat_function(geom = 'area', fun = dnorm, args = list(mean=50,sd=10), 
+                  xlim = c(45,62), fill = 'dodgerblue')
+
 (62-50)/10;(45-50)/10
 pnorm(q = 1.2)-pnorm(q = -.5)
+```
 
+
+```{r}
 # media=300, sigma=50
 pnorm(q = 362,mean = 300,sd = 50,lower.tail = F) # probabilidad de X > 362
 
+ggplot() + 
+    xlim(150,450) +
+    stat_function(geom = 'line', fun = dnorm, args = list(mean=300,sd=50)) + 
+    stat_function(geom = 'area', fun = dnorm, args = list(mean=300,sd=50), 
+                  xlim = c(362,450), fill = 'dodgerblue')
+```
+
+
+```{r}
 # media=40, sigma=6
 qnorm(p = .45,mean = 40,sd = 6) # X para 45% de los datos a la izquierda
 qnorm(p = .14,mean = 40,sd = 6,lower.tail = F) # X para 14% de los datos a la derecha
@@ -159,6 +207,10 @@ mean(rnorm(n = 10,mean = 50,sd = 6)) # 10 datos para X~N(50,6)
 mean(rnorm(n = n,mean = 50,sd = 10) < 62) - 
   mean(rnorm(n = n,mean = 50,sd = 10) < 45) # probabilidad de 45 < X < 62
 mean(rnorm(n = n,mean = 300,sd = 50) > 362) # probabilidad de X > 362, media=300, sigma=50
+```
+
+
+```{r}
 mean(rpois(n = n,lambda = lambda) == 2) # probabilidad de X = 2
 mean(rpois(n = n,lambda = lambda) > 2) # probabilidad de X > 2
 ```

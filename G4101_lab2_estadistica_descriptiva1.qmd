@@ -26,10 +26,10 @@ execute:
 #| label: setup
 #| include: false
 
-library(DescTools)
-library(janitor)
-library(summarytools)
-library(gtsummary)
+library(DescTools)      # funciones estadisticas y descripcion general
+library(janitor)        # tablas
+library(summarytools)   # descripcion general
+library(gtsummary)      # tablas
 library(tidyverse)
 library(rio)
 
@@ -120,7 +120,8 @@ Dentro de `geom_histogram` hay 3 opciones para definir la discretizacion:
 ```{r}
 ggplot(data = airquality, aes(x = Temp)) + 
   geom_histogram(breaks = seq(50,100,10), 
-                 col='black', fill='lightblue')
+                 col='black', fill='lightblue') +
+  labs(x='Temperatura', y='Frecuencia absoluta')
 ```
 
 *Frecuencias relativas*
@@ -129,7 +130,8 @@ ggplot(data = airquality, aes(x = Temp)) +
 ggplot(airquality, aes(Temp)) + 
   geom_histogram(breaks = seq(50,100,10), 
                  aes(y=stat(count/sum(count))), 
-                 col='black', fill='lightblue')
+                 col='black', fill='lightblue') +
+  labs(x='Temperatura', y='Frecuencia relativa')
 ```
 
 ```{r}
@@ -204,6 +206,9 @@ e1071::skewness(myvector) # asimetria
 e1071::kurtosis(myvector) # curtosis
 DescTools::Skew(myvector)
 DescTools::Kurt(myvector)
+
+# moments::agostino.test(myvector)
+# moments::anscombe.test(myvector)
 ```
 
 ### Descripciones mas generales
