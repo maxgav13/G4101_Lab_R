@@ -38,7 +38,7 @@ library(tidyverse)
 library(easystats)
 library(rio)
 
-theme_set(theme_minimal(base_size = 12))
+theme_set(theme_minimal(base_size = 14))
 
 options(
   modelsummary_get = 'all'

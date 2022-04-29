@@ -24,24 +24,29 @@ execute:
 #| label: setup
 #| include: false
 
-library(MOTE)
-library(papaja)
-library(DescTools) # tamanho del efecto
-library(effectsize)
-library(rstatix) # pruebas y tamanho del efecto
-library(rio) # importar datos
-library(tidymodels)
+library(rio)            # importar datos
+library(vroom)          # importar datos
+library(MOTE)           # tamanho del efecto
+library(papaja)         # presentacion datos
+library(DescTools)      # pruebas
+library(rstatix)        # pruebas y tamanho efecto
+library(ggstatsplot)    # graficos de pruebas
+library(tidymodels)     # resumenes tidy y otros
 library(tidyverse)
+library(easystats)
+
 options(digits = 3)
 
-theme_set(theme_minimal())
+theme_set(theme_minimal(base_family = 14))
+
+signed_rank = function(x) sign(x) * rank(abs(x))
 ```
 
 > Para las pruebas no parametricas se trabaja con los datos **rankeados**
 
 # Correlacion de Spearman
 
-$$H_0 : r_s = 0$$
+$$H_0 : \rho_s = 0$$
 
 ```{r}
 a = c(8,16,12,13,16,14,16,11,15,13)
@@ -51,17 +56,18 @@ alfa = .1
 
 cordat = tibble(a,b,c)
 
-cor.test(a,b,method = "spearman",conf = 1-alfa) %>% 
+cor.test(a,b, method = "spearman", conf = 1-alfa) %>% 
   tidy()
 
-SpearmanRho(a,b,conf.level = 1-alfa) # DescTools
+SpearmanRho(a,b, conf.level = 1-alfa) # DescTools
 
-cor.test(rank(a),rank(b),conf = 1-alfa) %>% 
+cor.test(rank(a),rank(b), conf = 1-alfa) %>% 
   tidy()
 
 correlation::cor_test(cordat,'a','b',
                       method = 'spearman',
-                      ci = 1-alfa)
+                      ci = 1-alfa) %>% 
+  tibble()
 ```
 
 # Prueba de Kolmogorov-Smirnov
@@ -92,15 +98,39 @@ $$H_0 : mediana \ muestra = mediana \ hipotetica$$
 verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
 alfa = .05
 n = length(verm)
+```
 
-wilcox.test(x = verm, mu=7, conf.int = T) %>% 
+
+```{r}
+wilcox.test(x = verm, mu=7, 
+            conf.int = T, conf.level = 1-alfa) %>% 
   tidy()
+```
 
+## Tamanho del efecto
+
+### rstatix
+
+```{r}
 set.seed(101)
 wilcox_effsize(enframe(verm), value~1, mu = 7,
-               ci = T,conf.level = 1-alfa)
+               ci = T, conf.level = 1-alfa)
+```
 
+### effectsize
+
+```{r}
 rank_biserial(verm, mu = 7,ci = 1-alfa)
+```
+
+## Graficos resumen
+
+```{r}
+gghistostats(enframe(verm), value,
+             test.value = 7,
+             type = 'np',
+             conf.level = 1-alfa,
+             bf.message = F)
 ```
 
 # Prueba de suma de rangos de Wilcoxon
@@ -127,15 +157,38 @@ mol %>%
             median(values),
             mean(pos),
             median(pos))
+```
 
-wilcox.test(values ~ ind, data = mol, conf.int = T) %>% 
+
+```{r}
+wilcox.test(values ~ ind, data = mol, 
+            conf.int = T, conf.level = 1-alfa) %>% 
   tidy()
+```
 
+## Tamanho del efecto
+
+### rstatix
+
+```{r}
 set.seed(101)
 wilcox_effsize(mol, values ~ ind,
-               ci = T,conf.level = 1-alfa)
+               ci = T, conf.level = 1-alfa)
+```
 
+### effectsize
+
+```{r}
 rank_biserial(values ~ ind, data = mol, ci = 1-alfa)
+```
+
+## Grafico resumen
+
+```{r}
+ggbetweenstats(mol, ind, values,
+               type = 'np',
+               conf.level = 1-alfa,
+               bf.message = F)
 ```
 
 # Prueba de Kruskal-Wallis
@@ -159,22 +212,45 @@ Stacked %>%
             median(values),
             mean(pos),
             median(pos))
+```
 
+
+```{r}
 kruskal.test(values ~ ind, data = Stacked) %>% 
   tidy()
+```
 
-# ES
+## Tamanho del efecto
+
+```{r}
 # (H - k + 1) / (N - k)
 (7.65 - 3 + 1) / (12 - 3) # eta-cuadrado
+```
 
+### rstatix
+
+```{r}
 set.seed(101)
-kruskal_effsize(Stacked,values~ind,ci = T,conf.level = 1-alfa)
+kruskal_effsize(Stacked, values ~ ind,
+                ci = T, conf.level = 1-alfa)
+```
 
+### effectsize
+
+```{r}
 rank_epsilon_squared(values ~ ind, data = Stacked, ci = 1-alfa)
+```
 
-DunnTest(values~ind, Stacked) # DescTools
+## Analisis post-hoc
 
-KW.post = dunn_test(Stacked,values ~ ind) %>%
+```{r}
+DunnTest(values~ind, Stacked, method = 'holm') # DescTools
+```
+
+
+```{r}
+KW.post = dunn_test(Stacked, values ~ ind, 
+                    p.adjust.method = 'holm') %>%
   as_tibble() %>%
   left_join(sjstats::mwu(Stacked,values,ind)$df %>% 
               rename(group1 = grp1.label, group2 = grp2.label) %>%
@@ -184,6 +260,17 @@ KW.post = dunn_test(Stacked,values ~ ind) %>%
          r.high = map2_dbl(.x = r, .y = (n1 + n2),
                            ~CorCI(.x, n = .y, conf.level = 1-alfa)[3]))
 KW.post
+```
+
+## Grafico resumen
+
+```{r}
+ggbetweenstats(Stacked, ind, values,
+               type = 'np',
+               conf.level = 1-alfa,
+               p.adjust.method = "holm",
+               pairwise.display = 's', # s, ns, all
+               bf.message = F)
 ```
 
 # Bootstrap con `rsample`
@@ -226,12 +313,14 @@ m = m %>%
 
 ```{r}
 m.s = m %>% 
-  summarise_if(is.numeric,
-               .funs = list(media=~mean(.),
-                            sd=~sd(.),
-                            q1=~quantile(.,alfa/2),
-                            q2=~quantile(.,.5),
-                            q3=~quantile(.,1-alfa/2)))
+  summarise(across(where(is.numeric),
+                   list(media=mean,
+                        sd=sd,
+                        q1=~quantile(.,alfa/2),
+                        q2=~quantile(.,.5),
+                        q3=~quantile(.,1-alfa/2)),
+                   .names = '{.col}_{.fn}'))
+
 m.s %>% 
   pivot_longer(cols = everything(),
                names_to = c('param','stat'),
@@ -253,15 +342,15 @@ ggplot(m, aes(get(myvar))) +
 
 ```{r}
 set.seed(4101)
-moluscos = tibble(A,B) %>% 
-  pivot_longer(1:2,names_to = 'aflor',values_to = 'longitud')
+
 alfa = .05
-R2 = bootstraps(data = moluscos, times = 1000, strata = 'aflor')
+
+R2 = bootstraps(data = mol, times = 1000, strata = 'ind')
 
 r2 = function(split) {
   split %>% 
     analysis() %>% 
-    lm(longitud ~ aflor, data = .) %>% 
+    lm(values ~ ind, data = .) %>% 
     glance() %>% 
     pull(r.squared)
 }
@@ -272,11 +361,12 @@ R2 = R2 %>%
 
 ```{r}
 R2.s = R2 %>% 
-  summarise_if(is.numeric,
-               .funs = list(media=~mean(.),
-                            q1=~quantile(.,alfa/2),
-                            q2=~quantile(.,.5),
-                            q3=~quantile(.,1-alfa/2)))
+  summarise(across(where(is.numeric),
+                   list(media=mean,
+                        q1=~quantile(.,alfa/2),
+                        q2=~quantile(.,.5),
+                        q3=~quantile(.,1-alfa/2)),
+                   .names = '{.col}_{.fn}'))
 R2.s
 
 ggplot(R2, aes(r2)) +
@@ -310,11 +400,12 @@ eta2 = eta2 %>%
 
 ```{r}
 eta2.s = eta2 %>% 
-  summarise_if(is.numeric,
-               .funs = list(media=~mean(.),
-                            q1=~quantile(.,alfa/2),
-                            q2=~quantile(.,.5),
-                            q3=~quantile(.,1-alfa/2)))
+  summarise(across(where(is.numeric),
+                   list(media=mean,
+                        q1=~quantile(.,alfa/2),
+                        q2=~quantile(.,.5),
+                        q3=~quantile(.,1-alfa/2)),
+                   .names = '{.col}_{.fn}'))
 eta2.s
 
 ggplot(eta2, aes(eta2)) +

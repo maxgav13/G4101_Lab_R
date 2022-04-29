@@ -35,6 +35,8 @@ library(tidymodels)     # resumenes tidy y otros
 library(ggstatsplot)    # graficos de pruebas
 library(tidyverse)
 library(easystats)      
+
+theme_set(theme_minimal(base_size = 14))
 ```
 
 
@@ -67,52 +69,14 @@ alfa = .05
 x = mpg %>% filter(manufacturer=='audi') %>% pull(cty)
 y = mpg %>% filter(manufacturer=='ford') %>% pull(cty)
 
-chi2 = var.test(x,y,ratio = 1,alt = "two.sided",conf = 1-alfa)
-chi2
+chi2 = var.test(x,y,ratio = 1,conf = 1-alfa)
+chi2 %>% 
+  tidy()
 
 var_test2(x,y,side = 0) # OneTwoSample
 interval_var2(x,y) # OneTwoSample
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
 ```
-
-
-# Prueba Z de 1 muestra
-
-$$H_0 : \mu = \mu_0$$
-
-```{r}
-# Ho: mu=13
-alfa = .05
-mu = 13
-sig = 4
-n = 8
-
-set.seed(4101)
-x = rnorm(n = n,mean = 10,sd = sig)
-
-(z = (mean(x)-mu)/(sig/sqrt(length(x))))
-(zcrit = c(qnorm(alfa/2), 
-           qnorm(1-alfa/2)))
-
-ci_z(x = mean(x), sig = sig, n = length(x), conf.level = alfa) # GMisc
-
-z1 = ZTest(x, mu=mu, sd_pop = sig, conf.level = alfa) # DescTools
-z1
-z1 %>% tidy()
-
-mean_test1(x, mu=mu, sigma = sig) # OneTwoSamples
-interval_estimate1(x, sigma = sig) # OneTwoSamples
-```
-
-
-```{r}
-d.z = d.z.mean(mu = mu, m1 = mean(x), sig = sig, 
-         sd1 = sd(x), n = n, a = alfa)
-
-d.z %>% 
-  as_tibble_row() # MOTE
-```
-
 
 
 # Prueba t de 1 muestra
@@ -132,21 +96,21 @@ t1 %>% tidy()
 
 (tcrit = c(qt(alfa/2,length(verm)-1),
            qt(1-alfa/2,length(verm)-1)))
-
-t1.mod = lm(verm~1)
-t1.mod %>% 
-  tidy(conf.int=T,conf.level=1-alfa)
 ```
 
+## Tamanho del effecto
+
+### MOTE
 
 ```{r}
 d1 = d.single.t(m = mean(verm), u = mu, sd = sd(verm), 
            n = length(verm), a = alfa)
 
 d1 %>% 
-  as_tibble_row() # MOTE
+  as_tibble_row()
 ```
 
+### effectsize
 
 ```{r}
 cohens_d(verm, mu = mu, ci = 1-alfa) # effectsize
@@ -176,46 +140,58 @@ B = c(45, 37, 36, 38, 49, 47, 32, 41, 38, 45, 33, 39, 46, 47, 40)
 
 DF = tibble(Val = c(A,B), 
             Grp = c(rep(c('A','B'),each=length(A))))
+```
 
+## Graficas
+
+```{r}
 DF %>% 
   ggplot() + 
-  geom_boxplot(aes(Grp,Val,col=Grp)) + 
-  theme_bw()
+  geom_boxplot(aes(Grp,Val,col=Grp))
 
 DF %>% 
   ggplot(aes(Grp,Val,col=Grp)) + 
   stat_summary(geom = 'pointrange',
                fun.data = mean_cl_normal,
-               fun.args = list(conf.int=.95)) + 
-  theme_bw()
+               fun.args = list(conf.int=.95))
+```
 
+## Estadisticas por grupo
+
+```{r}
 DF %>% 
   group_by(Grp) %>% 
   get_summary_stats()
+```
 
-var.test(A,B,conf.level = 1-alfa)
+## Revisar igualdad de varianzas
 
-t.test(A, B, mu=0,conf.level = 1-alfa) %>% 
+```{r}
+var.test(Val ~ Grp, DF, conf.level = 1-alfa)
+```
+
+
+```{r}
+t.test(A, B, mu=0, conf.level = 1-alfa) %>% 
   tidy()
 
-t.test(B, A, mu=0,conf.level = 1-alfa) %>% 
+t.test(B, A, mu=0, conf.level = 1-alfa) %>% 
   tidy()
 
-t.test(A, B, mu=0,conf.level = 1-alfa, var.equal = T) %>% 
+t.test(A, B, mu=0, conf.level = 1-alfa, var.equal = T) %>% 
   tidy()
 
-t2 = t.test(Val~Grp,DF,conf.level = 1-alfa)
+t2 = t.test(Val ~ Grp, DF, conf.level = 1-alfa, var.equal = T)
 t2
 
 ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
       x2 = mean(B), s2 = sd(B), n2 = length(B), 
       conf.level = 1-alfa) # GMisc
-
-t2.mod = lm(Val~Grp,DF)
-t2.mod  %>% 
-  tidy(conf.int=T,conf.level=1-alfa)
 ```
 
+## Tamanho del effecto
+
+### effectsize
 
 ```{r}
 cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
@@ -223,6 +199,7 @@ cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
 hedges_g(Val ~ Grp, data = DF, ci = 1-alfa, pooled_sd = T)
 ```
 
+### MOTE
 
 ```{r}
 d2.ind = d.ind.t(m1 = mean(A), m2 = mean(B), 
@@ -230,16 +207,17 @@ d2.ind = d.ind.t(m1 = mean(A), m2 = mean(B),
         n1 = length(A), n2 = length(B), a = alfa)
 
 d2.ind %>% 
-  as_tibble_row() # MOTE
+  as_tibble_row()
 
 g2.ind = g.ind.t(m1 = mean(A), m2 = mean(B), 
         sd1 = sd(A), sd2 = sd(B), 
         n1 = length(A), n2 = length(B), a = alfa)
 
 g2.ind %>% 
-  as_tibble_row() # MOTE
+  as_tibble_row()
 ```
 
+## Grafico resumen
 
 ```{r}
 ggbetweenstats(DF, Grp, Val,
@@ -262,19 +240,28 @@ Despues = c(13.6,14.6,12.6,15.7,11.1,16.6,13.2,19.5,16.8,18.6)
 
 DF2 = tibble(Val = c(Antes,Despues), 
              Grp = c(rep(c('A','B'), each=length(Antes))))
-
-t.test(Despues,Antes,mu=0,paired = T) %>% 
-  tidy()
 ```
 
+
+```{r}
+t.test(Despues,Antes,mu=0,paired = T) %>% 
+  tidy()
+
+ci_t(x = mean(Despues-Antes), s = sd(Despues-Antes), 
+     n = length(Antes), conf.level = 1-alfa) # GMisc
+```
+
+## Tamanho del effecto
+
+### itns
 
 ```{r}
 cohensd_rm(Despues, Antes) # itns
 ```
 
+### MOTE
 
 ```{r}
-# MOTE
 d2.av = d.dep.t.avg(m1 = mean(Antes),m2 = mean(Despues),
             sd1 = sd(Antes),sd2 = sd(Despues),
             n = length(Antes),a = alfa)
@@ -297,15 +284,7 @@ d2.rm %>%
   as_tibble_row()
 ```
 
-
-```{r}
-ci_t(x = mean(Despues-Antes), s = sd(Despues-Antes), 
-     n = length(Antes), conf.level = 1-alfa) # GMisc
-
-lm((Despues-Antes)~1) %>% 
-  tidy(conf.int=T,conf.level=1-alfa)
-```
-
+## Grafico resumen
 
 ```{r}
 ggwithinstats(DF2, Grp, Val,
@@ -327,23 +306,23 @@ b = c(7,8,10,12,14,9,13,6,9,10)
 c = c(3,5,9,5,5,8,13,3,9,9)
 
 cordat = tibble(a,b,c)
+```
 
+
+```{r}
 r = cor.test(a,b,method = "pearson",conf = 1-alfa)
 r %>% 
   tidy()
 
-CorCI(rho = cor(a,b), n = length(a), conf.level = 1-alfa) # DescTools
-
-r.es = r.correl(r = r$estimate, n = r$parameter+2, a = alfa)
-
-r.es %>% 
-  as_tibble_row()
+CorCI(rho = r$estimate, n = length(a), 
+      conf.level = 1-alfa) # DescTools
 
 correlation::cor_test(cordat,'a','b',
                       method = 'pearson',
                       ci = 1-alfa)
 ```
 
+## Grafico resumen
 
 ```{r}
 ggscatterstats(cordat, a, b,
@@ -353,23 +332,18 @@ ggscatterstats(cordat, a, b,
                bf.message = F)
 ```
 
-
 # Reportes
 
 ```{r}
-report::report(chi2)
+report(chi2)
 ```
 
 ```{r}
-report::report(t2)
+report(t2)
 ```
 
 ```{r}
-report::report(t2.mod)
-```
-
-```{r}
-report::report(r)
+report(r)
 ```
 
 # Estadisticas
@@ -384,10 +358,6 @@ apa_print(chi2)
 
 ```{r}
 apa_print(t2)
-```
-
-```{r}
-apa_print(t2.mod)
 ```
 
 ```{r}

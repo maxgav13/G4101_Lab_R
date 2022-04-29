@@ -1,0 +1,306 @@
+---
+title: "Pruebas como modelos estadisticos"
+author: "Maximiliano Garnier Villarreal"
+lang: es
+toc: true
+toc-depth: 2
+toc-title: Contenidos
+number-sections: true
+highlight-style: pygments
+theme: sandstone
+format:
+  html:
+    code-fold: true
+    html-math-method: katex
+  pdf: default
+  docx: default
+execute:
+  warning: false
+  error: false
+  echo: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(MOTE)           # tamanho del efecto
+library(papaja)         # presentacion datos
+library(DescTools)      # pruebas
+library(modelsummary)
+library(rstatix)        # pruebas y tamanho efecto
+library(ggstatsplot)    # graficos de pruebas
+library(tidymodels)     # resumenes tidy y otros
+library(tidyverse)
+library(easystats)      
+
+signed_rank = function(x) sign(x) * rank(abs(x))
+
+alfa =.05
+```
+
+# Una media
+
+$$y = \beta_0$$
+
+$$H_0 : \beta_0 = 0$$
+
+## Prueba-t de una muestra y prueba de signo con rango de Wilcoxon
+
+```{r}
+verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
+```
+
+### Prueba-t de una muestra
+
+```{r}
+t1.mod = lm(verm~1)
+
+t1.mod %>% 
+  tidy(conf.int = T, conf.level = 1-alfa)
+
+t1.mod %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+### Prueba de signo con rango de Wilcoxon
+
+```{r}
+w1.mod = lm(signed_rank(verm) ~ 1)
+
+w1.mod %>% 
+  tidy(conf.int = T, conf.level = 1-alfa)
+
+w1.mod %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+## Prueba-t y de Wilcoxon de muestras pareadas
+
+$$y_2 - y_1 = \beta_0$$
+
+$$\it{\text{signed_rank}}(y_2 - y_1) = \beta_0$$
+
+$$H_0 : \beta_0 = 0$$
+
+```{r}
+Antes = c(13.5,14.6,12.7,15.5,11.1,16.4,13.2,19.3,16.7,18.4)
+Despues = c(13.6,14.6,12.6,15.7,11.1,16.6,13.2,19.5,16.8,18.6)
+```
+
+### Prueba-t de muestras pareadas
+
+```{r}
+t.pair = lm(Despues-Antes ~ 1) 
+
+t.pair %>% 
+  tidy(conf.int = T, conf.level = 1-alfa)
+
+t.pair %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+### Prueba de Wilcoxon de muestras pareadas
+
+```{r}
+w.pair = lm(signed_rank(Despues-Antes) ~ 1) 
+
+w.pair %>% 
+  tidy(conf.int = T, conf.level = 1-alfa)
+
+w.pair %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+# Dos medias
+
+## Prueba-t de muestras independientes y prueba-U de Mann-Whitney
+
+$$y_i = \beta_0 + \beta_1 \cdot x_i$$
+
+$$\it{\text{rank}}(y_i) = \beta_0 + \beta_1 \cdot x_i$$
+
+$$H0: \beta_1 = 0$$
+
+```{r}
+A = c(25, 40, 34, 37, 38, 35, 29, 32, 35, 44, 27, 33, 37, 38, 36)
+B = c(45, 37, 36, 38, 49, 47, 32, 41, 38, 45, 33, 39, 46, 47, 40)
+
+DF = tibble(Val = c(A,B), 
+            Grp = c(rep(c('A','B'),
+                        each=length(A))))
+```
+
+### Prueba-t de muestras independientes
+
+```{r}
+t2.mod = lm(Val ~ Grp, DF)
+
+t2.mod  %>% 
+  tidy(conf.int =T , conf.level = 1-alfa)
+
+t2.mod %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+### Prueba-U de Mann-Whitney
+
+```{r}
+u2.mod = lm(rank(Val) ~ Grp, DF)
+
+u2.mod  %>% 
+  tidy(conf.int =T , conf.level = 1-alfa)
+
+u2.mod %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+### Prueba-t de muestras independientes con varianza diferente
+
+```{r}
+t2.welch = nlme::gls(Val ~ Grp, DF,
+                     weights = nlme::varIdent(form=~1|Grp),
+                     method="ML")
+
+t2.welch %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+# Correlacion de Pearson y Spearman
+
+$$y_i = \beta_0 + \beta_1x_i$$
+
+$$\it{\text{rank}}(y) = \beta_0 + \beta_1 \cdot \it{\text{rank}}(x)$$
+
+$$H_0 : \beta_1 = 0$$
+
+```{r}
+a = c(8,16,12,13,16,14,16,11,15,13)
+b = c(7,8,10,12,14,9,13,6,9,10)
+c = c(3,5,9,5,5,8,13,3,9,9)
+
+cordat = tibble(a,b,c)
+```
+
+## Correlacion de Pearson
+
+```{r}
+r.p = lm(scale(a) ~ scale(b))
+
+r.p %>% 
+  tidy(conf.int =T , conf.level = 1-alfa)
+
+r.p %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+## Correlacion de Spearman
+
+```{r}
+r.s = lm(rank(a) ~ rank(b))
+
+r.s %>% 
+  tidy(conf.int =T , conf.level = 1-alfa)
+
+r.s %>% 
+  model_parameters(ci = 1-alfa) %>% 
+  tibble()
+```
+
+# Tres o mas medias
+
+## Anova de 1 factor y Kruskal-Wallis
+
+$$y = \beta_0 + \beta_1 \cdot x_1  + \beta_2 \cdot x_2  + \beta_3 \cdot x_3 + \dots$$
+
+$$\it{\text{rank}}(y) = \beta_0 + \beta_1 \cdot x_1  + \beta_2 \cdot x_2  + \beta_3 \cdot x_3 + \dots$$
+
+$$H_0: y = \beta_0$$
+
+```{r}
+G1 = c(7,8,10,11) # Mt Mica
+G2 = c(4,5,7,8) # Sebago Bath
+G3 = c(1,2,4,5) # Black Mt
+
+Stacked = stack(list(G1=G1,
+                     G2=G2,
+                     G3=G3))
+
+Stacked = Stacked %>% 
+  mutate(ind = factor(ind,
+                      labels = c('Mt Mica', 'Sebago Bath', 'Black Mt')))
+```
+
+### Anova de 1 factor
+
+```{r}
+aov1.mod = lm(values ~ ind, Stacked)
+
+aov1.mod %>% 
+  glance()
+
+aov1.mod %>% 
+  model_performance() %>% 
+  tibble()
+```
+
+### Krushal-Wallis
+
+```{r}
+kw.mod = lm(rank(values) ~ ind, Stacked)
+
+kw.mod %>% 
+  glance()
+
+kw.mod %>% 
+  model_performance() %>% 
+  tibble()
+```
+
+# Datos categoricos ($\chi^2$)
+
+## Bondad de ajuste
+
+```{r}
+gof.tb = c(90, 110) %>% 
+    set_names(c('N','S')) %>% 
+    as_tibble(rownames = 'x')
+```
+
+```{r}
+gof.full = glm(value ~ x, gof.tb, family = poisson)
+gof.null = glm(value ~ 1, gof.tb, family = poisson)
+
+anova(gof.null, gof.full, test = 'Rao') # Chisq, LRT, Rao
+anova(gof.full, test = 'Rao')
+```
+
+## Tablas de contingencia
+
+```{r}
+rc = vroom('data/chi2 independencia.csv') %>% 
+  mutate(Redondez = fct_inorder(Redondez),
+         Distancia = fct_inorder(Distancia))
+
+rc.tb = rc %>% 
+  count(Distancia, Redondez, .drop = F)
+```
+
+```{r}
+rc.full = glm(n ~ Distancia * Redondez, rc.tb, 
+              family = poisson)
+rc.null = glm(n ~ Distancia + Redondez, rc.tb, 
+              family = poisson)
+
+anova(rc.null, rc.full, test = 'Rao') # Chisq, LRT, Rao
+
+anova(rc.full, test = 'Rao')
+```

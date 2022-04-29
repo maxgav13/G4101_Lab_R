@@ -24,20 +24,20 @@ execute:
 #| label: setup
 #| include: false
 
+library(vroom)          # importar datos
 library(MOTE)           # tamanho del efecto
 library(papaja)         # presentacion datos
 library(DescTools)      # pruebas
 library(rstatix)        # pruebas y tamanho efecto
 library(ggmosaic)       # mosaico en ggplot
 library(vcd)            # variables categoricas
-library(vroom)          # importar datos
 library(janitor)        # tablas
 library(ggstatsplot)    # graficos de pruebas
 library(tidymodels)     # resumenes tidy y otros
 library(tidyverse)
 library(easystats)
 
-theme_set(theme_minimal())
+theme_set(theme_minimal(base_family = 14))
 ```
 
 # ANOVA
@@ -48,7 +48,7 @@ $$H_0 : \mu_1 = \mu_2 = \mu_3 = \dotsb = \mu_n$$
 
 ```{r}
 dat1 = vroom('data/anova MgO.csv')
-a = .05
+alfa = .05
 myvar = 'MgO (%)'
 
 G1 = c(7,8,10,11) # Mt Mica
@@ -61,16 +61,21 @@ Stacked = stack(list(G1=G1,
 
 Stacked = Stacked %>% 
   mutate(ind = factor(ind,
-                      levels = levels(Stacked$ind),
                       labels = c('Mt Mica', 'Sebago Bath', 'Black Mt')))
+```
 
+
+```{r}
 Stacked %>% 
   group_by(ind) %>% 
   get_summary_stats()
+```
 
+
+```{r}
 ggplot(Stacked, aes(ind, values)) + 
   stat_summary(fun.data = mean_cl_normal, 
-               fun.args = list(conf.int = 1-a), 
+               fun.args = list(conf.int = 1-alfa), 
                geom = 'pointrange', size = .75) + 
   labs(x='', y = myvar)
 ```
@@ -99,44 +104,48 @@ var.igual = T
 
 ```{r}
 # con igualdad de varianzas
-mod = lm(values ~ ind, data = Stacked)
+aov.fit = aov(values ~ ind, data = Stacked)
 
-mod %>%
-  anova() %>% 
+aov.fit %>% 
   tidy()
-
-mod %>% 
-  tidy(conf.int=T, conf.level=1-a)
-
-mod %>% 
-  glance()
 
 # sin igualdad de varianzas
 oneway.test(values ~ ind, Stacked, var.equal = F) %>% 
   tidy()
 ```
 
-## ES
+## Tamanho del efecto
+
+### MOTE
 
 ```{r}
 # EtaSq(mod) # DescTools
 
-unlist(eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = a)[1:3]) %>% 
-  as_tibble_row() # MOTE
-unlist(omega.F(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = a)[1:3]) %>% 
-  as_tibble_row() # MOTE
+aov.eta = eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = alfa)
 
-effectsize::eta_squared(mod, ci = 1-a)
-effectsize::omega_squared(mod, ci = 1-a)
+aov.eta %>% 
+  as_tibble_row()
+
+aov.omega = omega.F(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = alfa)
+
+aov.omega %>% 
+  as_tibble_row()
 ```
 
-## *Post-hoc*
+### effectsize
+
+```{r}
+effectsize::eta_squared(aov.fit, ci = 1-alfa)
+effectsize::omega_squared(aov.fit, ci = 1-alfa)
+```
+
+## Analisis Post-hoc
 
 ```{r}
 if (var.igual == T) {
   CI = Stacked %>% mutate(ind = fct_rev(ind)) %>% 
     tukey_hsd(values ~ ind,
-              conf.level = 1-a) %>% 
+              conf.level = 1-alfa) %>% 
     select(-c(1,4)) %>% 
     mutate(contrast = str_c(group2,group1,sep = ' - '),
            method = 'Tukey') %>% 
@@ -146,7 +155,7 @@ if (var.igual == T) {
 } else {
   CI = Stacked %>% mutate(ind = fct_rev(ind)) %>% 
     games_howell_test(values ~ ind,
-                      conf.level = 1-a) %>% 
+                      conf.level = 1-alfa) %>% 
     select(-1) %>% 
     mutate(contrast = str_c(group2,group1,sep = ' - '),
            method = 'Games-Howell') %>% 
@@ -161,20 +170,20 @@ ggplot(CI, aes(contrast, estimate, ymin = conf.low, ymax = conf.high)) +
   geom_hline(yintercept = 0, col = 'red') +
   coord_flip() +
   labs(y = 'Diferencia en medias', x = 'Contraste')
-
-contrastes = combn(levels(Stacked %>% pull(ind)), 2) %>% 
-  as.data.frame() %>% 
-  as.list()
 ```
 
 
 ```{r}
+contrastes = combn(levels(Stacked %>% pull(ind)), 2) %>% 
+  as.data.frame() %>% 
+  as.list()
+
 ES = map_dfr(contrastes, 
-             ~ effectsize::cohens_d(values ~ ind, data = Stacked %>% 
+             ~ effectsize::hedges_g(values ~ ind, data = Stacked %>% 
                                       filter(ind %in% .x) %>% 
                                       mutate(ind=fct_drop(ind)),
                                     pooled_sd = var.igual,
-                                    ci = 1-a) %>%
+                                    ci = 1-alfa) %>%
                as_tibble()) %>% 
   mutate(contrast = map_chr(contrastes, 
                             ~ str_flatten(.x, collapse = ' - '))) %>%
@@ -187,6 +196,8 @@ ES
 ```{r}
 CI %>% inner_join(ES, by = 'contrast')
 ```
+
+## Grafico resumen
 
 ```{r}
 ggbetweenstats(Stacked, ind, values,
@@ -206,7 +217,7 @@ ggbetweenstats(Stacked, ind, values,
 $H_o$: Datos observados siguen la distribucion/proporcion propuesta
 
 ```{r}
-a = .05
+alfa = .05
 obs = c(90, 110) %>% 
   set_names(c('N','S')) # conteos observados
 
@@ -214,14 +225,33 @@ obs.tb = Untable(obs) %>% tibble()
 
 p = c(.5, .5) # proporciones esperadas
 
-chisq.test(obs,p=p) %>% 
+N.gof = sum(obs)
+```
+
+
+```{r}
+CHI.gof = chisq.test(obs,p=p) 
+CHI.gof %>% 
   tidy()
 
-v.chi.sq(x2 = 2, n = 200, r = 2, c = 2, a = a)[1:3] %>% 
-  as_tibble_row() # MOTE
+binom.test(x = 110, n = 200, p = .5, conf.level = 1-alfa) # binomial test
+```
 
-binom.test(x = 110, n = 200, p = .5, conf.level = 1-a) # binomial test
+### Tamanho del efecto
 
+#### MOTE
+
+```{r}
+v.gof = v.chi.sq(x2 = CHI.gof$statistic, n = N.gof, 
+                 r = 2, c = length(obs), a = alfa)
+
+v.gof %>% 
+  as_tibble_row()
+```
+
+### Analisis Post-hoc
+
+```{r}
 ncomp.gof = (length(obs)*(length(obs)-1))/2
 new.a.gof = a/ncomp.gof
 z.crit.gof = qnorm(new.a.gof/2) %>% abs()
@@ -238,13 +268,15 @@ chisq_descriptives(rstatix::chisq_test(obs)) %>%
   select(-c(group,n))
 ```
 
+### Grafico resumen
+
 ```{r}
 ggpiestats(obs.tb, Var1,
            type = 'p',
            ratio = p,
            label = 'both',
            proportion.test = T,
-           conf.level = 1-a,
+           conf.level = 1-alfa,
            bf.message = F)
 ```
 
@@ -253,7 +285,7 @@ ggpiestats(obs.tb, Var1,
 $H_o$: Proporcion de items es homogenea entre muestras
 
 ```{r}
-a = .05
+alfa = .05
 
 dat2 = vroom('data/chi2 homogeneidad clastos.csv')
 
@@ -269,38 +301,8 @@ clastos = matrix(data = c(23,10,17,32,8,10,16,16,18,20,14,16),
 
 table2d_summary(clastos)
 
-N = sum(clastos)
-
-ncomp.h = prod(dim(clastos))
-new.a.h = a/ncomp.h
-z.crit.h = qnorm(new.a.h/2) %>% abs()
-z.crit.h
+N.h = sum(clastos)
 ```
-
-
-```{r}
-CHI.h = chisq.test(clastos)
-CHI.h %>% tidy()
-
-CramerV(clastos,conf.level = 1-a,method = 'ncchisqadj') # DescTools
-
-chisq_to_cramers_v(chisq = CHI.h$statistic,
-                   n = N,
-                   nrow = nrow(clastos),
-                   ncol = ncol(clastos),
-                   ci = 1-a) # effectsize
-```
-
-
-```{r}
-chisq_descriptives(rstatix::chisq_test(clastos)) %>% 
-  left_join(pairwise_chisq_test_against_p(clastos,
-                                          p = ((CHI.h$expected)/N),
-                                          p.adjust.method = "BH")
-  ) %>% 
-  select(-c(group,n))
-```
-
 
 ```{r}
 ggplot(dat2, aes(Capa,fill=Clasto)) + 
@@ -312,6 +314,60 @@ ggplot(data = dat2) +
     labs(x='Capa',y='Clasto',fill='Clasto')
 ```
 
+```{r}
+CHI.h = chisq.test(clastos)
+CHI.h %>% 
+  tidy()
+```
+
+### Tamanho del efecto
+
+#### MOTE
+
+```{r}
+v.h = v.chi.sq(x2 = CHI.h$statistic, n = N.h, 
+               r = nrow(clastos), c = ncol(clastos), 
+               a = alfa)
+
+v.h %>% 
+  as_tibble_row()
+```
+
+#### DescTools
+
+```{r}
+CramerV(clastos,conf.level = 1-alfa,method = 'ncchisqadj')
+```
+
+#### effectsize
+
+```{r}
+chisq_to_cramers_v(chisq = CHI.h$statistic,
+                   n = N.h,
+                   nrow = nrow(clastos),
+                   ncol = ncol(clastos),
+                   ci = 1-alfa) # effectsize
+```
+
+### Analisis Post-hoc
+
+```{r}
+ncomp.h = prod(dim(clastos))
+new.a.h = a/ncomp.h
+z.crit.h = qnorm(new.a.h/2) %>% abs()
+z.crit.h
+```
+
+```{r}
+chisq_descriptives(rstatix::chisq_test(clastos)) %>% 
+  left_join(pairwise_chisq_test_against_p(clastos,
+                                          p = ((CHI.h$expected)/N.h),
+                                          p.adjust.method = "BH")
+  ) %>% 
+  select(-c(group,n))
+```
+
+### Graficos resumen
 
 ```{r}
 mosaic(t(clastos), 
@@ -350,7 +406,7 @@ ggbarstats(dat2, Clasto, Capa,
            proportion.test = F,
            sampling.plan = 'indepMulti',
            fixed.margin = 'cols',
-           conf.level = 1-a,
+           conf.level = 1-alfa,
            bf.message = F)
 ```
 
@@ -361,7 +417,7 @@ $H_o$: No hay relacion entre variables
 $H_o$: Las variables son independientes entre si
 
 ```{r}
-a = .05
+alfa = .05
 
 dat3 = vroom('data/chi2 independencia.csv')
 
@@ -381,32 +437,7 @@ round.dist = matrix(data = c(28,23,5,0,21,23,8,2,11,14,
 
 table2d_summary(round.dist)
 
-N = sum(round.dist)
-
-ncomp.i = prod(dim(round.dist))
-new.a.i = a/ncomp.i
-z.crit.i = qnorm(new.a.i/2) %>% abs()
-z.crit.i
-```
-
-
-```{r}
-CHI.i = chisq.test(round.dist)
-CHI.i %>% tidy()
-
-CramerV(round.dist,conf.level = 1-a,method = 'ncchisqadj') # DescTools
-
-cramers_v(round.dist,ci = 1-a)
-```
-
-
-```{r}
-chisq_descriptives(rstatix::chisq_test(round.dist)) %>% 
-  left_join(pairwise_chisq_test_against_p(round.dist,
-                                          p = ((CHI.i$expected)/N),
-                                          p.adjust.method = "BH")
-  ) %>% 
-  select(-c(group,n))
+N.i = sum(round.dist)
 ```
 
 
@@ -420,6 +451,57 @@ ggplot(data = dat3) +
   labs(x='Distancia',y='Redondez',fill='Redondez')
 ```
 
+
+```{r}
+CHI.i = chisq.test(round.dist)
+CHI.i %>% 
+  tidy()
+```
+
+### Tamanho del efecto
+
+#### MOTE
+
+```{r}
+v.i = v.chi.sq(x2 = CHI.i$statistic, n = N.i, 
+               r = nrow(round.dist), c = ncol(round.dist), 
+               a = alfa)
+
+v.i %>% 
+  as_tibble_row()
+```
+
+#### DescTools
+
+```{r}
+CramerV(round.dist, conf.level = 1-alfa, method = 'ncchisqadj')
+```
+
+#### effectsize
+
+```{r}
+cramers_v(round.dist, ci = 1-alfa)
+```
+
+### Analisis Post-hoc
+
+```{r}
+ncomp.i = prod(dim(round.dist))
+new.a.i = a/ncomp.i
+z.crit.i = qnorm(new.a.i/2) %>% abs()
+z.crit.i
+```
+
+```{r}
+chisq_descriptives(rstatix::chisq_test(round.dist)) %>% 
+  left_join(pairwise_chisq_test_against_p(round.dist,
+                                          p = ((CHI.i$expected)/N.i),
+                                          p.adjust.method = "BH")
+  ) %>% 
+  select(-c(group,n))
+```
+
+### Graficos resumen
 
 ```{r}
 mosaic(t(round.dist), 
@@ -458,6 +540,27 @@ ggbarstats(dat2, Clasto, Capa,
            label = 'both',
            proportion.test = T,
            sampling.plan = 'jointMulti',
-           conf.level = 1-a,
+           conf.level = 1-alfa,
            bf.message = F)
+```
+
+
+# Reportes
+
+```{r}
+report(aov.fit)
+```
+
+# Estadisticas
+
+```{r}
+apa_print(aov.fit)
+```
+
+```{r}
+apa_print(CHI.gof, n = N.gof)
+```
+
+```{r}
+apa_print(CHI.h, n = N.h)
 ```

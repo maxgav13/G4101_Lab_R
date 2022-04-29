@@ -27,6 +27,8 @@ execute:
 library(GMisc)
 library(CircStats)
 library(tidyverse)
+
+theme_set(theme_minimal(base_family = 14))
 ```
 
 # Analisis de una muestra

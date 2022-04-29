@@ -41,7 +41,7 @@ library(ggrepel)
 library(tidyverse)
 
 # Opciones para ggplot
-theme_set(theme_bw())
+theme_set(theme_minimal(base_family = 14))
 theme_update(legend.position='right')
 x_var = 'Distancia [m]'
 y_var = 'Semivarianza'
