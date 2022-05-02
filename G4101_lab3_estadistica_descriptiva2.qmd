@@ -62,7 +62,6 @@ theme_gtsummary_language(
 
 ```
 
-
 Vamos a usar los datos de `airquality`.
 
 ```{r datos}
@@ -177,7 +176,6 @@ with(airq, cor(Temp_z, Wind_z))
 
 with(airq, cov(Temp_z, Wind_z))
 ```
-
 
 ### Lineal
 
@@ -377,4 +375,3 @@ A.tb %>%
 A.tb %>% filter(Capa=='A') %>% tabyl(Tipo)
 A.tb %>% filter(Tipo=='Y') %>% tabyl(Capa)
 ```
-

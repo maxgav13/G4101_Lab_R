@@ -30,7 +30,6 @@ library(GMisc)          # intervalos de confianza
 library(OneTwoSamples)  # intervalos y pruebas
 library(DescTools)      # pruebas
 library(rstatix)        # pruebas y tamanho efecto
-library(itns)           # tamanho del efecto
 library(tidymodels)     # resumenes tidy y otros
 library(ggstatsplot)    # graficos de pruebas
 library(tidyverse)
@@ -38,7 +37,6 @@ library(easystats)
 
 theme_set(theme_minimal(base_size = 14))
 ```
-
 
 # Prueba $\chi^2$ de 1 varianza
 
@@ -56,7 +54,6 @@ chi1
 interval_var1(x = w) # OneTwoSample
 ci_chisq(s = sd(w), n = length(w), digits = 4) # GMisc
 ```
-
 
 # Prueba F de 2 varianzas
 
@@ -77,7 +74,6 @@ var_test2(x,y,side = 0) # OneTwoSample
 interval_var2(x,y) # OneTwoSample
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
 ```
-
 
 # Prueba t de 1 muestra
 
@@ -100,6 +96,14 @@ t1 %>% tidy()
 
 ## Tamanho del effecto
 
+$$
+d_s = \frac{\bar{x} - \mu_0}{s}
+$$
+
+$$
+g = d \cdot \Big(1-\frac{3}{4 \cdot v-1}\Big)
+$$
+
 ### MOTE
 
 ```{r}
@@ -118,7 +122,6 @@ cohens_d(verm, mu = mu, ci = 1-alfa) # effectsize
 hedges_g(verm, mu = mu, ci = 1-alfa) # effectsize
 ```
 
-
 ```{r}
 gghistostats(tibble(verm),verm,
              test.value = mu,
@@ -127,7 +130,6 @@ gghistostats(tibble(verm),verm,
              conf.level = 1-alfa,
              bf.message = F)
 ```
-
 
 # Prueba t de 2 muestras independientes
 
@@ -138,8 +140,8 @@ alfa = .05
 A = c(25, 40, 34, 37, 38, 35, 29, 32, 35, 44, 27, 33, 37, 38, 36)
 B = c(45, 37, 36, 38, 49, 47, 32, 41, 38, 45, 33, 39, 46, 47, 40)
 
-DF = tibble(Val = c(A,B), 
-            Grp = c(rep(c('A','B'),each=length(A))))
+DF = stack(list(A=A,B=B)) %>% 
+  as_tibble()
 ```
 
 ## Graficas
@@ -147,10 +149,10 @@ DF = tibble(Val = c(A,B),
 ```{r}
 DF %>% 
   ggplot() + 
-  geom_boxplot(aes(Grp,Val,col=Grp))
+  geom_boxplot(aes(ind,values,col=ind))
 
 DF %>% 
-  ggplot(aes(Grp,Val,col=Grp)) + 
+  ggplot(aes(ind,values,col=ind)) + 
   stat_summary(geom = 'pointrange',
                fun.data = mean_cl_normal,
                fun.args = list(conf.int=.95))
@@ -160,16 +162,15 @@ DF %>%
 
 ```{r}
 DF %>% 
-  group_by(Grp) %>% 
+  group_by(ind) %>% 
   get_summary_stats()
 ```
 
 ## Revisar igualdad de varianzas
 
 ```{r}
-var.test(Val ~ Grp, DF, conf.level = 1-alfa)
+var.test(values ~ ind, DF, conf.level = 1-alfa)
 ```
-
 
 ```{r}
 t.test(A, B, mu=0, conf.level = 1-alfa) %>% 
@@ -181,7 +182,7 @@ t.test(B, A, mu=0, conf.level = 1-alfa) %>%
 t.test(A, B, mu=0, conf.level = 1-alfa, var.equal = T) %>% 
   tidy()
 
-t2 = t.test(Val ~ Grp, DF, conf.level = 1-alfa, var.equal = T)
+t2 = t.test(values ~ ind, DF, conf.level = 1-alfa, var.equal = T)
 t2
 
 ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
@@ -191,12 +192,30 @@ ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A),
 
 ## Tamanho del effecto
 
+Sin igualdad de varianzas
+
+$$
+d = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2+s_2^2}{2}}}
+$$
+
+Con igualdad de varianzas
+
+$$
+d = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2(n_1-1)+s_2^2(n_2-1)}{n_1+n_2-2}}}
+$$
+
+Correcion
+
+$$
+g = d \cdot \Big(1-\frac{3}{4 \cdot v-1}\Big) = d \cdot \Big(\frac{N-3}{N-2.25}\Big)
+$$
+
 ### effectsize
 
 ```{r}
 cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
 
-hedges_g(Val ~ Grp, data = DF, ci = 1-alfa, pooled_sd = T)
+hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T)
 ```
 
 ### MOTE
@@ -220,14 +239,13 @@ g2.ind %>%
 ## Grafico resumen
 
 ```{r}
-ggbetweenstats(DF, Grp, Val,
+ggbetweenstats(DF, ind, values,
                var.equal = F,
                type = 'p',
                effsize.type = 'unbiased',
                conf.level = 1-alfa,
                bf.message = F)
 ```
-
 
 # Prueba t de 2 muestras dependientes
 
@@ -238,10 +256,9 @@ alfa = .05
 Antes = c(13.5,14.6,12.7,15.5,11.1,16.4,13.2,19.3,16.7,18.4)
 Despues = c(13.6,14.6,12.6,15.7,11.1,16.6,13.2,19.5,16.8,18.6)
 
-DF2 = tibble(Val = c(Antes,Despues), 
-             Grp = c(rep(c('A','B'), each=length(Antes))))
+DF2 = stack(list(Antes=Antes,Despues=Despues)) %>% 
+  as_tibble()
 ```
-
 
 ```{r}
 t.test(Despues,Antes,mu=0,paired = T) %>% 
@@ -253,10 +270,22 @@ ci_t(x = mean(Despues-Antes), s = sd(Despues-Antes),
 
 ## Tamanho del effecto
 
+$$
+d_z = \frac{\bar{d}}{s_d}
+$$
+
+$$
+d_{rm} = \frac{\bar{d}}{\sqrt{s_1^2 + s_2^2-2 \cdot r \cdot s_1 \cdot s_2}}\sqrt{2(1-r)}
+$$
+
+$$
+d_{av} = \frac{\bar{d}}{\sqrt{\frac{s_1^2+s_2^2}{2}}}
+$$
+
 ### itns
 
 ```{r}
-cohensd_rm(Despues, Antes) # itns
+itns::cohensd_rm(Despues, Antes) # itns
 ```
 
 ### MOTE
@@ -268,13 +297,17 @@ d2.av = d.dep.t.avg(m1 = mean(Antes),m2 = mean(Despues),
 
 d2.av %>% 
   as_tibble_row()
+```
 
+```{r}
 d2.z = d.dep.t.diff(mdiff = mean(Antes-Despues),sddiff = sd(Antes-Despues),
              n = length(Antes),a = alfa)
 
 d2.z %>% 
   as_tibble_row()
+```
 
+```{r}
 d2.rm = d.dep.t.rm(m1 = mean(Antes),m2 = mean(Despues),
            sd1 = sd(Antes),sd2 = sd(Despues),
            r = cor(Antes,Despues),n = length(Antes),
@@ -287,13 +320,12 @@ d2.rm %>%
 ## Grafico resumen
 
 ```{r}
-ggwithinstats(DF2, Grp, Val,
+ggwithinstats(DF2, ind, values,
               type = 'p',
               effsize.type = 'unbiased',
               conf.level = 1-alfa,
               bf.message = F)
 ```
-
 
 # Prueba t de correlacion
 
@@ -307,7 +339,6 @@ c = c(3,5,9,5,5,8,13,3,9,9)
 
 cordat = tibble(a,b,c)
 ```
-
 
 ```{r}
 r = cor.test(a,b,method = "pearson",conf = 1-alfa)

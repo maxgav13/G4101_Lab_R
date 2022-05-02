@@ -25,14 +25,16 @@ execute:
 #| include: false
 
 library(tidyverse)
+
+theme_set(theme_minimal(base_family = 14))
 ```
 
 En general existen 4 fucniones basicas para todas las distribuciones, empiezan con las letras `d`, `p`, `q` y `r` y les sigue el nombre de la distribucion.
 
-* `d`: Para encontrar la probabilidad puntual 
-* `p`: Para encontrar la probabilidad acumulada
-* `q`: Para encontrar el cuantil (valor de la variable) a una dada probabilidad
-* `r`: Para generar un vector de datos aleatorios de la distribucion
+-   `d`: Para encontrar la probabilidad puntual
+-   `p`: Para encontrar la probabilidad acumulada
+-   `q`: Para encontrar el cuantil (valor de la variable) a una dada probabilidad
+-   `r`: Para generar un vector de datos aleatorios de la distribucion
 
 En el caso de generar datos aleatorios (`r`) es recomendable definir un punto de partida para asegurar siempre el mismo resultado, esto se logra definiendo lo que se llama la semilla (seed) por medio de `set.seed(numero)` y escribiendo un numero entero dentro de la funcion (por ejemplo: `set.seed(4101)`).
 
@@ -40,9 +42,9 @@ En el caso de generar datos aleatorios (`r`) es recomendable definir un punto de
 
 Para esta distribucion los parametros son:
 
-* `x`: Numero de exitos para el cual se requiere la probabilidad
-* `size`: El numero total de intentos
-* `prob`: La probabilidad de exito
+-   `x`: Numero de exitos para el cual se requiere la probabilidad
+-   `size`: El numero total de intentos
+-   `prob`: La probabilidad de exito
 
 ```{r}
 x = 1
@@ -81,13 +83,12 @@ data.frame(x=x2,y=pbinom(x2,n2,p)) %>%
   theme_bw()
 ```
 
-
 # Poisson
 
 Para esta distribucion los parametros son:
 
-* `x`: Numero de exitos para el cual se requiere la probabilidad
-* `lambda`: El promedio de exitos por unidad de tiempo/espacio
+-   `x`: Numero de exitos para el cual se requiere la probabilidad
+-   `lambda`: El promedio de exitos por unidad de tiempo/espacio
 
 ```{r}
 x3 = 2
@@ -123,13 +124,12 @@ data.frame(x=x4,y=ppois(x4,lambda)) %>%
   theme_bw()
 ```
 
-
 # Normal
 
 Para esta distribucion los parametros son:
 
-* `mean`: Media del evento
-* `sd`: Desviacion estandar del evento
+-   `mean`: Media del evento
+-   `sd`: Desviacion estandar del evento
 
 ```{r}
 pnorm(q = 1.84,lower.tail = F) # probabilidad de Z mayor a 1.84
@@ -141,7 +141,6 @@ ggplot() +
                   xlim = c(1.84,3), fill = 'dodgerblue')
 ```
 
-
 ```{r}
 pnorm(q = 0.86) - pnorm(q = -1.97) # probabilidad de Z entre -1.97 y 0.86
 
@@ -151,7 +150,6 @@ ggplot() +
     stat_function(geom = 'area', fun = dnorm, args = list(mean=0,sd=1), 
                   xlim = c(-1.97,.86), fill = 'dodgerblue')
 ```
-
 
 ```{r}
 # media=50, sigma=10
@@ -167,7 +165,6 @@ ggplot() +
 pnorm(q = 1.2)-pnorm(q = -.5)
 ```
 
-
 ```{r}
 # media=300, sigma=50
 pnorm(q = 362,mean = 300,sd = 50,lower.tail = F) # probabilidad de X > 362
@@ -178,7 +175,6 @@ ggplot() +
     stat_function(geom = 'area', fun = dnorm, args = list(mean=300,sd=50), 
                   xlim = c(362,450), fill = 'dodgerblue')
 ```
-
 
 ```{r}
 # media=40, sigma=6
@@ -209,9 +205,7 @@ mean(rnorm(n = n,mean = 50,sd = 10) < 62) -
 mean(rnorm(n = n,mean = 300,sd = 50) > 362) # probabilidad de X > 362, media=300, sigma=50
 ```
 
-
 ```{r}
 mean(rpois(n = n,lambda = lambda) == 2) # probabilidad de X = 2
 mean(rpois(n = n,lambda = lambda) > 2) # probabilidad de X > 2
 ```
-

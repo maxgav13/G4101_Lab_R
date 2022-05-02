@@ -40,7 +40,6 @@ b * c
 b %*% c
 ```
 
-
 ## Matrices
 
 Para matrices recordar que para sumar o restar deben tener las mismas dimensiones y para multiplicar (`%*%`) deben cumplir $A(m,n) \cdot B(n,p)$
@@ -74,7 +73,3 @@ datos <- rio::import("data/ABOC.csv")
  
 (C = as.matrix(datos)) # convierte dataframe en matriz
 ```
-
-
-
- 

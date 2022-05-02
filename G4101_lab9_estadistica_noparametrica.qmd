@@ -94,12 +94,20 @@ ggplot(dat, aes(x, colour = g)) +
 $$H_0 : mediana \ muestra = mediana \ hipotetica$$
 
 ```{r}
-# Ho: Meadiana es igual a valor propuesto, o, mediana de las diferencias es igual a cero
 verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
 alfa = .05
-n = length(verm)
-```
 
+verm %>% 
+  enframe() %>% 
+  mutate(diff = value-7, 
+         signo = sign(diff), 
+         ranking = rank(abs(diff)),
+         signo = factor(signo,
+                        levels = c(-1,1),
+                        labels = c('Negativo','Positivo'))) %>% 
+  group_by(signo) %>% 
+  summarise(w = sum(ranking))
+```
 
 ```{r}
 wilcox.test(x = verm, mu=7, 
@@ -111,6 +119,10 @@ wilcox.test(x = verm, mu=7,
 
 ### rstatix
 
+$$
+r = \frac{|Z|}{\sqrt{N}}
+$$
+
 ```{r}
 set.seed(101)
 wilcox_effsize(enframe(verm), value~1, mu = 7,
@@ -119,11 +131,15 @@ wilcox_effsize(enframe(verm), value~1, mu = 7,
 
 ### effectsize
 
+$$
+r = \frac{W}{S_R} = \frac{2 \cdot(w_+ - w_-)}{N(N+1)}
+$$
+
 ```{r}
 rank_biserial(verm, mu = 7,ci = 1-alfa)
 ```
 
-## Graficos resumen
+## Grafico resumen
 
 ```{r}
 gghistostats(enframe(verm), value,
@@ -135,10 +151,9 @@ gghistostats(enframe(verm), value,
 
 # Prueba de suma de rangos de Wilcoxon
 
-$$H_0 : mediana_1 = mediana_2$$
+$$H_0 : \bar{R}_1 = \bar{R}_2$$
 
 ```{r}
-# Ho: Mediana de A es igual a mediana de B
 A = c(25, 40, 34, 37, 38, 35, 29, 32, 35, 44, 27, 33, 37, 38, 36)
 B = c(45, 37, 36, 38, 49, 47, 32, 41, 38, 45, 33, 39, 46, 47, 40)
 alfa = .05
@@ -146,19 +161,14 @@ alfa = .05
 mol = stack(list(A=A,B=B)) %>% 
   as_tibble()
 
-N = nrow(mol)
-
-mol = mol %>% 
-  mutate(pos = rank(values))
-
 mol %>% 
+  mutate(ranking = rank(values)) %>% 
   group_by(ind) %>% 
-  summarise(mean(values),
-            median(values),
-            mean(pos),
-            median(pos))
+  summarise(n = n(), 
+            rango_medio = mean(ranking), 
+            w = sum(ranking)) %>% 
+  mutate(u = w - (n*(n+1))/2)
 ```
-
 
 ```{r}
 wilcox.test(values ~ ind, data = mol, 
@@ -170,6 +180,10 @@ wilcox.test(values ~ ind, data = mol,
 
 ### rstatix
 
+$$
+r = \frac{|Z|}{\sqrt{N}}
+$$
+
 ```{r}
 set.seed(101)
 wilcox_effsize(mol, values ~ ind,
@@ -178,8 +192,20 @@ wilcox_effsize(mol, values ~ ind,
 
 ### effectsize
 
+$$
+r = \frac{2(\bar{R}_1-\bar{R}_2)}{N}
+$$
+
 ```{r}
 rank_biserial(values ~ ind, data = mol, ci = 1-alfa)
+```
+
+$$
+d = \frac{2U}{n_1n_2}-1 
+$$
+
+```{r}
+cliffs_delta(values ~ ind, data = mol, ci = 1-alfa)
 ```
 
 ## Grafico resumen
@@ -193,27 +219,24 @@ ggbetweenstats(mol, ind, values,
 
 # Prueba de Kruskal-Wallis
 
-$$H_0 : mediana_1 = mediana_2 = mediana_3 = \dotsb = mediana_n$$
+$$H_0 : \bar{R}_1 = \bar{R}_2 = \bar{R}_3 = \dotsb = \bar{R}_n$$
 
 ```{r}
-# Ho: Toda las medianas son iguales
 G1 = c(7,8,10,11) # Mt Mica
 G2 = c(4,5,7,8) # Sebago Bath
 G3 = c(1,2,4,5) # Black Mt
 alfa = .05
 
 Stacked = stack(list(G1=G1,G2=G2,G3=G3)) %>% 
-  as_tibble() %>% 
-  mutate(pos = rank(values))
+  as_tibble()
 
 Stacked %>% 
+  mutate(ranking = rank(values)) %>% 
   group_by(ind) %>% 
-  summarise(mean(values),
-            median(values),
-            mean(pos),
-            median(pos))
+  summarise(n = n(), 
+            rango_medio = mean(ranking), 
+            w = sum(ranking))
 ```
-
 
 ```{r}
 kruskal.test(values ~ ind, data = Stacked) %>% 
@@ -223,11 +246,15 @@ kruskal.test(values ~ ind, data = Stacked) %>%
 ## Tamanho del efecto
 
 ```{r}
-# (H - k + 1) / (N - k)
-(7.65 - 3 + 1) / (12 - 3) # eta-cuadrado
+# eta-cuadrado = (H - k + 1) / (N - k)
+(7.65 - 3 + 1) / (12 - 3)
 ```
 
 ### rstatix
+
+$$
+\eta_H^2 = \frac{H - k + 1}{N - k}
+$$
 
 ```{r}
 set.seed(101)
@@ -236,6 +263,10 @@ kruskal_effsize(Stacked, values ~ ind,
 ```
 
 ### effectsize
+
+$$
+\epsilon^2 = \frac{H}{(N^2-1)/(N+1)}
+$$
 
 ```{r}
 rank_epsilon_squared(values ~ ind, data = Stacked, ci = 1-alfa)
@@ -246,7 +277,6 @@ rank_epsilon_squared(values ~ ind, data = Stacked, ci = 1-alfa)
 ```{r}
 DunnTest(values~ind, Stacked, method = 'holm') # DescTools
 ```
-
 
 ```{r}
 KW.post = dunn_test(Stacked, values ~ ind, 

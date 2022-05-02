@@ -85,7 +85,6 @@ ggplot(data = gss_cat, aes(x = race, fill = marital)) +
   geom_bar(position = 'fill')
 ```
 
-
 ## Datos continuos
 
 ```{r}
@@ -111,9 +110,9 @@ Freq(airquality$Temp, breaks = seq(50,100,10))
 
 Dentro de `geom_histogram` hay 3 opciones para definir la discretizacion:
 
-* bins = Numero de clases
-* binwidth = El ancho de las clases
-* breaks = Un vector con los puntos donde separar los datos
+-   bins = Numero de clases
+-   binwidth = El ancho de las clases
+-   breaks = Un vector con los puntos donde separar los datos
 
 *Frecuencias absolutas*
 
@@ -154,7 +153,7 @@ ggplot(data = airq, aes(x = Month, y = Temp)) +
 ggplot(airq, aes(Temp, Month)) +
   geom_boxplot() +
   stat_summary(fun = mean, geom = 'point', shape=3)
-``` 
+```
 
 ### Medidas de tendencia central
 
@@ -231,4 +230,3 @@ skimr::skim(airq)
 DescTools::Desc(airq)
 summarytools::descr(airq)
 ```
-

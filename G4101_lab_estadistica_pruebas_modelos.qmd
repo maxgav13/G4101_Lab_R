@@ -33,7 +33,9 @@ library(ggstatsplot)    # graficos de pruebas
 library(tidymodels)     # resumenes tidy y otros
 library(tidyverse)
 library(easystats)      
+```
 
+```{r}
 signed_rank = function(x) sign(x) * rank(abs(x))
 
 alfa =.05
@@ -54,7 +56,8 @@ verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
 ### Prueba-t de una muestra
 
 ```{r}
-t1.mod = lm(verm~1)
+mu = 7
+t1.mod = lm((verm-mu) ~ 1)
 
 t1.mod %>% 
   tidy(conf.int = T, conf.level = 1-alfa)
@@ -67,7 +70,7 @@ t1.mod %>%
 ### Prueba de signo con rango de Wilcoxon
 
 ```{r}
-w1.mod = lm(signed_rank(verm) ~ 1)
+w1.mod = lm(signed_rank(verm-mu) ~ 1)
 
 w1.mod %>% 
   tidy(conf.int = T, conf.level = 1-alfa)

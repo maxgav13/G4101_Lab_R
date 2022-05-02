@@ -42,7 +42,7 @@ theme_set(theme_minimal(base_family = 14))
 
 # ANOVA
 
-$$H_0 : \mu_1 = \mu_2 = \mu_3 = \dotsb = \mu_n$$ 
+$$H_0 : \mu_1 = \mu_2 = \mu_3 = \dotsb = \mu_n$$
 
 ## EDA
 
@@ -57,20 +57,19 @@ G3 = c(1,2,4,5) # Black Mt
 
 Stacked = stack(list(G1=G1,
                      G2=G2,
-                     G3=G3))
+                     G3=G3)) %>% 
+  as_tibble()
 
 Stacked = Stacked %>% 
   mutate(ind = factor(ind,
                       labels = c('Mt Mica', 'Sebago Bath', 'Black Mt')))
 ```
 
-
 ```{r}
 Stacked %>% 
   group_by(ind) %>% 
   get_summary_stats()
 ```
-
 
 ```{r}
 ggplot(Stacked, aes(ind, values)) + 
@@ -115,6 +114,14 @@ oneway.test(values ~ ind, Stacked, var.equal = F) %>%
 ```
 
 ## Tamanho del efecto
+
+$$
+\eta^2 = \frac{SC_{efecto}}{SC_{total}}
+$$
+
+$$
+\omega^2 = \frac{v_{efecto}(CM_{efecto}-CM_{error})}{SC_{total}+CM_{error}}
+$$
 
 ### MOTE
 
@@ -172,7 +179,6 @@ ggplot(CI, aes(contrast, estimate, ymin = conf.low, ymax = conf.high)) +
   labs(y = 'Diferencia en medias', x = 'Contraste')
 ```
 
-
 ```{r}
 contrastes = combn(levels(Stacked %>% pull(ind)), 2) %>% 
   as.data.frame() %>% 
@@ -191,7 +197,6 @@ ES = map_dfr(contrastes,
   arrange(contrast)
 ES
 ```
-
 
 ```{r}
 CI %>% inner_join(ES, by = 'contrast')
@@ -228,7 +233,6 @@ p = c(.5, .5) # proporciones esperadas
 N.gof = sum(obs)
 ```
 
-
 ```{r}
 CHI.gof = chisq.test(obs,p=p) 
 CHI.gof %>% 
@@ -238,6 +242,10 @@ binom.test(x = 110, n = 200, p = .5, conf.level = 1-alfa) # binomial test
 ```
 
 ### Tamanho del efecto
+
+$$
+\phi = V = \sqrt{\frac{\chi^2}{N}}
+$$
 
 #### MOTE
 
@@ -257,7 +265,6 @@ new.a.gof = a/ncomp.gof
 z.crit.gof = qnorm(new.a.gof/2) %>% abs()
 z.crit.gof
 ```
-
 
 ```{r}
 chisq_descriptives(rstatix::chisq_test(obs)) %>% 
@@ -321,6 +328,10 @@ CHI.h %>%
 ```
 
 ### Tamanho del efecto
+
+$$
+V = \sqrt{\frac{\chi^2}{N \cdot v_{min}}}
+$$
 
 #### MOTE
 
@@ -410,11 +421,9 @@ ggbarstats(dat2, Clasto, Capa,
            bf.message = F)
 ```
 
-
 ## $\chi^2$ Independencia/asociacion
 
-$H_o$: No hay relacion entre variables
-$H_o$: Las variables son independientes entre si
+$H_o$: No hay relacion entre variables $H_o$: Las variables son independientes entre si
 
 ```{r}
 alfa = .05
@@ -440,7 +449,6 @@ table2d_summary(round.dist)
 N.i = sum(round.dist)
 ```
 
-
 ```{r}
 ggplot(dat3, aes(Distancia,fill=Redondez)) + 
   geom_bar(position = 'fill')
@@ -451,7 +459,6 @@ ggplot(data = dat3) +
   labs(x='Distancia',y='Redondez',fill='Redondez')
 ```
 
-
 ```{r}
 CHI.i = chisq.test(round.dist)
 CHI.i %>% 
@@ -459,6 +466,10 @@ CHI.i %>%
 ```
 
 ### Tamanho del efecto
+
+$$
+V = \sqrt{\frac{\chi^2}{N \cdot v_{min}}}
+$$
 
 #### MOTE
 
@@ -533,7 +544,6 @@ corrplot::corrplot(CHI.i$stdres,
                    bg = 'grey80')
 ```
 
-
 ```{r}
 ggbarstats(dat2, Clasto, Capa,
            type = 'p',
@@ -543,7 +553,6 @@ ggbarstats(dat2, Clasto, Capa,
            conf.level = 1-alfa,
            bf.message = F)
 ```
-
 
 # Reportes
 

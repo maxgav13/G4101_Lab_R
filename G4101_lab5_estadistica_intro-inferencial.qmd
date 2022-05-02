@@ -55,7 +55,6 @@ dx = 1
 pnorm(z,lower.tail = F)
 ```
 
-
 # $\chi^2$
 
 Inferencia sobre una $s^2$ con respecto a $\sigma^2$
@@ -66,7 +65,6 @@ Inferencia sobre una $s^2$ con respecto a $\sigma^2$
 pchisq(q = chi,df = 6-1,lower.tail = F) # probabilidad de s2 > 1.2
 ```
 
-
 # T
 
 Inferencia sobre la media sin conocer $\sigma^2$
@@ -75,7 +73,6 @@ Inferencia sobre la media sin conocer $\sigma^2$
 pt(q = 2.25, df = 24, lower.tail = F) # probabilidad de t > 2.25 con 24 grados de libertad
 ```
 
-
 # F
 
 Inferencia sobre dos $s^2$
@@ -83,4 +80,3 @@ Inferencia sobre dos $s^2$
 ```{r}
 pf(q = 2, df1 = 5, df2 = 8, lower.tail = F) # probabilidad de F > 2 con 5 y 8 grados de libertad
 ```
-

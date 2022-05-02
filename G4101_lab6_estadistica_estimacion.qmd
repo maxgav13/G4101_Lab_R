@@ -30,26 +30,23 @@ library(DescTools)      # funciones estadisticas
 library(tidyverse)
 ```
 
-
 # Intervalos de confianza
 
-Para distribuciones simetricas los intervalos de confianza siguen la forma 
+Para distribuciones simetricas los intervalos de confianza siguen la forma
 
-$$\hat{\theta} \pm MoE$$
-donde 
+$$\hat{\theta} \pm MoE$$ donde
 
 $$\hat{\theta} = \text{estadistico o estimador}$$
 
-$$MoE = \text{margen de error} =  SE \cdot stat_{crit,1-\alpha,v}$$  
+$$MoE = \text{margen de error} =  SE \cdot stat_{crit,1-\alpha,v}$$
 
 y $SE = \text{error estandar}$, $1-\alpha = \text{nivel de confianza}$, y $v = \text{grados de libertad}$.
 
-Para distribuciones asimetricas los intervalos de confianza siguen la forma 
+Para distribuciones asimetricas los intervalos de confianza siguen la forma
 
 $$\hat{\theta}_i < \hat{\theta} < \hat{\theta}_s$$
 
 donde $\hat{\theta}_i = \text{limite inferior}$ y $\hat{\theta}_s = \text{limite superior}$
-
 
 ## Normal estandar - Z
 
@@ -89,12 +86,9 @@ s1 = 3.07; s2 = 0.8
 ci_F(s1 = s1, n1 = n1, s2 = s2, n2 = n2, conf.level = 0.98) # intervalo de confianza al 98%
 ```
 
-
 # Valor-p
 
 ```{r}
 pnorm(q = 1.18,lower.tail = F)      # unilateral derecha
 pnorm(q = 2.34,lower.tail = F) * 2  # bilateral
 ```
-
-
