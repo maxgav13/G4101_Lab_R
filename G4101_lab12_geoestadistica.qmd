@@ -24,24 +24,24 @@ execute:
 #| label: setup
 #| include: false
 
-library(gstat)
-library(sp)
-library(sf)
-library(ggspatial)
-library(plotly)
-library(raster)
-library(stars)
-library(viridis)
-library(rgeos)
-library(rgdal)
-library(DescTools)
-library(mapview)
-library(RColorBrewer)
-library(ggrepel)
+library(gstat)          # geoestadistica
+library(sp)             # objetos espaciales vectoriales
+library(sf)             # objetos espaciales vectoriales
+# library(ggspatial)
+library(plotly)         # graficos interctivos
+library(raster)         # objetos espaciales raster
+library(stars)          # arreglos de objetos espaciales
+library(viridis)        # colores
+# library(rgeos)
+# library(rgdal)
+library(DescTools)      # analisis de datos
+library(mapview)        # mapas interactivos
+library(RColorBrewer)   # colores
+library(ggrepel)        # etiquetas en ggplot2
 library(tidyverse)
 
 # Opciones para ggplot
-theme_set(theme_minimal(base_family = 14))
+theme_set(theme_minimal(base_size = 14))
 theme_update(legend.position='right')
 x_var = 'Distancia [m]'
 y_var = 'Semivarianza'
@@ -51,26 +51,30 @@ x_vmap = "Distancia E-W [m]"
 y_vmap = "Distancia N-S [m]"
 ```
 
-
 # Datos
 
 ## Importar datos
 
 ```{r datos}
 datos <- rio::import("data/BroomsBarn.txt", setclass = 'tibble') %>% 
-  mutate(x = x*40, y = y*40, logK = log(K), logP = log(P))
+  mutate(x = x*40, y = y*40)
+datos %>% glimpse()
 ```
-
 
 ## Exploracion de datos
 
 Importante realizar este paso para determinar si la variable esta normalmente distribuida o no; de no estarlo habria que transformarla.
 
 ```{r AED}
-myvar = 'logK' # variable a modelar
-summary(datos)
+# datos = datos %>% 
+#   mutate(logK = log(K), logP = log(P))
+
+myvar = 'K' # variable a modelar
+
 Desc(datos[[myvar]])
+
 (S = var(datos[[myvar]])) # varianza de la variable
+
 ggplot(datos, aes_string(myvar)) + 
   geom_histogram(aes(y = stat(density)), bins = 10, 
                  col = 'black', fill = 'blue', alpha = .5) + 
@@ -78,7 +82,6 @@ ggplot(datos, aes_string(myvar)) +
   geom_density(col = 'blue') +
   labs(y = 'Densidad')
 ```
-
 
 # Datos espaciales
 
@@ -90,10 +93,9 @@ Se le indica cuales son las columnas que tienen las coordenadas (X,Y) y de conoc
 datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>% 
   mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) %>% 
   select(X, Y, everything())
-datos_sp = as(datos_sf, 'Spatial')
-coordnames(datos_sp) = c('X','Y')
+# datos_sp = as(datos_sf, 'Spatial')
+# coordnames(datos_sp) = c('X','Y')
 ```
-
 
 ## Calculo de distancias
 
@@ -106,12 +108,11 @@ names(distancias) = c('min', 'media', 'max')
 distancias
 ```
 
-
 ## Poligono que contiene los datos
+
 ```{r outline}
 outline = st_convex_hull(st_union(datos_sf))
 ```
-
 
 ## Grilla de interpolacion
 
@@ -130,7 +131,6 @@ st_as_stars(matrix(0, length(dx), length(dy))) %>%
 
 datosint2 = st_crop(datosint, outline)
 ```
-
 
 ## Distribucion espacial
 
@@ -154,15 +154,14 @@ mapview(outline, alpha.regions = 0, layer.name='Border',
           layer.name = myvar, native.crs = T)
 ```
 
-
 # Analisis Geoestadistico
 
 ## Variograma omnidireccional
 
 Creacion del variograma. La funcion base realiza un buen trabajo inicial, pero se puede mejorar modificando los argumentos:
 
-* `cutoff`: la distancia maxima a la cual calcular el variograma
-* `width`: el lag de cada cuanto calcular el variograma
+-   `cutoff`: la distancia maxima a la cual calcular el variograma
+-   `width`: el lag de cada cuanto calcular el variograma
 
 En general se recomienda que no haya pocos puntos representados en las diferentes distancias.
 
@@ -189,13 +188,12 @@ ggplot(dat.vgm,aes(x = dist, y = gamma)) +
   geom_text_repel(aes(label = np), size = 3)
 ```
 
-
 ## Mapa de la superficie del variograma
 
 Representacion en 2D de la variable donde:
 
-* `width`: es el tamanho de celda
-* `cutoff`: es la extension lateral
+-   `width`: es el tamanho de celda
+-   `cutoff`: es la extension lateral
 
 ```{r variog-map}
 map.vgm <- variogram(g, width = 80, cutoff = 600, map = TRUE)
@@ -207,13 +205,12 @@ ggplot(data.frame(map.vgm), aes(x = map.dx, y = map.dy, fill = map.var1)) +
   coord_quickmap()
 ```
 
-
 ## Variogramas direccionales
 
 Variogramas en diferentes direcciones donde:
 
-* `alpha`: vector de direcciones sobre las cuales se va a calcular el variograma
-* `tol.hor`: tolerancia angular, susualmente 22.5
+-   `alpha`: vector de direcciones sobre las cuales se va a calcular el variograma
+-   `tol.hor`: tolerancia angular, susualmente 22.5
 
 ```{r variog-dir}
 dat.vgm2 = variogram(g, alpha = c(0,45,90,135),
@@ -245,7 +242,6 @@ rango = 400
 pep = 0.020
 ```
 
-
 ### Ajuste de variograma teorico
 
 ```{r ajuste, cache=TRUE, dependson='params'}
@@ -255,7 +251,6 @@ plot(dat.vgm, dat.fit, xlab = x_var, ylab = y_var) # omnidireccional
 plot(dat.vgm2, dat.fit, as.table = T, xlab = x_var, ylab = y_var) # direccionales
 varmod = dat.fit # modelo ajustado
 ```
-
 
 ### Validacion cruzada
 
@@ -302,13 +297,12 @@ ggplot(as.data.frame(kcv.ok), aes(residual)) +
   geom_vline(xintercept = mean(kcv.ok$residual), col = 'red')
 ```
 
-
 ## Interpolacion usando kriging ordinario
 
 Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es caso mas sencillo y que aplica en la mayoria de las situaciones.
 
 ```{r kriging, cache=TRUE}
-ok = krige(as.formula(paste(myvar,'~1')), locations = datos_sp,
+ok = krige(as.formula(paste(myvar,'~1')), locations = datos_sf,
            newdata = datosint2, model = varmod)
 
 ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok), 
@@ -316,14 +310,14 @@ ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok),
                                proj4string = CRS(proj4string(datos_sp)))
 ```
 
-
 ## Genera GeoTifs para usar en GIS
 
 ```{r geotifs}
+#| eval: false
+
 writeGDAL(ok_sp['var1.pred'], 'figs/krige_pred.tif')
 writeGDAL(ok_sp['var1.var'], 'figs/krige_var.tif')
 ```
-
 
 ## Mapas de las predicciones y varianzas
 
@@ -347,7 +341,6 @@ p2 = ggplot() +
 gridExtra::grid.arrange(p1,p2,ncol=2)
 ```
 
-
 # Visualizacion 3D
 
 Visuzalicion 3D de los datos
@@ -369,10 +362,3 @@ plot_ly() %>%
                       aspectmode = 'manual', 
                       aspectratio = list(x = 1, y = 1, z = .5)))
 ```
-
-
-
-
-
-
-

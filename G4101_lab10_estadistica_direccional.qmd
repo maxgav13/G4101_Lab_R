@@ -34,20 +34,22 @@ theme_set(theme_minimal(base_family = 14))
 # Analisis de una muestra
 
 ## Vector de mediciones angulares
+
 ```{r}
-theta0 = c(255, 239, 222, 231, 199, 271, 222, 274, 228, 246, 177, 199, 
-          257, 201, 237, 209, 216, 180, 182, 250, 219, 196, 197, 246, 
-          218, 235, 232, 243, 232, 180, 231, 254, 242, 149, 212, 210, 230, 205, 220, 268)
+theta0 = c(255, 239, 222, 231, 199, 271, 222, 274, 228, 246, 
+           177, 199, 257, 201, 237, 209, 216, 180, 182, 250, 
+           219, 196, 197, 246, 218, 235, 232, 243, 232, 180, 
+           231, 254, 242, 149, 212, 210, 230, 205, 220, 268)
 ```
 
 ## Ajusta angulos para datos no-direccionales
 
 Si los datos son no-direccionales deben multiplicarse por 2 para convertirlos a direccionales y realizar los calculos sobre estos
 
-Direccion de datos: 
+Direccion de datos:
 
-* 0 para no-direccional
-* 1 para direccional
+-   0 para no-direccional
+-   1 para direccional
 
 ```{r}
 d = 1
@@ -62,6 +64,7 @@ thetarad = theta*pi/180
 ```
 
 ## Componentes del vector medio
+
 ```{r}
 x = sum(sin(thetarad))
 y = sum(cos(thetarad))
@@ -69,7 +72,7 @@ meanrad = atan(x/y) # direccion media en radianes
 meandeg = degs(meanrad) # direccion media en grados
 ```
 
-## Verdadera direccion media 
+## Verdadera direccion media
 
 Agregue aqui su codigo sobre *if statements* y asigne el resultado a la variable `meantrue`. Para datos no-direccionales hay que dividir por 2 la direccion verdadera.
 
@@ -82,9 +85,9 @@ meantrue = ifelse(d == 0, meantrue/2, meantrue)
 
 ## Otras estadisticas
 
-* R: resultante media
-* $s_0$: varianza circular
-* k: parametro de concentracion
+-   R: resultante media
+-   $s_0$: varianza circular
+-   k: parametro de concentracion
 
 ```{r}
 (R = sqrt(x^2+y^2)/length(theta)) # resultante media
@@ -96,7 +99,7 @@ meantrue = ifelse(d == 0, meantrue/2, meantrue)
 
 ## Test de aleatoriedad
 
-$$H_0: k = 0, \ los \ datos \ siguen \ una \ distribucion \ aleatoria$$
+$$H_0: k = 0, \text{ los datos siguen una distribucion aleatoria}$$
 
 ```{r}
 R_crit(n = length(theta), conf.level = .95)
@@ -127,7 +130,6 @@ Diagrama de rosos mostrando la direccion media y cono de confianza
 rose_diag_2D(x = theta0, width = 30, dir = d, conf.level = .95)
 ```
 
-
 # Analisis de dos muestras
 
 $$H_0: \bar{\theta}_1 = \bar{\theta}_2$$
@@ -152,9 +154,3 @@ thetaallrad = rads(thetaall)
 (fcrit = qf(1-a,1,length(thetaall)-2))
 f > fcrit
 ```
-
-
-
-
-
-

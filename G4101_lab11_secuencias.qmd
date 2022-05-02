@@ -36,14 +36,7 @@ library(easystats)
 
 theme_set(theme_minimal(base_size = 14))
 
-formato.salida = case_when(
-  knitr::is_html_output() ~ 'html',
-  knitr::is_latex_output() ~ 'latex',
-  T  ~ 'simple',
-)
-
 options(
-  knitr.table.format = formato.salida,
   modelsummary_get = 'all'
   # OutDec = ','
   , digits = 3
@@ -69,7 +62,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-
 # Prueba de tendencia (Spearman)
 
 Se determina si la longitud de los intervalos varia en el tiempo/espacio
@@ -89,7 +81,6 @@ cor.test(i,h,method = "spearman") %>% tidy()
 cor.test(i,rankh) %>% tidy()
 ```
 
-
 # Prueba de corridas
 
 Se determina si la secuencia es aleatoria o no
@@ -105,7 +96,6 @@ dens = c(3.57,3.63,2.86,2.94,3.42,2.85,3.67,3.78,3.86,
 
 RunsTest(dens2,correct = F) %>% tidy() # test de corridas
 ```
-
 
 # Regresion
 
@@ -241,7 +231,6 @@ ggstatsplot::ggcoefstats(fit2,exclude.intercept = T)
 ggstatsplot::ggcoefstats(fit3,exclude.intercept = T)
 ```
 
-
 # Autocorrelacion
 
 Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados equidistantemente en el espacio/tiempo.
@@ -250,11 +239,12 @@ Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados
 
 Pasos:
 
-1. Determinar si hay una tendencia
-    a. Construir modelo lineal
-    a. Determinar si la pendiente es significativa
+1.  Determinar si hay una tendencia
 
-2. Si hay tendencia, calcular los residuos
+    a.  Construir modelo lineal
+    b.  Determinar si la pendiente es significativa
+
+2.  Si hay tendencia, calcular los residuos
 
 ```{r ts-data}
 AirPassengers
@@ -353,10 +343,3 @@ lagt = ac1$acf[ac1$acf<0]
 
 (z1 = rtau1*sqrt(n-tau1+3)) # test de significancia de autocorrelacion
 ```
-
-
-
-
-
-
-
