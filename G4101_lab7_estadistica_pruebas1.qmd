@@ -104,23 +104,38 @@ $$
 g = d \cdot \Big(1-\frac{3}{4 \cdot v-1}\Big)
 $$
 
-### MOTE
+### $d$ de Cohen
 
 ```{r}
+# MOTE
 d1 = d.single.t(m = mean(verm), u = mu, sd = sd(verm), 
            n = length(verm), a = alfa)
 
 d1 %>% 
   as_tibble_row()
+
+# effectsize
+cohens_d(verm, mu = mu, ci = 1-alfa)
 ```
 
-### effectsize
+### $g$ de Hedge
 
 ```{r}
-cohens_d(verm, mu = mu, ci = 1-alfa) # effectsize
-
+# effectsize
 hedges_g(verm, mu = mu, ci = 1-alfa) # effectsize
 ```
+
+### Tamanho de efecto en lenguaje comun (CLES)
+
+```{r}
+# effectsize
+d_to_cles(.96) %>% 
+  as_tibble() %>% 
+  janitor::clean_names() %>% 
+  mutate(across(.fns = ~.*100 %>% round(1)))
+```
+
+## Grafico resumen
 
 ```{r}
 gghistostats(tibble(verm),verm,
@@ -210,17 +225,10 @@ $$
 g = d \cdot \Big(1-\frac{3}{4 \cdot v-1}\Big) = d \cdot \Big(\frac{N-3}{N-2.25}\Big)
 $$
 
-### effectsize
+### $d$ de Cohen
 
 ```{r}
-cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
-
-hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T)
-```
-
-### MOTE
-
-```{r}
+# MOTE
 d2.ind = d.ind.t(m1 = mean(A), m2 = mean(B), 
         sd1 = sd(A), sd2 = sd(B), 
         n1 = length(A), n2 = length(B), a = alfa)
@@ -228,12 +236,33 @@ d2.ind = d.ind.t(m1 = mean(A), m2 = mean(B),
 d2.ind %>% 
   as_tibble_row()
 
+# effectsize
+cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
+```
+
+### $g$ de Hedge
+
+```{r}
+# MOTE
 g2.ind = g.ind.t(m1 = mean(A), m2 = mean(B), 
         sd1 = sd(A), sd2 = sd(B), 
         n1 = length(A), n2 = length(B), a = alfa)
 
 g2.ind %>% 
   as_tibble_row()
+
+# effectsize
+hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T)
+```
+
+### Tamanho de efecto en lenguaje comun (CLES)
+
+```{r}
+# effectsize
+d_to_cles(1.17) %>% 
+  as_tibble() %>% 
+  janitor::clean_names() %>% 
+  mutate(across(.fns = ~.*100 %>% round(1)))
 ```
 
 ## Grafico resumen
@@ -271,6 +300,10 @@ ci_t(x = mean(Despues-Antes), s = sd(Despues-Antes),
 ## Tamanho del effecto
 
 $$
+d_{av} = \frac{\bar{d}}{\sqrt{\frac{s_1^2+s_2^2}{2}}}
+$$
+
+$$
 d_z = \frac{\bar{d}}{s_d}
 $$
 
@@ -278,28 +311,25 @@ $$
 d_{rm} = \frac{\bar{d}}{\sqrt{s_1^2 + s_2^2-2 \cdot r \cdot s_1 \cdot s_2}}\sqrt{2(1-r)}
 $$
 
-$$
-d_{av} = \frac{\bar{d}}{\sqrt{\frac{s_1^2+s_2^2}{2}}}
-$$
-
-### itns
+### $d$ de Cohen, media de desviaciones estandar
 
 ```{r}
-itns::cohensd_rm(Despues, Antes) # itns
-```
-
-### MOTE
-
-```{r}
+# MOTE
 d2.av = d.dep.t.avg(m1 = mean(Antes),m2 = mean(Despues),
             sd1 = sd(Antes),sd2 = sd(Despues),
             n = length(Antes),a = alfa)
 
 d2.av %>% 
   as_tibble_row()
+
+# itns
+itns::cohensd_rm(Despues, Antes)
 ```
 
+### $d$ de Cohen, desviacion estandar de la diferencia
+
 ```{r}
+# MOTE
 d2.z = d.dep.t.diff(mdiff = mean(Antes-Despues),sddiff = sd(Antes-Despues),
              n = length(Antes),a = alfa)
 
@@ -307,7 +337,10 @@ d2.z %>%
   as_tibble_row()
 ```
 
+### $d$ de Cohen, media de desvaiciones estandar controlando por correlacion
+
 ```{r}
+# MOTE
 d2.rm = d.dep.t.rm(m1 = mean(Antes),m2 = mean(Despues),
            sd1 = sd(Antes),sd2 = sd(Despues),
            r = cor(Antes,Despues),n = length(Antes),
@@ -345,9 +378,11 @@ r = cor.test(a,b,method = "pearson",conf = 1-alfa)
 r %>% 
   tidy()
 
+# DescTools
 CorCI(rho = r$estimate, n = length(a), 
-      conf.level = 1-alfa) # DescTools
+      conf.level = 1-alfa) 
 
+# correlation
 correlation::cor_test(cordat,'a','b',
                       method = 'pearson',
                       ci = 1-alfa)

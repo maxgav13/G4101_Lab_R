@@ -117,26 +117,35 @@ wilcox.test(x = verm, mu=7,
 
 ## Tamanho del efecto
 
-### rstatix
+### Correlacion
 
 $$
 r = \frac{|Z|}{\sqrt{N}}
 $$
 
 ```{r}
+# rstatix
 set.seed(101)
 wilcox_effsize(enframe(verm), value~1, mu = 7,
                ci = T, conf.level = 1-alfa)
 ```
 
-### effectsize
+### Correlacion de rango biserial
 
 $$
 r = \frac{W}{S_R} = \frac{2 \cdot(w_+ - w_-)}{N(N+1)}
 $$
 
 ```{r}
+# effectsize
 rank_biserial(verm, mu = 7,ci = 1-alfa)
+```
+
+### Tamanho de efecto en lenguaje comun (CLES)
+
+```{r}
+# effectsize
+rb_to_cles(.87)
 ```
 
 ## Grafico resumen
@@ -149,7 +158,7 @@ gghistostats(enframe(verm), value,
              bf.message = F)
 ```
 
-# Prueba de suma de rangos de Wilcoxon
+# Prueba de suma de rangos de Wilcoxon o Prueba U de Mann-Whitney
 
 $$H_0 : \bar{R}_1 = \bar{R}_2$$
 
@@ -178,25 +187,27 @@ wilcox.test(values ~ ind, data = mol,
 
 ## Tamanho del efecto
 
-### rstatix
+### Correlacion
 
 $$
 r = \frac{|Z|}{\sqrt{N}}
 $$
 
 ```{r}
+# rstatix
 set.seed(101)
 wilcox_effsize(mol, values ~ ind,
                ci = T, conf.level = 1-alfa)
 ```
 
-### effectsize
+### Correlacion de rango biserial
 
 $$
 r = \frac{2(\bar{R}_1-\bar{R}_2)}{N}
 $$
 
 ```{r}
+# effectsize
 rank_biserial(values ~ ind, data = mol, ci = 1-alfa)
 ```
 
@@ -204,8 +215,18 @@ $$
 d = \frac{2U}{n_1n_2}-1 
 $$
 
+### Delta de Cliff
+
 ```{r}
+# effectsize
 cliffs_delta(values ~ ind, data = mol, ci = 1-alfa)
+```
+
+### Tamanho de efecto en lenguaje comun (CLES)
+
+```{r}
+# effectsize
+rb_to_cles(.61)
 ```
 
 ## Grafico resumen
@@ -250,25 +271,27 @@ kruskal.test(values ~ ind, data = Stacked) %>%
 (7.65 - 3 + 1) / (12 - 3)
 ```
 
-### rstatix
+### $\eta_H^2$
 
 $$
 \eta_H^2 = \frac{H - k + 1}{N - k}
 $$
 
 ```{r}
+# rstatix
 set.seed(101)
 kruskal_effsize(Stacked, values ~ ind,
                 ci = T, conf.level = 1-alfa)
 ```
 
-### effectsize
+### $\epsilon^2$
 
 $$
 \epsilon^2 = \frac{H}{(N^2-1)/(N+1)}
 $$
 
 ```{r}
+# effectsize
 rank_epsilon_squared(values ~ ind, data = Stacked, ci = 1-alfa)
 ```
 

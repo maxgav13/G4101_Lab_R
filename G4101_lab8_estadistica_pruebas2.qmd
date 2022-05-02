@@ -123,26 +123,29 @@ $$
 \omega^2 = \frac{v_{efecto}(CM_{efecto}-CM_{error})}{SC_{total}+CM_{error}}
 $$
 
-### MOTE
+### $\eta^2$
 
 ```{r}
-# EtaSq(mod) # DescTools
-
+# MOTE
 aov.eta = eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = alfa)
 
 aov.eta %>% 
   as_tibble_row()
 
+# effectsize
+effectsize::eta_squared(aov.fit, ci = 1-alfa)
+```
+
+### $\omega^2$
+
+```{r}
+# MOTE
 aov.omega = omega.F(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = alfa)
 
 aov.omega %>% 
   as_tibble_row()
-```
 
-### effectsize
-
-```{r}
-effectsize::eta_squared(aov.fit, ci = 1-alfa)
+# effectsize
 effectsize::omega_squared(aov.fit, ci = 1-alfa)
 ```
 
@@ -247,9 +250,10 @@ $$
 \phi = V = \sqrt{\frac{\chi^2}{N}}
 $$
 
-#### MOTE
+#### $V$ de Cramer
 
 ```{r}
+# MOTE
 v.gof = v.chi.sq(x2 = CHI.gof$statistic, n = N.gof, 
                  r = 2, c = length(obs), a = alfa)
 
@@ -311,6 +315,8 @@ table2d_summary(clastos)
 N.h = sum(clastos)
 ```
 
+### Graficos
+
 ```{r}
 ggplot(dat2, aes(Capa,fill=Clasto)) + 
   geom_bar(position = 'fill')
@@ -320,6 +326,8 @@ ggplot(data = dat2) +
                     fill=Clasto), offset = 0.02) + 
     labs(x='Capa',y='Clasto',fill='Clasto')
 ```
+
+### Prueba $\chi^2$
 
 ```{r}
 CHI.h = chisq.test(clastos)
@@ -333,31 +341,26 @@ $$
 V = \sqrt{\frac{\chi^2}{N \cdot v_{min}}}
 $$
 
-#### MOTE
+#### $V$ de Cramer
 
 ```{r}
+# MOTE
 v.h = v.chi.sq(x2 = CHI.h$statistic, n = N.h, 
                r = nrow(clastos), c = ncol(clastos), 
                a = alfa)
 
 v.h %>% 
   as_tibble_row()
-```
 
-#### DescTools
-
-```{r}
+# DescTools
 CramerV(clastos,conf.level = 1-alfa,method = 'ncchisqadj')
-```
 
-#### effectsize
-
-```{r}
+# effectsize
 chisq_to_cramers_v(chisq = CHI.h$statistic,
                    n = N.h,
                    nrow = nrow(clastos),
                    ncol = ncol(clastos),
-                   ci = 1-alfa) # effectsize
+                   ci = 1-alfa) 
 ```
 
 ### Analisis Post-hoc
@@ -449,6 +452,8 @@ table2d_summary(round.dist)
 N.i = sum(round.dist)
 ```
 
+### Graficos
+
 ```{r}
 ggplot(dat3, aes(Distancia,fill=Redondez)) + 
   geom_bar(position = 'fill')
@@ -458,6 +463,8 @@ ggplot(data = dat3) +
                   fill=Redondez), offset = 0.02) + 
   labs(x='Distancia',y='Redondez',fill='Redondez')
 ```
+
+### Prueba $\chi^2$
 
 ```{r}
 CHI.i = chisq.test(round.dist)
@@ -471,26 +478,21 @@ $$
 V = \sqrt{\frac{\chi^2}{N \cdot v_{min}}}
 $$
 
-#### MOTE
+### $V$ de Cramer
 
 ```{r}
+# MOTE
 v.i = v.chi.sq(x2 = CHI.i$statistic, n = N.i, 
                r = nrow(round.dist), c = ncol(round.dist), 
                a = alfa)
 
 v.i %>% 
   as_tibble_row()
-```
 
-#### DescTools
-
-```{r}
+# DescTools
 CramerV(round.dist, conf.level = 1-alfa, method = 'ncchisqadj')
-```
 
-#### effectsize
-
-```{r}
+# effectsize
 cramers_v(round.dist, ci = 1-alfa)
 ```
 
