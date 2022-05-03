@@ -38,7 +38,7 @@ library(easystats)
 theme_set(theme_minimal(base_size = 14))
 ```
 
-# Prueba $\chi^2$ de 1 varianza
+# Prueba-$\chi^2$ de 1 varianza
 
 $$H_0 : \sigma^2 = \sigma_0^2$$
 
@@ -55,7 +55,7 @@ interval_var1(x = w) # OneTwoSample
 ci_chisq(s = sd(w), n = length(w), digits = 4) # GMisc
 ```
 
-# Prueba F de 2 varianzas
+# Prueba-F de 2 varianzas
 
 $$H_0 : \sigma_1^2 = \sigma_2^2$$
 
@@ -75,7 +75,17 @@ interval_var2(x,y) # OneTwoSample
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
 ```
 
-# Prueba t de 1 muestra
+# Tamanho de efecto en lenguaje comun (CLES)
+
+Aplica para todas las pruebas-t y su respectivo $d$
+
+$$
+PS = \Phi \Bigg(\frac{|d|}{\sqrt{2}}\Bigg) \\
+U_3 = \Phi(|d|) \\
+OVL = 2 \cdot \Phi \Bigg(\frac{-|d|}{\sqrt{2}}\Bigg)
+$$
+
+# Prueba-t de 1 muestra
 
 $$H_0 : \mu = \mu_0$$
 
@@ -101,7 +111,7 @@ d_s = \frac{\bar{x} - \mu_0}{s}
 $$
 
 $$
-g = d \cdot \Big(1-\frac{3}{4 \cdot v-1}\Big)
+g_s = d_s \cdot \Bigg(1-\frac{3}{4 \cdot v-1}\Bigg)
 $$
 
 ### $d$ de Cohen
@@ -118,7 +128,7 @@ d1 %>%
 cohens_d(verm, mu = mu, ci = 1-alfa)
 ```
 
-### $g$ de Hedge
+### $g$ de Hedges
 
 ```{r}
 # effectsize
@@ -146,7 +156,7 @@ gghistostats(tibble(verm),verm,
              bf.message = F)
 ```
 
-# Prueba t de 2 muestras independientes
+# Prueba-t de 2 muestras independientes
 
 $$H_0 : \mu_1 = \mu_2$$
 
@@ -212,19 +222,19 @@ ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A),
 Sin igualdad de varianzas
 
 $$
-d = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2+s_2^2}{2}}}
+d_s = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2+s_2^2}{2}}}
 $$
 
 Con igualdad de varianzas
 
 $$
-d = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2(n_1-1)+s_2^2(n_2-1)}{n_1+n_2-2}}}
+d_s = \frac{\bar{x}_1 - \bar{x}_2}{\sqrt{\frac{s_1^2(n_1-1)+s_2^2(n_2-1)}{n_1+n_2-2}}}
 $$
 
 Correcion
 
 $$
-g = d \cdot \Big(1-\frac{3}{4 \cdot v-1}\Big) = d \cdot \Big(\frac{N-3}{N-2.25}\Big)
+g_s = d_s \cdot \Bigg(1-\frac{3}{4 \cdot v-1}\Bigg) = d_s \cdot \Bigg(\frac{N-3}{N-2.25}\Bigg)
 $$
 
 ### $d$ de Cohen
@@ -242,7 +252,7 @@ d2.ind %>%
 cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
 ```
 
-### $g$ de Hedge
+### $g$ de Hedges
 
 ```{r}
 # MOTE
@@ -278,7 +288,7 @@ ggbetweenstats(DF, ind, values,
                bf.message = F)
 ```
 
-# Prueba t de 2 muestras dependientes
+# Prueba-t de 2 muestras dependientes
 
 $$H_0 : \mu_D = \mu_{despues} - \mu_{antes} = 0$$
 
@@ -372,7 +382,7 @@ ggwithinstats(DF2, ind, values,
               bf.message = F)
 ```
 
-# Prueba t de correlacion
+# Prueba de correlacion
 
 $$H_0 : \rho = 0$$
 

@@ -44,8 +44,6 @@ theme_set(theme_minimal(base_family = 14))
 
 $$H_0 : \mu_1 = \mu_2 = \mu_3 = \dotsb = \mu_n$$
 
-## EDA
-
 ```{r}
 dat1 = vroom('data/anova MgO.csv')
 alfa = .05
@@ -103,7 +101,7 @@ bartlett.test(values ~ ind, data = Stacked) %>%
 var.igual = T
 ```
 
-## ANOVA
+## Prueba
 
 ```{r}
 # con igualdad de varianzas
@@ -127,7 +125,7 @@ $$
 \omega^2 = \frac{v_{efecto}(CM_{efecto}-CM_{error})}{SC_{total}+CM_{error}}
 $$
 
-### $\eta^2$
+### Eta-cuadrado ($\eta^2$)
 
 ```{r}
 # MOTE
@@ -140,7 +138,7 @@ aov.eta %>%
 effectsize::eta_squared(aov.fit, ci = 1-alfa, alternative = 'two')
 ```
 
-### $\omega^2$
+### Omega-cuadrado ($\omega^2$)
 
 ```{r}
 # MOTE
@@ -224,7 +222,7 @@ ggbetweenstats(Stacked, ind, values,
 
 # Datos categoricos
 
-## $\chi^2$ Bondad de ajuste
+## Prueba-$\chi^2$ de bondad de ajuste
 
 $H_o$: Datos observados siguen la distribucion/proporcion propuesta
 
@@ -239,6 +237,8 @@ p = c(.5, .5) # proporciones esperadas
 
 N.gof = sum(obs)
 ```
+
+### Prueba
 
 ```{r}
 CHI.gof = chisq.test(obs,p=p) 
@@ -295,7 +295,7 @@ ggpiestats(obs.tb, Var1,
            bf.message = F)
 ```
 
-## $\chi^2$ Homogeneidad
+## Prueba-$\chi^2$ de homogeneidad
 
 $H_o$: Proporcion de items es homogenea entre muestras
 
@@ -331,7 +331,7 @@ ggplot(data = dat2) +
     labs(x='Capa',y='Clasto',fill='Clasto')
 ```
 
-### Prueba $\chi^2$
+### Prueba
 
 ```{r}
 CHI.h = chisq.test(clastos)
@@ -429,7 +429,7 @@ ggbarstats(dat2, Clasto, Capa,
            bf.message = F)
 ```
 
-## $\chi^2$ Independencia/asociacion
+## Prueba-$\chi^2$ de independencia/asociacion
 
 $H_o$: No hay relacion entre variables $H_o$: Las variables son independientes entre si
 
@@ -469,7 +469,7 @@ ggplot(data = dat3) +
   labs(x='Distancia',y='Redondez',fill='Redondez')
 ```
 
-### Prueba $\chi^2$
+### Prueba
 
 ```{r}
 CHI.i = chisq.test(round.dist)

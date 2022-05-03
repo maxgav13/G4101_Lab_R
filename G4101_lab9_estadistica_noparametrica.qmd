@@ -91,7 +91,7 @@ ggplot(dat, aes(x, colour = g)) +
 
 # Prueba de rango con signo de Wilcoxon
 
-$$H_0 : mediana \ muestra = mediana \ hipotetica$$
+$$H_0 : \text{mediana muestra} = \text{mediana hipotetica}$$
 
 ```{r}
 verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
@@ -117,11 +117,19 @@ wilcox.test(x = verm, mu=7,
 
 ## Tamanho del efecto
 
-### Correlacion
-
 $$
 r = \frac{|Z|}{\sqrt{N}}
 $$
+
+$$
+r_b = \frac{2 \cdot(w_+ - w_-)}{N(N+1)}
+$$
+
+$$
+cles \ (PS) = \frac{2 \cdot w_{max}}{N(N+1)} 
+$$
+
+### Correlacion ($r$)
 
 ```{r}
 # rstatix
@@ -130,15 +138,11 @@ wilcox_effsize(enframe(verm), value~1, mu = 7,
                ci = T, conf.level = 1-alfa)
 ```
 
-### Correlacion de rango biserial
-
-$$
-r = \frac{W}{S_R} = \frac{2 \cdot(w_+ - w_-)}{N(N+1)}
-$$
+### Correlacion de rango biserial ($r_b$)
 
 ```{r}
 # effectsize
-rank_biserial(verm, mu = 7,ci = 1-alfa)
+rank_biserial(verm, mu = 7, ci = 1-alfa)
 ```
 
 ### Tamanho de efecto en lenguaje comun (CLES)
@@ -158,7 +162,7 @@ gghistostats(enframe(verm), value,
              bf.message = F)
 ```
 
-# Prueba de suma de rangos de Wilcoxon o Prueba U de Mann-Whitney
+# Prueba de suma de rangos de Wilcoxon o Prueba-U de Mann-Whitney
 
 $$H_0 : \bar{R}_1 = \bar{R}_2$$
 
@@ -187,11 +191,23 @@ wilcox.test(values ~ ind, data = mol,
 
 ## Tamanho del efecto
 
-### Correlacion
-
 $$
 r = \frac{|Z|}{\sqrt{N}}
 $$
+
+$$
+r_b = \frac{2(\bar{R}_1-\bar{R}_2)}{N}
+$$
+
+$$
+\delta = \frac{2U}{n_1n_2}-1 
+$$
+
+$$
+cles \ (PS) = \frac{U_{max}}{n_1n_2} 
+$$
+
+### Correlacion ($r$)
 
 ```{r}
 # rstatix
@@ -200,22 +216,14 @@ wilcox_effsize(mol, values ~ ind,
                ci = T, conf.level = 1-alfa)
 ```
 
-### Correlacion de rango biserial
-
-$$
-r = \frac{2(\bar{R}_1-\bar{R}_2)}{N}
-$$
+### Correlacion de rango biserial ($r_b$)
 
 ```{r}
 # effectsize
 rank_biserial(values ~ ind, data = mol, ci = 1-alfa)
 ```
 
-$$
-d = \frac{2U}{n_1n_2}-1 
-$$
-
-### Delta de Cliff
+### Delta de Cliff ($\delta$)
 
 ```{r}
 # effectsize
@@ -266,16 +274,16 @@ kruskal.test(values ~ ind, data = Stacked) %>%
 
 ## Tamanho del efecto
 
-```{r}
-# eta-cuadrado = (H - k + 1) / (N - k)
-(7.65 - 3 + 1) / (12 - 3)
-```
-
-### $\eta_H^2$
+### Eta-cuadrado ($\eta_H^2$)
 
 $$
 \eta_H^2 = \frac{H - k + 1}{N - k}
 $$
+
+```{r}
+# eta-cuadrado = (H - k + 1) / (N - k)
+(7.65 - 3 + 1) / (12 - 3)
+```
 
 ```{r}
 # rstatix
@@ -284,11 +292,16 @@ kruskal_effsize(Stacked, values ~ ind,
                 ci = T, conf.level = 1-alfa)
 ```
 
-### $\epsilon^2$
+### Epsilon-cuadrado ($\epsilon^2$)
 
 $$
 \epsilon^2 = \frac{H}{(N^2-1)/(N+1)}
 $$
+
+```{r}
+# epsilon-cuadrado = (H) / ((N^2 - 1)/(N + 1))
+(7.65) / ((12^2 - 1)/(12 + 1))
+```
 
 ```{r}
 # effectsize
@@ -296,7 +309,7 @@ rank_epsilon_squared(values ~ ind, data = Stacked,
                      ci = 1-alfa, alternative = 'two')
 ```
 
-## Analisis post-hoc
+## Analisis Post-hoc
 
 ```{r}
 DunnTest(values~ind, Stacked, method = 'holm') # DescTools
