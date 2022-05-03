@@ -65,11 +65,15 @@ Stacked = Stacked %>%
                       labels = c('Mt Mica', 'Sebago Bath', 'Black Mt')))
 ```
 
+## Estadisticas por grupo
+
 ```{r}
 Stacked %>% 
   group_by(ind) %>% 
   get_summary_stats()
 ```
+
+## Grafico
 
 ```{r}
 ggplot(Stacked, aes(ind, values)) + 
@@ -133,7 +137,7 @@ aov.eta %>%
   as_tibble_row()
 
 # effectsize
-effectsize::eta_squared(aov.fit, ci = 1-alfa)
+effectsize::eta_squared(aov.fit, ci = 1-alfa, alternative = 'two')
 ```
 
 ### $\omega^2$
@@ -146,7 +150,7 @@ aov.omega %>%
   as_tibble_row()
 
 # effectsize
-effectsize::omega_squared(aov.fit, ci = 1-alfa)
+omega_squared(aov.fit, ci = 1-alfa, alternative = 'two')
 ```
 
 ## Analisis Post-hoc
@@ -360,7 +364,8 @@ chisq_to_cramers_v(chisq = CHI.h$statistic,
                    n = N.h,
                    nrow = nrow(clastos),
                    ncol = ncol(clastos),
-                   ci = 1-alfa) 
+                   ci = 1-alfa, 
+                   alternative = 'two') 
 ```
 
 ### Analisis Post-hoc
@@ -493,7 +498,7 @@ v.i %>%
 CramerV(round.dist, conf.level = 1-alfa, method = 'ncchisqadj')
 
 # effectsize
-cramers_v(round.dist, ci = 1-alfa)
+cramers_v(round.dist, ci = 1-alfa, alternative = 'two')
 ```
 
 ### Analisis Post-hoc

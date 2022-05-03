@@ -123,7 +123,8 @@ oneway.test(values ~ ind, Stacked, var.equal = F) %>%
 unlist(eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = a)[1:3]) %>% 
   as_tibble_row() # MOTE
 
-effectsize::eta_squared(mod,ci = 1-a) # solo cuando varianzas son iguales
+effectsize::eta_squared(mod,ci = 1-a, 
+                        alternative = 'two') # solo cuando varianzas son iguales
 ```
 
 ## *Post-hoc*
@@ -241,7 +242,8 @@ chisq_to_cramers_v(chisq = CHI.h$statistic,
                    n = N,
                    nrow = nrow(clastos),
                    ncol = ncol(clastos),
-                   ci = 1-a) # effectsize
+                   ci = 1-a, 
+                   alternative = 'two') # effectsize
 
 chisq_descriptives(rstatix::chisq_test(clastos)) %>% 
   left_join(pairwise_chisq_test_against_p(clastos,
@@ -309,7 +311,7 @@ z.crit.i
 CHI.i = chisq.test(round.dist)
 CHI.i %>% tidy()
 CramerV(round.dist,conf.level = 1-a,method = 'ncchisqadj') # DescTools
-cramers_v(round.dist,ci = 1-a)
+cramers_v(round.dist,ci = 1-a, alternative = 'two')
 
 chisq_descriptives(rstatix::chisq_test(round.dist)) %>% 
   left_join(pairwise_chisq_test_against_p(round.dist,

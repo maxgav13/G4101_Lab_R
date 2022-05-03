@@ -292,7 +292,8 @@ $$
 
 ```{r}
 # effectsize
-rank_epsilon_squared(values ~ ind, data = Stacked, ci = 1-alfa)
+rank_epsilon_squared(values ~ ind, data = Stacked, 
+                     ci = 1-alfa, alternative = 'two')
 ```
 
 ## Analisis post-hoc

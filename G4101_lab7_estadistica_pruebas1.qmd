@@ -181,11 +181,13 @@ DF %>%
   get_summary_stats()
 ```
 
-## Revisar igualdad de varianzas
+## Prueba de igualdad de varianzas
 
 ```{r}
 var.test(values ~ ind, DF, conf.level = 1-alfa)
 ```
+
+## Prueba
 
 ```{r}
 t.test(A, B, mu=0, conf.level = 1-alfa) %>% 
@@ -348,6 +350,16 @@ d2.rm = d.dep.t.rm(m1 = mean(Antes),m2 = mean(Despues),
 
 d2.rm %>% 
   as_tibble_row()
+```
+
+### Tamanho de efecto en lenguaje comun (CLES)
+
+```{r}
+# effectsize
+d_to_cles(.034) %>% 
+  as_tibble() %>% 
+  janitor::clean_names() %>% 
+  mutate(across(.fns = ~.*100 %>% round(1)))
 ```
 
 ## Grafico resumen

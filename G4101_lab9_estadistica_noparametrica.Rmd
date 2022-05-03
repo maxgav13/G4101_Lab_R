@@ -166,7 +166,8 @@ kruskal.test(values ~ ind, data = Stacked) %>%
 set.seed(101)
 kruskal_effsize(Stacked,values~ind,ci = T,conf.level = 1-alfa)
 
-rank_epsilon_squared(values ~ ind, data = Stacked, ci = 1-alfa)
+rank_epsilon_squared(values ~ ind, data = Stacked, 
+                     ci = 1-alfa, alternative = 'two')
 
 DunnTest(values~ind, Stacked) # DescTools
 
