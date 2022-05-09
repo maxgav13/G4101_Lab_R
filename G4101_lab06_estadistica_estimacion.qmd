@@ -28,6 +28,8 @@ library(GMisc)          # intervalos de confianza
 library(OneTwoSamples)  # intervalos de confianza
 library(DescTools)      # funciones estadisticas
 library(tidyverse)
+
+theme_set(theme_minimal(base_size = 14))
 ```
 
 # Intervalos de confianza
@@ -48,22 +50,57 @@ $$\hat{\theta}_i < \hat{\theta} < \hat{\theta}_s$$
 
 donde $\hat{\theta}_i = \text{limite inferior}$ y $\hat{\theta}_s = \text{limite superior}$
 
-## Normal estandar - Z
+## Normal estandar - $Z$
 
 $$\bar{x} \pm z_{\alpha/2} \frac{\sigma}{\sqrt{n}}$$
 
 ```{r}
-ci_z(x = 2.6, sig = 0.3, n = 36, conf.level = .95) # intervalo de confianza al 95%
+x = 2.6
+sigma = .3
+n = 36
+s = sigma/sqrt(n)
+alfa = .95
+
+ci_z(x = x, sig = sigma, n = n, conf.level = alfa) # intervalo de confianza al 95%
 ```
 
-## T
+```{r}
+xmin = x-3.5*s
+xmax = x+3.5*s
+ggplot() + 
+    xlim(xmin,xmax) +
+    stat_function(geom = 'line', fun = dnorm, 
+                  args = list(mean=x,sd=s)) + 
+    stat_function(geom = 'area', fun = dnorm, 
+                  args = list(mean=x,sd=s), 
+                  xlim = c(2.5,2.7), fill = 'dodgerblue')
+```
+
+# $t$
 
 $$\bar{x} \pm t_{\alpha/2,v} \frac{s}{\sqrt{n}}$$
 
 ```{r}
 vec = c(9.4, 12.2, 10.7, 11.6)
-ci_t(x = mean(vec), s = sd(vec), n = length(vec), conf.level = .90) # intervalo de confianza al 90%
-interval_estimate1(x = vec, alpha = 0.1) # intervalo de confianza al 90%
+x = mean(vec)
+n = length(vec)
+s = sd(vec)
+alfa = .1
+
+ci_t(x = x, s = s, n = n, conf.level = 1-alfa) # intervalo de confianza al 90%
+interval_estimate1(x = vec, alpha = alfa) # intervalo de confianza al 90%
+```
+
+```{r}
+xmin = x-3.5*s
+xmax = x+3.5*s
+ggplot() + 
+    xlim(xmin,xmax) +
+    stat_function(geom = 'line', fun = dnorm, 
+                  args = list(mean=x,sd=s)) + 
+    stat_function(geom = 'area', fun = dnorm, 
+                  args = list(mean=x,sd=s), 
+                  xlim = c(9.54,12.41), fill = 'dodgerblue')
 ```
 
 ## $\chi^2$
@@ -72,11 +109,16 @@ $$\frac{(n-1)s^2}{\chi^2_{\alpha/2,v}} < \sigma^2 < \frac{(n-1)s^2}{\chi^2_{1-\a
 
 ```{r}
 vec = c(46.4, 46.1, 45.8, 47.0, 46.1, 45.9, 45.8, 46.9, 45.2, 46.0)
-ci_chisq(s = sd(vec), n = length(vec), conf.level = .95) # intervalo de confianza al 95%
-interval_var1(x = vec, alpha = .05) # intervalo de confianza al 95%
+s = sd(vec)
+n = length(vec)
+v = n-1
+alfa = .05
+
+ci_chisq(s = s, n = n, conf.level = 1-alfa) # intervalo de confianza al 95%
+interval_var1(x = vec, alpha = alfa) # intervalo de confianza al 95%
 ```
 
-## F
+# $F$
 
 $$\frac{s^2_1}{s^2_2} \frac{1}{F_{\alpha/2(v_1,v_2)}} < \frac{\sigma^2_1}{\sigma^2_2} < \frac{s^2_1}{s^2_2} F_{\alpha/2(v_2,v_1)}$$
 

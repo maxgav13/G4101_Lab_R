@@ -1,0 +1,142 @@
+---
+title: "Lab 5: Estadistica Inferencial"
+author: "Maximiliano Garnier Villarreal"
+lang: es
+toc: true
+toc-depth: 2
+toc-title: Contenidos
+number-sections: true
+highlight-style: pygments
+theme: sandstone
+format:
+  html:
+    code-fold: true
+    html-math-method: katex
+  pdf: default
+  docx: default
+execute:
+  warning: false
+  error: false
+  echo: true
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+library(DescTools)    # funciones estadisticas
+library(tidyverse)
+
+theme_set(theme_minimal(base_size = 14))
+```
+
+Para $\chi^2$, $t$ y $F$, el parametro *df* corresponde con los grados de libertad. Para todas el parametro *q* se refiere al estadistico, o en el caso de la distribucion normal el valor de la media a comparar.
+
+En general *lower.tail=F* quiere decir la probabilidad a la derecha o mayor que.
+
+# Normal - $Z$
+
+Inferencia sobre una media con respecto a una teorica, conociendo $\sigma^2$
+
+```{r}
+mu = 3.5
+sigma = 0.2 
+n = 8
+s = sigma/sqrt(n)
+
+# probabilidad de X > 3.6 con n=8
+pnorm(q = 3.6,mean = mu, sd = s,lower.tail = F) 
+```
+
+```{r}
+xmin = mu-3.5*s
+xmax = mu+3.5*s
+ggplot() + 
+    xlim(xmin,xmax) +
+    stat_function(geom = 'line', fun = dnorm, 
+                  args = list(mean=mu,sd=s)) + 
+    stat_function(geom = 'area', fun = dnorm, 
+                  args = list(mean=mu,sd=s), 
+                  xlim = c(3.6,xmax), fill = 'dodgerblue')
+```
+
+# $t$
+
+Inferencia sobre la media sin conocer $\sigma^2$
+
+```{r}
+mu = 500
+s = 40
+n = 25
+v = n-1
+t = (518 - 500) / (s/sqrt(n))
+
+pt(q = t, df = v, lower.tail = F) 
+```
+
+```{r}
+xmin = -4
+xmax = 4
+ggplot() + 
+    xlim(xmin,xmax) +
+    stat_function(geom = 'line', fun = dt, 
+                  args = list(df=v)) + 
+    stat_function(geom = 'area', fun = dt, 
+                  args = list(df=v), 
+                  xlim = c(t,xmax), fill = 'dodgerblue')
+```
+
+# $\chi^2$
+
+Inferencia sobre una $s^2$ con respecto a $\sigma^2$
+
+```{r}
+sigma2 = 0.8
+s2 = 1.2
+n = 6
+v = n-1
+
+(chi=(v*s2)/sigma2)
+
+# probabilidad de s2 > 1.2
+pchisq(q = chi,df = v,lower.tail = F) 
+```
+
+```{r}
+xmax = qchisq(p = .995, df = v)
+ggplot() + 
+    xlim(0,xmax) +
+    stat_function(geom = 'line', fun = dchisq, 
+                  args = list(df=v)) + 
+    stat_function(geom = 'area', fun = dchisq, 
+                  args = list(df=v), 
+                  xlim = c(chi,xmax), fill = 'dodgerblue')
+```
+
+# $F$
+
+Inferencia sobre dos $s^2$
+
+```{r}
+n1 = 6
+n2 = 9
+v1 = n1-1
+v2 = n2-2
+s2_1 = 4
+s2_2 = 2
+f = s2_1 / s2_2
+
+# probabilidad de F > 2 con 5 y 8 grados de libertad
+pf(q = 2, df1 = 5, df2 = 8, lower.tail = F) 
+```
+
+```{r}
+xmax = qf(p = .995, df1 = v1, df2 = v2)
+ggplot() + 
+    xlim(0,xmax) +
+    stat_function(geom = 'line', fun = df, 
+                  args = list(df1=v1,df2=v2)) + 
+    stat_function(geom = 'area', fun = df, 
+                  args = list(df1=v1,df2=v2), 
+                  xlim = c(f,xmax), fill = 'dodgerblue')
+```

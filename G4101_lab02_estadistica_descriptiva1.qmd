@@ -33,7 +33,7 @@ library(gtsummary)      # tablas
 library(tidyverse)
 library(rio)
 
-theme_set(theme_minimal(base_size = 12))
+theme_set(theme_minimal(base_size = 14))
 
 options(
   # OutDec = ',',

@@ -37,7 +37,7 @@ library(tidymodels)     # resumenes tidy y otros
 library(tidyverse)
 library(easystats)
 
-theme_set(theme_minimal(base_family = 14))
+theme_set(theme_minimal(base_size = 14))
 ```
 
 # ANOVA
