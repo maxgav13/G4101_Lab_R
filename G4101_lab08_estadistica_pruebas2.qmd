@@ -190,7 +190,7 @@ contrastes = combn(levels(Stacked %>% pull(ind)), 2) %>%
   as.list()
 
 ES = map_dfr(contrastes, 
-             ~ effectsize::hedges_g(values ~ ind, data = Stacked %>% 
+             ~ effectsize::cohens_d(values ~ ind, data = Stacked %>% 
                                       filter(ind %in% .x) %>% 
                                       mutate(ind=fct_drop(ind)),
                                     pooled_sd = var.igual,
@@ -211,7 +211,7 @@ CI %>% inner_join(ES, by = 'contrast')
 
 ```{r}
 ggbetweenstats(Stacked, ind, values,
-               var.equal = T,
+               var.equal = var.igual,
                type = 'p',
                effsize.type = 'unbiased',
                conf.level = 1-alfa,

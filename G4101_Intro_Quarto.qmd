@@ -22,7 +22,13 @@ execute:
 
 # Introduccion
 
-Este es un documento [Quarto](http://quarto.org). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Render* (![](imgs/rstudio-render-button.png){width="20" height="17"}).
+::: callout-note
+
+Para poder usar este tipo de documentos es necesario primero instalar Quarto en su equipo. Seguir las instrucciones en el sitio web [Quarto](http://quarto.org).
+
+:::
+
+Este es un documento Quarto (`.qmd`). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Render* (![](imgs/rstudio-render-button.png){width="20" height="17"}).
 
 Los documentos se pueden crear en modo *Source* o *Visual*. En modo *Visual* (@fig-visual-opts) se puede trabajar el documento como un editor de texto clasico.
 
