@@ -3,7 +3,7 @@ title: "Lab 9: Estadistica Inferencial - No Parametrica"
 author: "Maximiliano Garnier Villarreal"
 lang: es
 toc: true
-toc-depth: 2
+toc-depth: 3
 toc-title: Contenidos
 number-sections: true
 highlight-style: pygments

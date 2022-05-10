@@ -3,7 +3,7 @@ title: "Lab 12: Geoestadistica"
 author: "Maximiliano Garnier Villarreal"
 lang: es
 toc: true
-toc-depth: 2
+toc-depth: 3
 toc-title: Contenidos
 number-sections: true
 highlight-style: pygments
@@ -27,13 +27,10 @@ execute:
 library(gstat)          # geoestadistica
 library(sp)             # objetos espaciales vectoriales
 library(sf)             # objetos espaciales vectoriales
-# library(ggspatial)
-library(plotly)         # graficos interctivos
+library(plotly)         # graficos interactivos
 library(raster)         # objetos espaciales raster
 library(stars)          # arreglos de objetos espaciales
 library(viridis)        # colores
-# library(rgeos)
-# library(rgdal)
 library(DescTools)      # analisis de datos
 library(mapview)        # mapas interactivos
 library(RColorBrewer)   # colores

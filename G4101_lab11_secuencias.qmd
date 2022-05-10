@@ -3,7 +3,7 @@ title: "Lab 11: Secuencias"
 author: "Maximiliano Garnier Villarreal"
 lang: es
 toc: true
-toc-depth: 2
+toc-depth: 3
 toc-title: Contenidos
 number-sections: true
 highlight-style: pygments
@@ -46,19 +46,6 @@ set_flextable_defaults(
   # decimal.mark = ',',
   # big.mark = '.',
   digits = 3
-)
-
-knitr::opts_chunk$set(
-  echo = TRUE,
-  message = FALSE,
-  warning = FALSE,
-  error = FALSE,
-  # fig.path = "figs/",
-  fig.retina = 3,
-  fig.width = 8,
-  fig.asp = 0.618,
-  # fig.align = "center",
-  out.width = "90%"
 )
 ```
 

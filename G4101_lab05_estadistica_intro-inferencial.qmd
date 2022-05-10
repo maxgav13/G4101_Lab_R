@@ -3,7 +3,7 @@ title: "Lab 5: Estadistica Inferencial"
 author: "Maximiliano Garnier Villarreal"
 lang: es
 toc: true
-toc-depth: 2
+toc-depth: 3
 toc-title: Contenidos
 number-sections: true
 highlight-style: pygments
@@ -30,7 +30,7 @@ library(tidyverse)
 theme_set(theme_minimal(base_size = 14))
 ```
 
-Para $\chi^2$, $t$ y $F$, el parametro *df* corresponde con los grados de libertad. Para todas el parametro *q* se refiere al estadistico, o en el caso de la distribucion normal el valor de la media a comparar.
+Para $\chi^2$, $t$ y $F$, el parametro *df* corresponde con los grados de libertad. Para todas el parametro *q* se refiere al estadistico, o en el caso de la distribucion normal el valor de la media muestral.
 
 En general *lower.tail=F* quiere decir la probabilidad a la derecha o mayor que.
 
@@ -45,7 +45,7 @@ n = 8
 s = sigma/sqrt(n)
 
 # probabilidad de X > 3.6 con n=8
-pnorm(q = 3.6,mean = mu, sd = s,lower.tail = F) 
+pnorm(q = 3.6, mean = mu, sd = s, lower.tail = F) 
 ```
 
 ```{r}
@@ -99,7 +99,7 @@ v = n-1
 (chi=(v*s2)/sigma2)
 
 # probabilidad de s2 > 1.2
-pchisq(q = chi,df = v,lower.tail = F) 
+pchisq(q = chi, df = v, lower.tail = F) 
 ```
 
 ```{r}
