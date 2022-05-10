@@ -70,6 +70,14 @@ correlation::cor_test(cordat,'a','b',
   tibble()
 ```
 
+```{r}
+ggscatterstats(cordat, a, b,
+               marginal = F,
+               type = 'np',
+               conf.level = 1-alfa,
+               bf.message = F)
+```
+
 # Prueba de Kolmogorov-Smirnov
 
 ```{r}
@@ -99,8 +107,9 @@ alfa = .05
 
 verm %>% 
   enframe() %>% 
-  mutate(diff = value-7, 
-         signo = sign(diff), 
+  mutate(diff = value-7) %>% 
+  filter(diff != 0) %>% 
+  mutate(signo = sign(diff), 
          ranking = rank(abs(diff)),
          signo = factor(signo,
                         levels = c(-1,1),
