@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -301,6 +305,8 @@ DF2 = stack(list(Antes=Antes,Despues=Despues)) %>%
   as_tibble()
 ```
 
+## Prueba
+
 ```{r}
 t.test(Despues,Antes,mu=0,paired = T) %>% 
   tidy()
@@ -394,6 +400,8 @@ c = c(3,5,9,5,5,8,13,3,9,9)
 
 cordat = tibble(a,b,c)
 ```
+
+## Prueba
 
 ```{r}
 r = cor.test(a,b,method = "pearson",conf = 1-alfa)

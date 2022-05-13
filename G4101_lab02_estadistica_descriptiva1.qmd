@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -20,7 +22,7 @@ execute:
   echo: true
 ---
 
-# Estadistica descriptiva
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -49,6 +51,8 @@ theme_gtsummary_language(
 )
 ```
 
+# Estadistica descriptiva
+
 ## Datos categoricos
 
 ### Tabla de frecuencias
@@ -75,7 +79,7 @@ tbl_cross(gss_cat, marital, race, percent = 'cell')
 
 #### Barras
 
-Para `geom_bar` el argumento *position* puede tener cualquiera de estos tres valores: 'stack', 'dodge' o 'fill', para cuando se visualizan 2 variables categoricas.
+Para `geom_bar` el argumento `position` puede tener cualquiera de estos tres valores: `stack`, `dodge` o `fill`, para cuando se visualizan 2 variables categoricas.
 
 ```{r}
 ggplot(data = gss_cat, aes(x = race, fill = race)) +
@@ -110,9 +114,9 @@ Freq(airquality$Temp, breaks = seq(50,100,10))
 
 Dentro de `geom_histogram` hay 3 opciones para definir la discretizacion:
 
--   bins = Numero de clases
--   binwidth = El ancho de las clases
--   breaks = Un vector con los puntos donde separar los datos
+-   `bins` = Numero de clases
+-   `binwidth` = El ancho de las clases
+-   `breaks` = Un vector con los puntos donde separar los datos
 
 *Frecuencias absolutas*
 
@@ -214,7 +218,7 @@ DescTools::Kurt(myvector)
 
 Se muestran varias funciones que generan un resumen general de un vector o DataFrame, para este ultimo dependiendo del tipo de variable presente.
 
-Vector
+#### Vector
 
 ```{r}
 skimr::skim(myvector)
@@ -223,7 +227,7 @@ DescTools::Desc(myvector)
 summarytools::descr(myvector)
 ```
 
-DataFrame
+#### DataFrame
 
 ```{r}
 skimr::skim(airq)

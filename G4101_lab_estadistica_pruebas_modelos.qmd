@@ -47,7 +47,7 @@ $$y = \beta_0$$
 
 $$H_0 : \beta_0 = 0$$
 
-## Prueba-t de una muestra y prueba de signo con rango de Wilcoxon
+## Prueba-t de una muestra y prueba de rango con signo de Wilcoxon
 
 ```{r}
 verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
@@ -67,7 +67,7 @@ t1.mod %>%
   tibble()
 ```
 
-### Prueba de signo con rango de Wilcoxon
+### Prueba de rango con signo de Wilcoxon
 
 ```{r}
 w1.mod = lm(signed_rank(verm-mu) ~ 1)
@@ -127,7 +127,7 @@ $$y_i = \beta_0 + \beta_1 \cdot x_i$$
 
 $$\it{\text{rank}}(y_i) = \beta_0 + \beta_1 \cdot x_i$$
 
-$$H0: \beta_1 = 0$$
+$$H_0: \beta_1 = 0$$
 
 ```{r}
 A = c(25, 40, 34, 37, 38, 35, 29, 32, 35, 44, 27, 33, 37, 38, 36)
@@ -222,11 +222,12 @@ r.s %>%
 
 ## Anova de 1 factor y Kruskal-Wallis
 
-$$y = \beta_0 + \beta_1 \cdot x_1  + \beta_2 \cdot x_2  + \beta_3 \cdot x_3 + \dots$$
+$$y = \beta_0 + \beta_1 \cdot x_1  + \beta_2 \cdot x_2  + \beta_3 \cdot x_3 + \dots + \beta_n \cdot x_n$$
 
-$$\it{\text{rank}}(y) = \beta_0 + \beta_1 \cdot x_1  + \beta_2 \cdot x_2  + \beta_3 \cdot x_3 + \dots$$
+$$\it{\text{rank}}(y) = \beta_0 + \beta_1 \cdot x_1  + \beta_2 \cdot x_2  + \beta_3 \cdot x_3 + \dots + \beta_n \cdot x_n$$
 
-$$H_0: y = \beta_0$$
+$$H_0: y = \beta_0 \\
+ H_0:\beta_1 \dots \beta_n=0$$
 
 ```{r}
 G1 = c(7,8,10,11) # Mt Mica

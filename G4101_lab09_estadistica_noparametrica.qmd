@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -42,7 +46,7 @@ theme_set(theme_minimal(base_size = 14))
 signed_rank = function(x) sign(x) * rank(abs(x))
 ```
 
-> Para las pruebas no parametricas se trabaja con los datos **rankeados**
+> Para las pruebas no parametricas se trabaja con los datos **ranqueados**
 
 # Correlacion de Spearman
 
@@ -69,6 +73,8 @@ correlation::cor_test(cordat,'a','b',
                       ci = 1-alfa) %>% 
   tibble()
 ```
+
+## Grafico resumen
 
 ```{r}
 ggscatterstats(cordat, a, b,
@@ -117,6 +123,8 @@ verm %>%
   group_by(signo) %>% 
   summarise(w = sum(ranking))
 ```
+
+## Prueba
 
 ```{r}
 wilcox.test(x = verm, mu=7, 
@@ -191,6 +199,8 @@ mol %>%
             w = sum(ranking)) %>% 
   mutate(u = w - (n*(n+1))/2)
 ```
+
+## Prueba
 
 ```{r}
 wilcox.test(values ~ ind, data = mol, 
@@ -276,6 +286,8 @@ Stacked %>%
             w = sum(ranking))
 ```
 
+## Prueba
+
 ```{r}
 kruskal.test(values ~ ind, data = Stacked) %>% 
   tidy()
@@ -349,7 +361,7 @@ ggbetweenstats(Stacked, ind, values,
                bf.message = F)
 ```
 
-# Bootstrap con `rsample`
+# Bootstrap con *rsample*
 
 Remuestreo con remplazamiento, a cada una de la muestras se le calcula el estadistico o dato de interes. El intervalo de confianza es a partir de cuantiles, por lo general 2.5% y 97.5% para un $1 - \alpha = 95 \%$
 

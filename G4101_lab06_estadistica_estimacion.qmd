@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -54,6 +58,8 @@ donde $\hat{\theta}_i = \text{limite inferior}$ y $\hat{\theta}_s = \text{limite
 
 $$\bar{x} \pm z_{\alpha/2} \frac{\sigma}{\sqrt{n}}$$
 
+$SE = \text{error estandar}=\frac{\sigma}{\sqrt{n}}$
+
 ```{r}
 x = 2.6
 sigma = .3
@@ -64,21 +70,11 @@ alfa = .95
 ci_z(x = x, sig = sigma, n = n, conf.level = alfa) # intervalo de confianza al 95%
 ```
 
-```{r}
-xmin = x-3.5*s
-xmax = x+3.5*s
-ggplot() + 
-    xlim(xmin,xmax) +
-    stat_function(geom = 'line', fun = dnorm, 
-                  args = list(mean=x,sd=s)) + 
-    stat_function(geom = 'area', fun = dnorm, 
-                  args = list(mean=x,sd=s), 
-                  xlim = c(2.5,2.7), fill = 'dodgerblue')
-```
-
-# $t$
+## $t$
 
 $$\bar{x} \pm t_{\alpha/2,v} \frac{s}{\sqrt{n}}$$
+
+$SE = \text{error estandar}=\frac{s}{\sqrt{n}}$
 
 ```{r}
 vec = c(9.4, 12.2, 10.7, 11.6)
@@ -89,18 +85,6 @@ alfa = .1
 
 ci_t(x = x, s = s, n = n, conf.level = 1-alfa) # intervalo de confianza al 90%
 interval_estimate1(x = vec, alpha = alfa) # intervalo de confianza al 90%
-```
-
-```{r}
-xmin = x-3.5*s
-xmax = x+3.5*s
-ggplot() + 
-    xlim(xmin,xmax) +
-    stat_function(geom = 'line', fun = dnorm, 
-                  args = list(mean=x,sd=s)) + 
-    stat_function(geom = 'area', fun = dnorm, 
-                  args = list(mean=x,sd=s), 
-                  xlim = c(9.54,12.41), fill = 'dodgerblue')
 ```
 
 ## $\chi^2$
@@ -118,7 +102,7 @@ ci_chisq(s = s, n = n, conf.level = 1-alfa) # intervalo de confianza al 95%
 interval_var1(x = vec, alpha = alfa) # intervalo de confianza al 95%
 ```
 
-# $F$
+## $F$
 
 $$\frac{s^2_1}{s^2_2} \frac{1}{F_{\alpha/2(v_1,v_2)}} < \frac{\sigma^2_1}{\sigma^2_2} < \frac{s^2_1}{s^2_2} F_{\alpha/2(v_2,v_1)}$$
 

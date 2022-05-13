@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -483,7 +487,7 @@ $$
 V = \sqrt{\frac{\chi^2}{N \cdot v_{min}}}
 $$
 
-### $V$ de Cramer
+#### $V$ de Cramer
 
 ```{r}
 # MOTE

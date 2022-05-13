@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -84,12 +88,13 @@ ggplot(datos, aes_string(myvar)) +
 
 ## Transformar datos en objeto espacial
 
-Se le indica cuales son las columnas que tienen las coordenadas (X,Y) y de conocerse se le asiga el sistema de referencia de coordenadas (CRS)
+Se le indica cuales son las columnas que tienen las coordenadas (X,Y) y de conocerse se le asigna el sistema de referencia de coordenadas (CRS)
 
 ```{r datos-sf}
 datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>% 
   mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) %>% 
   select(X, Y, everything())
+datos_sf
 # datos_sp = as(datos_sf, 'Spatial')
 # coordnames(datos_sp) = c('X','Y')
 ```
@@ -155,7 +160,7 @@ mapview(outline, alpha.regions = 0, layer.name='Border',
 
 ## Variograma omnidireccional
 
-Creacion del variograma. La funcion base realiza un buen trabajo inicial, pero se puede mejorar modificando los argumentos:
+Creacion del variograma. La funcion basica (`gstat`) realiza un buen trabajo inicial, pero se puede mejorar modificando los argumentos:
 
 -   `cutoff`: la distancia maxima a la cual calcular el variograma
 -   `width`: el lag de cada cuanto calcular el variograma
@@ -207,7 +212,7 @@ ggplot(data.frame(map.vgm), aes(x = map.dx, y = map.dy, fill = map.var1)) +
 Variogramas en diferentes direcciones donde:
 
 -   `alpha`: vector de direcciones sobre las cuales se va a calcular el variograma
--   `tol.hor`: tolerancia angular, susualmente 22.5
+-   `tol.hor`: tolerancia angular, usualmente 22.5
 
 ```{r variog-dir}
 dat.vgm2 = variogram(g, alpha = c(0,45,90,135),
@@ -243,9 +248,16 @@ pep = 0.020
 
 ```{r ajuste, cache=TRUE, dependson='params'}
 (dat.fit = fit.variogram(dat.vgm, model = vgm(meseta, mod, rango, pep)))
-(fit.rmse = sqrt(attributes(dat.fit)$SSErr/(nrow(datos)))) # error del ajuste
-plot(dat.vgm, dat.fit, xlab = x_var, ylab = y_var) # omnidireccional
-plot(dat.vgm2, dat.fit, as.table = T, xlab = x_var, ylab = y_var) # direccionales
+
+# error del ajuste
+(fit.rmse = sqrt(attributes(dat.fit)$SSErr/(nrow(datos)))) 
+
+# omnidireccional
+plot(dat.vgm, dat.fit, xlab = x_var, ylab = y_var) 
+
+# direccionales
+plot(dat.vgm2, dat.fit, as.table = T, xlab = x_var, ylab = y_var) 
+
 varmod = dat.fit # modelo ajustado
 ```
 
@@ -280,6 +292,8 @@ CIbeta
 ```
 
 ```{r xval-plots, dependson='xval'}
+#| layout-ncol: 2
+
 ggplot(as.data.frame(kcv.ok), aes(var1.pred, observed)) + 
   geom_point(col = "blue", shape = 1, size = 1.25) + 
   coord_fixed() + 
@@ -302,6 +316,11 @@ Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es caso mas se
 ok = krige(as.formula(paste(myvar,'~1')), locations = datos_sf,
            newdata = datosint2, model = varmod)
 
+```
+
+```{r}
+#| eval: false
+
 ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok), 
                                data = data.frame(ok), 
                                proj4string = CRS(proj4string(datos_sp)))
@@ -312,13 +331,15 @@ ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok),
 ```{r geotifs}
 #| eval: false
 
-writeGDAL(ok_sp['var1.pred'], 'figs/krige_pred.tif')
-writeGDAL(ok_sp['var1.var'], 'figs/krige_var.tif')
+rgdal::writeGDAL(ok_sp['var1.pred'], 'figs/krige_pred.tif')
+rgdal::writeGDAL(ok_sp['var1.var'], 'figs/krige_var.tif')
 ```
 
 ## Mapas de las predicciones y varianzas
 
 ```{r mapas-resultados, dependson='kriging', warning=FALSE}
+#| layout-ncol: 2
+
 p1 = ggplot() + 
   geom_stars(data = ok, aes(fill = var1.pred, x = x, y = y)) + 
   scale_fill_gradientn(colours = viridis(10), na.value = NA) + 
@@ -335,7 +356,9 @@ p2 = ggplot() +
        title = 'Varianza',
        fill = myvar)
 
-gridExtra::grid.arrange(p1,p2,ncol=2)
+p1
+p2
+# gridExtra::grid.arrange(p1,p2,ncol=2)
 ```
 
 # Visualizacion 3D

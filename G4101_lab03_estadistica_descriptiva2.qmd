@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -20,7 +22,7 @@ execute:
   echo: true
 ---
 
-# Estadistica descriptiva bivariable
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -62,6 +64,8 @@ theme_gtsummary_language(
 
 ```
 
+# Estadistica descriptiva bivariable
+
 Vamos a usar los datos de `airquality`.
 
 ```{r datos}
@@ -94,16 +98,22 @@ airq2 %>% head() %>% flextable()
 
 Las funciones covarianza (`cov`) y correlacion (`cor`) pueden actuar sobre vectores o sobre DataFrames. En estos ultimos el resultado va a ser una matriz de covarianza o correlacion, en su mayoria se requiere que el DataFrame sea numerico, sin columnas de texto o factores.
 
+Aqui se extraen las variables de interes
+
 ```{r}
 x = airq$Solar.R
 y = airq$Temp
 ```
+
+Se usan als funciones basicas para correlacion y covarianza
 
 ```{r cov-cor}
 cov(x,y,use = 'pairwise.complete.obs') # covarianza
 cor(x,y,method = "pearson",
     use = 'pairwise.complete.obs') # coeficiente de correlacion de Pearson
 ```
+
+Matrices de correlacion y covarianza del DataFrame con unicamente variables numericas
 
 ```{r cov-cor-mat}
 cov(airq2, use = 'pairwise.complete.obs') # matriz de varianza-covarianza
@@ -145,7 +155,7 @@ hchart(cor(airq2,use = 'pairwise.complete.obs')) # grafico interactivo de coefic
 
 ## Regresion
 
-Para presentar caracteristicas de los modelos de forma mas estetica y ordenada se pueden usar las funciones `tidy` y `glance` del paquete **broom**, o `model_parameter` y `model_performance` de los paquetes **parameters** y **performance**. `tidy` y `model_parameter` generan la tabla resumen de los coeficientes y sus estadisticas, mientras que `glance` y `model_performance` generan una tabla con medidas de ajuste, incluyendo el $R^2$.
+Para presentar caracteristicas de los modelos de forma mas estetica y ordenada se pueden usar las funciones `tidy` y `glance` del paquete **broom**, o `model_parameter` y `model_performance` de los paquetes **parameters** y **performance**, respectivamente. `tidy` y `model_parameter` generan la tabla resumen de los coeficientes y sus estadisticas, mientras que `glance` y `model_performance` generan una tabla con medidas de ajuste, incluyendo el $R^2$.
 
 ### Relacion entre correlacion y regresion simple
 
@@ -185,6 +195,8 @@ $y \thicksim \hat{b}_0 + \hat{b}_1x + \epsilon$
 mod1 = lm(Temp ~ Solar.R, data = airq) # modelo de regresion lineal
 ```
 
+Coeficientes del modelo
+
 ```{r mod-lin-param}
 mod1 %>% tidy() %>%
   flextable() %>%
@@ -194,6 +206,8 @@ mod1 %>% model_parameters() %>%
   flextable() %>%
   colformat_double()
 ```
+
+Ajuste del modelo
 
 ```{r mod-lin-fit}
 mod1 %>% glance() %>%
@@ -209,6 +223,8 @@ mod1 %>% model_performance() %>%
 ```{r mod-lin-cv}
 sjstats::cv(mod1) # cv
 ```
+
+Cuadro resumen del modelo
 
 ```{r mod-lin-gts}
 tbl_regression(mod1,
@@ -236,10 +252,14 @@ $y \thicksim \hat{b}_0 + \hat{b}_1x + \hat{b}_2x^2 + \epsilon$
 mod2 = lm(Temp ~ Solar.R + I(Solar.R^2), data = airq) # modelo de regresion cuadratica
 ```
 
+Coeficientes del modelo
+
 ```{r mod-cuad-param}
 mod2 %>% tidy()
 mod2 %>% model_parameters()
 ```
+
+Ajuste del modelo
 
 ```{r mod-cuad-fit}
 mod2 %>% glance()
@@ -249,6 +269,8 @@ mod2 %>% model_performance()
 ```{r mod-cuad-cv}
 sjstats::cv(mod2) # cv
 ```
+
+Cuadro resumen del modelo
 
 ```{r mod-cuad-gts}
 tbl_regression(mod2,
@@ -270,13 +292,15 @@ check_model(mod2,panel=F)
 
 ### Compara modelos
 
+Diferentes funciones para comparar modelos entre si
+
 ```{r comp-mod1}
 TMod(mod1,mod2) # DescTools
 ```
 
 ```{r comp-mod2}
 modelsummary(list(Lineal=mod1,Cuadratico=mod2),
-             title = 'Comparasion de modelos',
+             title = 'Comparacion de modelos',
              statistic = NULL, # 'conf.int',
              coef_omit = NULL, # 'Int'
              gof_omit = '^(?!R|Num|A)',
@@ -286,7 +310,7 @@ modelsummary(list(Lineal=mod1,Cuadratico=mod2),
 
 ```{r comp-mod3}
 sjPlot::tab_model(mod1,mod2,
-                  title = 'Comparasion de modelos',
+                  title = 'Comparacion de modelos',
                   show.std = NULL, # 'std', NULL
                   show.intercept = T,
                   show.ci = F, # .95
@@ -308,7 +332,7 @@ plot(comp.mods)
 
 ## Graficos
 
-Para agregar lineas de tendencia en **ggplot2** se usa la funcion `geom_smooth`. Por defecto ajusta una curva loess, pero para cambiarlo se usa `method = 'lm'`, y para especificar una ecuacion diferente a la regresion simple se usa `formula`, donde `y` y `x` son genericos, **NO** hay que poner el nombre de las variables que se esta graficando.
+Para agregar lineas de tendencia en graficos de **ggplot2** se usa la funcion `geom_smooth`. Por defecto ajusta una curva loess, pero para cambiarlo se usa `method = 'lm'`, y para especificar una ecuacion diferente a la regresion simple se usa `formula`, donde `y` y `x` son genericos, **NO** hay que poner el nombre de las variables que se esta graficando.
 
 ```{r dispersion}
 ggplot(airq, aes(Solar.R,Temp)) + 
@@ -321,22 +345,25 @@ ggplot(airq, aes(Solar.R,Temp)) +
   geom_smooth()
 ```
 
+Grafico de regresion lineal
+
 ```{r regresion-lin}
-# grafico regresion lineal
 ggplot(airq, aes(Solar.R,Temp)) + 
   geom_point() + 
   geom_smooth(method = 'lm')
 ```
 
+Grafico de regresion cuadratica
+
 ```{r regresion-cuad}
-# grafico regresion cuadratica
 ggplot(airq, aes(Solar.R,Temp)) + 
   geom_point() + 
   geom_smooth(method = 'lm', formula = y~poly(x, 2))
 ```
 
+Grafico de regresion lineal y cuadratica
+
 ```{r regresion-lin-cuad}
-# grafico regresion lineal y cuadratica
 ggplot(airq, aes(Solar.R,Temp)) + 
   geom_point() + 
   geom_smooth(method = 'lm', aes(col='Lineal')) + 
@@ -346,6 +373,8 @@ ggplot(airq, aes(Solar.R,Temp)) +
 ```
 
 # Probabilidad
+
+Es mejor trabajar con la tabla completa de datos, no solo la tabla de contigencia, por lo que se puede generar la primera a partir de la segunda con la funcion `Untable` de **DescTools**. Posteriormente con las funciones `tbl_cross` de **gtsummary** y `tabyl` y `adorn_*` de **janitor**, se puede manipular la tabla para obtener los valores deseados.
 
 ```{r prob}
 A = matrix(data = c(15,24,23,14,11,13),nrow = 2,

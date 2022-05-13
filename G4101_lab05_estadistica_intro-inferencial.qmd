@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -30,11 +34,13 @@ library(tidyverse)
 theme_set(theme_minimal(base_size = 14))
 ```
 
-Para $\chi^2$, $t$ y $F$, el parametro *df* corresponde con los grados de libertad. Para todas el parametro *q* se refiere al estadistico, o en el caso de la distribucion normal el valor de la media muestral.
+# Inferencial
 
-En general *lower.tail=F* quiere decir la probabilidad a la derecha o mayor que.
+Para $\chi^2$, $t$ y $F$, el parametro `df` corresponde con los grados de libertad. Para todas el parametro `q` se refiere al estadistico, o en el caso de la distribucion normal el valor de la media muestral.
 
-# Normal - $Z$
+En general `lower.tail = F` quiere decir la probabilidad a la derecha o mayor que, y equivale a hacer `1-p(x)`.
+
+## Normal - $Z$
 
 Inferencia sobre una media con respecto a una teorica, conociendo $\sigma^2$
 
@@ -60,7 +66,7 @@ ggplot() +
                   xlim = c(3.6,xmax), fill = 'dodgerblue')
 ```
 
-# $t$
+## $t$
 
 Inferencia sobre la media sin conocer $\sigma^2$
 
@@ -86,7 +92,7 @@ ggplot() +
                   xlim = c(t,xmax), fill = 'dodgerblue')
 ```
 
-# $\chi^2$
+## $\chi^2$
 
 Inferencia sobre una $s^2$ con respecto a $\sigma^2$
 
@@ -113,7 +119,7 @@ ggplot() +
                   xlim = c(chi,xmax), fill = 'dodgerblue')
 ```
 
-# $F$
+## $F$
 
 Inferencia sobre dos $s^2$
 

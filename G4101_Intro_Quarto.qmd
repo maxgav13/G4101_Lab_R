@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -36,7 +38,7 @@ Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en for
 
 Se puede agregar un nuevo bloque haciendo click en *Insert Chunk* (![](imgs/rstudio-insert-chunk-button.png){width="25" height="15"}), o ejecutando *Cmd+Option+I* (Mac) o *Ctrl+Alt+I* (Windows).
 
-El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, asi como parametros opcionales globales. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
+El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, asi como parametros opcionales globales. Los bloques pueden llevar una etiqueta (`label`) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
 
 ```{r}
 #| label: paquetes
@@ -85,7 +87,7 @@ Tambien se pueden usar diferentes paquetes para mostrar las tablas mejor en el d
 Se recomienda que cada tabla vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado
 :::
 
-Para poder referencias tablas en el texto la etiqueta del bloque donde se genera la tabla debe empezar con "tbl-".
+Para poder referencias tablas en el texto la etiqueta del bloque donde se genera la tabla debe empezar con `tbl-`.
 
 ```{r}
 #| label: tbl-flext
@@ -122,7 +124,7 @@ Graficos de **ggplot2** o cualquier otro grafico estatico son resultados que se 
 Se recomienda que cada grafico vaya en su propio bloque de codigo para poder asignarle una etiqueta y encabezado a la figura
 :::
 
-Para poder referencias figuras en el texto la etiqueta del bloque donde se genera la figura debe empezar con "fig-".
+Para poder referencias figuras en el texto la etiqueta del bloque donde se genera la figura debe empezar con `fig-`.
 
 ```{r fig-disp}
 #| fig-cap: "Grafico de dispersion creado con **ggplot2**."

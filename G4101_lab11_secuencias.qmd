@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -20,13 +22,15 @@ execute:
   echo: true
 ---
 
+# Paquetes
+
 ```{r}
 #| label: setup
 #| include: false
 
 library(GMisc)
 library(flextable)
-library(ggeffects)
+library(sjPlot)
 library(DescTools)
 library(modelsummary)
 library(broom)
@@ -70,7 +74,7 @@ cor.test(i,rankh) %>% tidy()
 
 # Prueba de corridas
 
-Se determina si la secuencia es aleatoria o no
+Se determina si la secuencia, dicotomica, es aleatoria o no. Si se tienen datos continuos se tienen que dicotomizar, se pueden usar los criterios con respecto a la mediana (`median`) o arriba-abajo (`up-down`).
 
 ```{r}
 dens = c(3.57,3.63,2.86,2.94,3.42,2.85,3.67,3.78,3.86,
@@ -99,10 +103,14 @@ moist = c(124,78,54,35,30,21,22,18) # contenido de humedad
 DF3 = tibble(depth, moist)
 ```
 
+## Grafico
+
 ```{r}
 ggplot(DF3, aes(depth,moist)) + 
   geom_point()
 ```
+
+## Modelo lineal
 
 ```{r reg-lin}
 fit1 = lm(moist~depth) # modelo lineal
@@ -115,6 +123,8 @@ sjstats::cv(fit1) # coef var modelo lineal
 check_model(fit1,panel = F)
 ```
 
+## Modelo cuadratico
+
 ```{r reg-cuad}
 fit2 = lm(moist~depth+I(depth^2)) # modelo cuadratico
 
@@ -126,6 +136,8 @@ sjstats::cv(fit2) # coef var modelo cuadratico
 check_model(fit2,panel = F)
 ```
 
+## Modelo logaritmico
+
 ```{r reg-log}
 fit3 = lm(moist~log(depth)) # modelo logaritmico
 
@@ -136,6 +148,8 @@ sjstats::cv(fit3) # coef var modelo logaritmico
 
 check_model(fit3,panel = F)
 ```
+
+## Grafico con modelos
 
 ```{r reg-plots}
 ggplot(DF3, aes(depth, moist)) + 
@@ -149,15 +163,15 @@ ggplot(DF3, aes(depth, moist)) +
 ```
 
 ```{r reg-lin-plot}
-plot(ggpredict(fit1),rawdata = T)
+plot_model(fit1, type = 'pred')
 ```
 
 ```{r reg-cuad-plot}
-plot(ggpredict(fit2),rawdata = T)
+plot_model(fit2, type = 'pred')
 ```
 
 ```{r reg-log-plot}
-plot(ggpredict(fit3),rawdata = T)
+plot_model(fit3, type = 'pred')
 ```
 
 ## Comparacion de modelos
@@ -175,7 +189,7 @@ plot(comp.mods)
 
 ```{r comp-modsum}
 modelsummary(list(Lineal=fit1,Cuadratico=fit2,Logaritmico=fit3),
-             title = 'Comparasion de modelos',
+             title = 'Comparacion de modelos',
              statistic = 'conf.int',
              coef_omit = NULL, # 'Int'
              gof_omit = '^(?!R|Num|A)',
@@ -210,6 +224,8 @@ sjPlot::plot_models(fit1,fit2,fit3,
                     legend.title = 'Modelo')
 ```
 
+## Graficos de coeficientes
+
 ```{r cuad-stats-plot}
 ggstatsplot::ggcoefstats(fit2,exclude.intercept = T)
 ```
@@ -220,7 +236,7 @@ ggstatsplot::ggcoefstats(fit3,exclude.intercept = T)
 
 # Autocorrelacion
 
-Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados equidistantemente en el espacio/tiempo.
+Determina si hay ciclos, patrones, tendencia, sobre una serie de datos ordenados, preferiblemente equidistantemente, en el espacio/tiempo.
 
 ## Como remover una tendencia de una serie de datos
 
@@ -232,6 +248,8 @@ Pasos:
     b.  Determinar si la pendiente es significativa
 
 2.  Si hay tendencia, calcular los residuos
+
+### Visualizar los datos
 
 ```{r ts-data}
 AirPassengers
@@ -262,6 +280,8 @@ ggplot(DF, aes(index,value)) +
   geom_smooth(method = 'lm')
 ```
 
+### Modelo
+
 ```{r ts-mod}
 mod = lm(value ~ index, data = DF)
 
@@ -277,7 +297,7 @@ ggplot(DF2, aes(index,.resid)) +
   geom_hline(yintercept = 0, col = 2)
 ```
 
-Sin remover tendencia
+### Sin remover tendencia
 
 ```{r acf-trend}
 DF %>% plot_acf_diagnostics(index,value,
@@ -286,7 +306,7 @@ DF %>% plot_acf_diagnostics(index,value,
                             .interactive = T)
 ```
 
-Despues de remover tendencia
+### Despues de remover tendencia
 
 ```{r acf-no-trend}
 DF2 %>% plot_acf_diagnostics(index,.resid,
@@ -295,7 +315,9 @@ DF2 %>% plot_acf_diagnostics(index,.resid,
                              .interactive = T)
 ```
 
-## Objeto dataframe
+## Prueba de autocorrelacion
+
+### Objeto dataframe
 
 ```{r acf-diag}
 ac.1 = DF2 %>% tk_acf_diagnostics(index, .resid, .lags = nrow(.)/3)
@@ -312,7 +334,7 @@ lag.t = ac.1 %>% filter(ACF<0)
 (z.1 = rtau.1*sqrt(nrow(DF2)-tau.1+3)) # test de significancia de autocorrelacion
 ```
 
-## Objeto serie temporal
+### Objeto serie temporal
 
 ```{r}
 DF.ts = zoo::zoo(DF2$.resid,DF2$index)

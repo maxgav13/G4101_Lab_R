@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -29,16 +33,18 @@ library(tidyverse)
 theme_set(theme_minimal(base_size = 14))
 ```
 
+# Distribuciones
+
 En general existen 4 fucniones basicas para todas las distribuciones, empiezan con las letras `d`, `p`, `q` y `r` y les sigue el nombre de la distribucion.
 
--   `d`: Para encontrar la probabilidad puntual
--   `p`: Para encontrar la probabilidad acumulada
--   `q`: Para encontrar el cuantil (valor de la variable) a una dada probabilidad
--   `r`: Para generar un vector de datos aleatorios de la distribucion
+-   `d`: para encontrar la probabilidad puntual,
+-   `p`: para encontrar la probabilidad acumulada,
+-   `q`: para encontrar el cuantil (valor de la variable) a una dada probabilidad, y
+-   `r`: para generar un vector de datos aleatorios de la distribucion
 
 En el caso de generar datos aleatorios (`r`) es recomendable definir un punto de partida para asegurar siempre el mismo resultado, esto se logra definiendo lo que se llama la semilla (seed) por medio de `set.seed(numero)` y escribiendo un numero entero dentro de la funcion (por ejemplo: `set.seed(4101)`).
 
-# Binomial
+## Binomial
 
 Para esta distribucion los parametros son:
 
@@ -83,7 +89,7 @@ data.frame(x=x2,y=pbinom(x2,n2,p)) %>%
   theme_bw()
 ```
 
-# Poisson
+## Poisson
 
 Para esta distribucion los parametros son:
 
@@ -124,7 +130,7 @@ data.frame(x=x4,y=ppois(x4,lambda)) %>%
   theme_bw()
 ```
 
-# Normal
+## Normal
 
 Para esta distribucion los parametros son:
 

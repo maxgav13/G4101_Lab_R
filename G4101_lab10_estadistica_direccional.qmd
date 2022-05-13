@@ -11,6 +11,8 @@ theme: sandstone
 format:
   html:
     code-fold: true
+    code-summary: "Codigo"
+    code-tools: true
     html-math-method: katex
   pdf: default
   docx: default
@@ -19,6 +21,8 @@ execute:
   error: false
   echo: true
 ---
+
+# Paquetes
 
 ```{r}
 #| label: setup
@@ -42,14 +46,14 @@ theta0 = c(255, 239, 222, 231, 199, 271, 222, 274, 228, 246,
            231, 254, 242, 149, 212, 210, 230, 205, 220, 268)
 ```
 
-## Ajusta angulos para datos no-direccionales
+## Ajuste para datos no-direccionales
 
 Si los datos son no-direccionales deben multiplicarse por 2 para convertirlos a direccionales y realizar los calculos sobre estos
 
 Direccion de datos:
 
--   0 para no-direccional
--   1 para direccional
+-   `d=0` para no-direccional
+-   `d=1` para direccional
 
 ```{r}
 d = 1
@@ -141,13 +145,16 @@ theta_2 = c(225, 208, 172, 198, 204, 183, 190, 212, 247,
             127, 167, 234, 217, 192, 212, 171, 169, 210, 
             245, 222, 185, 227, 193, 178, 187, 182, 194, 
             217, 168, 211, 234, 204, 221, 198, 261, 228, 146, 201, 146, 231)
+
 theta_2rad = rads(theta_2)
 thetaall = c(theta0,theta_2)
 thetaallrad = rads(thetaall)
+
 (R1 = est.rho(thetarad)*length(theta))
 (R2 = est.rho(theta_2rad)*length(theta_2))
 (Rt = est.rho(thetaallrad)*length(thetaall))
 (kt = est.kappa(thetaallrad))
+
 (f = ifelse(kt > 10, 
            ((length(thetaall) - 2)*(R1+R2-Rt))/(length(thetaall)-R1-R2),
            (1+3/(8*kt))*((length(thetaall)-2)*(R1+R2-Rt))/(length(thetaall)-R1-R2)))
