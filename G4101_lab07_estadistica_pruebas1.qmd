@@ -34,7 +34,7 @@ library(GMisc)          # intervalos de confianza
 library(OneTwoSamples)  # intervalos y pruebas
 library(DescTools)      # pruebas
 library(rstatix)        # pruebas y tamanho efecto
-library(tidymodels)     # resumenes tidy y otros
+library(broom)          # resumenes tidy modelos
 library(ggstatsplot)    # graficos de pruebas
 library(tidyverse)
 library(easystats)      

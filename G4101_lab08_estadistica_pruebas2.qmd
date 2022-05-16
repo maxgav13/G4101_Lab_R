@@ -37,7 +37,7 @@ library(ggmosaic)       # mosaico en ggplot
 library(vcd)            # variables categoricas
 library(janitor)        # tablas
 library(ggstatsplot)    # graficos de pruebas
-library(tidymodels)     # resumenes tidy y otros
+library(broom)          # resumenes tidy modelos
 library(tidyverse)
 library(easystats)
 

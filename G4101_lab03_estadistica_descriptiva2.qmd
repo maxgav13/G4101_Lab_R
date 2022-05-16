@@ -35,7 +35,7 @@ library(DescTools)      # funciones estadisticas
 library(janitor)        # tablas
 library(highcharter)    # graficos interactivos
 library(modelsummary)   # modelos
-library(tidymodels)     # modelos
+library(broom)          # resumenes tidy modelos
 library(tidyverse)
 library(easystats)
 library(rio)

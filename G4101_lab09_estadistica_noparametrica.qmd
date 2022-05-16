@@ -35,7 +35,8 @@ library(papaja)         # presentacion datos
 library(DescTools)      # pruebas
 library(rstatix)        # pruebas y tamanho efecto
 library(ggstatsplot)    # graficos de pruebas
-library(tidymodels)     # resumenes tidy y otros
+library(broom)          # resumenes tidy modelos
+library(rsample)        # remuestreo
 library(tidyverse)
 library(easystats)
 
