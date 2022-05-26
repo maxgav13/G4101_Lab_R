@@ -42,7 +42,9 @@ library(easystats)
 theme_set(theme_minimal(base_size = 14))
 ```
 
-# Prueba-$\chi^2$ de 1 varianza
+# Varianza
+
+## Prueba-$\chi^2$ de 1 varianza
 
 $$H_0 : \sigma^2 = \sigma_0^2$$
 
@@ -59,7 +61,7 @@ interval_var1(x = w) # OneTwoSample
 ci_chisq(s = sd(w), n = length(w), digits = 4) # GMisc
 ```
 
-# Prueba-F de 2 varianzas
+## Prueba-F de 2 varianzas
 
 $$H_0 : \sigma_1^2 = \sigma_2^2$$
 
@@ -67,6 +69,9 @@ $$H_0 : \frac{\sigma_1^2}{\sigma_2^2} = 1$$
 
 ```{r}
 alfa = .05
+
+mpg %>% pull(manufacturer) %>% unique()
+
 x = mpg %>% filter(manufacturer=='audi') %>% pull(cty)
 y = mpg %>% filter(manufacturer=='ford') %>% pull(cty)
 
@@ -74,12 +79,17 @@ chi2 = var.test(x,y,ratio = 1,conf = 1-alfa)
 chi2 %>% 
   tidy()
 
+var.test(hwy ~ manufacturer, data = mpg,
+         subset = manufacturer %in% c('audi','ford'))
+
 var_test2(x,y,side = 0) # OneTwoSample
 interval_var2(x,y) # OneTwoSample
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
 ```
 
-# Tamanho de efecto en lenguaje comun (CLES)
+# Media
+
+## Tamanho de efecto en lenguaje comun (CLES)
 
 Aplica para todas las pruebas-t y su respectivo $d$
 
@@ -89,7 +99,7 @@ U_3 = \Phi(|d|) \\
 OVL = 2 \cdot \Phi \Bigg(\frac{-|d|}{\sqrt{2}}\Bigg)
 $$
 
-# Prueba-t de 1 muestra
+## Prueba-t de 1 muestra
 
 $$H_0 : \mu = \mu_0$$
 
@@ -108,7 +118,7 @@ t1 %>% tidy()
            qt(1-alfa/2,length(verm)-1)))
 ```
 
-## Tamanho del effecto
+### Tamanho del effecto
 
 $$
 d_s = \frac{\bar{x} - \mu_0}{s}
@@ -118,7 +128,7 @@ $$
 g_s = d_s \cdot \Bigg(1-\frac{3}{4 \cdot v-1}\Bigg)
 $$
 
-### $d$ de Cohen
+#### $d$ de Cohen
 
 ```{r}
 # MOTE
@@ -132,14 +142,14 @@ d1 %>%
 cohens_d(verm, mu = mu, ci = 1-alfa)
 ```
 
-### $g$ de Hedges
+#### $g$ de Hedges
 
 ```{r}
 # effectsize
 hedges_g(verm, mu = mu, ci = 1-alfa) # effectsize
 ```
 
-### Tamanho de efecto en lenguaje comun (CLES)
+#### Tamanho de efecto en lenguaje comun (CLES)
 
 ```{r}
 # effectsize
@@ -149,7 +159,7 @@ d_to_cles(.96) %>%
   mutate(across(.fns = ~.*100 %>% round(1)))
 ```
 
-## Grafico resumen
+### Grafico resumen
 
 ```{r}
 gghistostats(tibble(verm),verm,
@@ -160,7 +170,7 @@ gghistostats(tibble(verm),verm,
              bf.message = F)
 ```
 
-# Prueba-t de 2 muestras independientes
+## Prueba-t de 2 muestras independientes
 
 $$H_0 : \mu_1 = \mu_2$$
 
@@ -173,7 +183,7 @@ DF = stack(list(A=A,B=B)) %>%
   as_tibble()
 ```
 
-## Graficas
+### Graficas
 
 ```{r}
 DF %>% 
@@ -187,7 +197,7 @@ DF %>%
                fun.args = list(conf.int=.95))
 ```
 
-## Estadisticas por grupo
+### Estadisticas por grupo
 
 ```{r}
 DF %>% 
@@ -195,13 +205,13 @@ DF %>%
   get_summary_stats()
 ```
 
-## Prueba de igualdad de varianzas
+### Prueba de igualdad de varianzas
 
 ```{r}
 var.test(values ~ ind, DF, conf.level = 1-alfa)
 ```
 
-## Prueba
+### Prueba
 
 ```{r}
 t.test(A, B, mu=0, conf.level = 1-alfa) %>% 
@@ -221,7 +231,7 @@ ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A),
       conf.level = 1-alfa) # GMisc
 ```
 
-## Tamanho del effecto
+### Tamanho del effecto
 
 Sin igualdad de varianzas
 
@@ -241,7 +251,7 @@ $$
 g_s = d_s \cdot \Bigg(1-\frac{3}{4 \cdot v-1}\Bigg) = d_s \cdot \Bigg(\frac{N-3}{N-2.25}\Bigg)
 $$
 
-### $d$ de Cohen
+#### $d$ de Cohen
 
 ```{r}
 # MOTE
@@ -256,7 +266,7 @@ d2.ind %>%
 cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
 ```
 
-### $g$ de Hedges
+#### $g$ de Hedges
 
 ```{r}
 # MOTE
@@ -271,7 +281,7 @@ g2.ind %>%
 hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T)
 ```
 
-### Tamanho de efecto en lenguaje comun (CLES)
+#### Tamanho de efecto en lenguaje comun (CLES)
 
 ```{r}
 # effectsize
@@ -281,7 +291,7 @@ d_to_cles(1.17) %>%
   mutate(across(.fns = ~.*100 %>% round(1)))
 ```
 
-## Grafico resumen
+### Grafico resumen
 
 ```{r}
 ggbetweenstats(DF, ind, values,
@@ -292,7 +302,7 @@ ggbetweenstats(DF, ind, values,
                bf.message = F)
 ```
 
-# Prueba-t de 2 muestras dependientes
+## Prueba-t de 2 muestras dependientes
 
 $$H_0 : \mu_D = \mu_{despues} - \mu_{antes} = 0$$
 
@@ -305,7 +315,7 @@ DF2 = stack(list(Antes=Antes,Despues=Despues)) %>%
   as_tibble()
 ```
 
-## Prueba
+### Prueba
 
 ```{r}
 t.test(Despues,Antes,mu=0,paired = T) %>% 
@@ -315,7 +325,7 @@ ci_t(x = mean(Despues-Antes), s = sd(Despues-Antes),
      n = length(Antes), conf.level = 1-alfa) # GMisc
 ```
 
-## Tamanho del effecto
+### Tamanho del effecto
 
 $$
 d_{av} = \frac{\bar{d}}{\sqrt{\frac{s_1^2+s_2^2}{2}}}
@@ -329,7 +339,7 @@ $$
 d_{rm} = \frac{\bar{d}}{\sqrt{s_1^2 + s_2^2-2 \cdot r \cdot s_1 \cdot s_2}}\sqrt{2(1-r)}
 $$
 
-### $d$ de Cohen, media de desviaciones estandar
+#### $d$ de Cohen, media de desviaciones estandar
 
 ```{r}
 # MOTE
@@ -344,7 +354,7 @@ d2.av %>%
 itns::cohensd_rm(Despues, Antes)
 ```
 
-### $d$ de Cohen, desviacion estandar de la diferencia
+#### $d$ de Cohen, desviacion estandar de la diferencia
 
 ```{r}
 # MOTE
@@ -355,7 +365,7 @@ d2.z %>%
   as_tibble_row()
 ```
 
-### $d$ de Cohen, media de desvaiciones estandar controlando por correlacion
+#### $d$ de Cohen, media de desvaiciones estandar controlando por correlacion
 
 ```{r}
 # MOTE
@@ -368,7 +378,7 @@ d2.rm %>%
   as_tibble_row()
 ```
 
-### Tamanho de efecto en lenguaje comun (CLES)
+#### Tamanho de efecto en lenguaje comun (CLES)
 
 ```{r}
 # effectsize
@@ -378,7 +388,7 @@ d_to_cles(.034) %>%
   mutate(across(.fns = ~.*100 %>% round(1)))
 ```
 
-## Grafico resumen
+### Grafico resumen
 
 ```{r}
 ggwithinstats(DF2, ind, values,
@@ -388,7 +398,7 @@ ggwithinstats(DF2, ind, values,
               bf.message = F)
 ```
 
-# Prueba de correlacion
+# Correlacion
 
 $$H_0 : \rho = 0$$
 
@@ -404,9 +414,13 @@ cordat = tibble(a,b,c)
 ## Prueba
 
 ```{r}
-r = cor.test(a,b,method = "pearson",conf = 1-alfa)
+r = cor.test(a,b,method = "pearson",conf.level = 1-alfa)
 r %>% 
   tidy()
+
+cor.test(~ a + b, cordat) # usando variables del dataframe
+
+cor.test(~ log(a) + log(b), cordat) # usando variables del dataframe transformadas
 
 # DescTools
 CorCI(rho = r$estimate, n = length(a), 
