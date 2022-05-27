@@ -58,10 +58,11 @@ chi1 = VarTest(x = w, sigma.squared = 7^2, conf.level = 1-alfa) # DescTools
 chi1
 
 interval_var1(x = w) # OneTwoSample
+
 ci_chisq(s = sd(w), n = length(w), digits = 4) # GMisc
 ```
 
-## Prueba-F de 2 varianzas
+## Prueba-$F$ de 2 varianzas
 
 $$H_0 : \sigma_1^2 = \sigma_2^2$$
 
@@ -75,16 +76,18 @@ mpg %>% pull(manufacturer) %>% unique()
 x = mpg %>% filter(manufacturer=='audi') %>% pull(cty)
 y = mpg %>% filter(manufacturer=='ford') %>% pull(cty)
 
+# usando vectores
 chi2 = var.test(x,y,ratio = 1,conf = 1-alfa)
 chi2 %>% 
   tidy()
 
-var.test(hwy ~ manufacturer, data = mpg,
-         subset = manufacturer %in% c('audi','ford'))
-
 var_test2(x,y,side = 0) # OneTwoSample
 interval_var2(x,y) # OneTwoSample
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
+
+# usando dataframe
+var.test(hwy ~ manufacturer, data = mpg,
+         subset = manufacturer %in% c('audi','ford'))
 ```
 
 # Media
@@ -214,6 +217,7 @@ var.test(values ~ ind, DF, conf.level = 1-alfa)
 ### Prueba
 
 ```{r}
+# usando vectores
 t.test(A, B, mu=0, conf.level = 1-alfa) %>% 
   tidy()
 
@@ -223,12 +227,13 @@ t.test(B, A, mu=0, conf.level = 1-alfa) %>%
 t.test(A, B, mu=0, conf.level = 1-alfa, var.equal = T) %>% 
   tidy()
 
-t2 = t.test(values ~ ind, DF, conf.level = 1-alfa, var.equal = T)
-t2
-
 ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
       x2 = mean(B), s2 = sd(B), n2 = length(B), 
       conf.level = 1-alfa) # GMisc
+
+# usando dataframe
+t2 = t.test(values ~ ind, DF, conf.level = 1-alfa, var.equal = T)
+t2
 ```
 
 ### Tamanho del effecto
@@ -262,8 +267,8 @@ d2.ind = d.ind.t(m1 = mean(A), m2 = mean(B),
 d2.ind %>% 
   as_tibble_row()
 
-# effectsize
-cohens_d(A, B, ci = 1-alfa, pooled_sd = T)
+# effectsize 
+cohens_d(A, B, ci = 1-alfa, pooled_sd = T) # con vectores
 ```
 
 #### $g$ de Hedges
@@ -278,7 +283,7 @@ g2.ind %>%
   as_tibble_row()
 
 # effectsize
-hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T)
+hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T) # con dataframe
 ```
 
 #### Tamanho de efecto en lenguaje comun (CLES)
@@ -295,7 +300,7 @@ d_to_cles(1.17) %>%
 
 ```{r}
 ggbetweenstats(DF, ind, values,
-               var.equal = F,
+               var.equal = T,
                type = 'p',
                effsize.type = 'unbiased',
                conf.level = 1-alfa,

@@ -54,7 +54,40 @@ $$\hat{\theta}_i < \hat{\theta} < \hat{\theta}_s$$
 
 donde $\hat{\theta}_i = \text{limite inferior}$ y $\hat{\theta}_s = \text{limite superior}$
 
-## Normal estandar - $Z$
+## Varianza
+
+### $\chi^2$
+
+$$\frac{(n-1)s^2}{\chi^2_{\alpha/2,v}} < \sigma^2 < \frac{(n-1)s^2}{\chi^2_{1-\alpha/2,v}}$$
+
+```{r}
+vec = c(46.4, 46.1, 45.8, 47.0, 46.1, 45.9, 45.8, 46.9, 45.2, 46.0)
+s = sd(vec)
+n = length(vec)
+v = n-1
+alfa = .05
+
+VarCI(vec) # DescTools
+
+interval_var1(x = vec, alpha = alfa) # OneTwoSamples
+
+ci_chisq(s = s, n = n, conf.level = 1-alfa) # GMisc
+```
+
+### $F$
+
+$$\frac{s^2_1}{s^2_2} \frac{1}{F_{\alpha/2(v_1,v_2)}} < \frac{\sigma^2_1}{\sigma^2_2} < \frac{s^2_1}{s^2_2} F_{\alpha/2(v_2,v_1)}$$
+
+```{r}
+n1 = 15; n2 = 12
+s1 = 3.07; s2 = 0.8
+
+ci_F(s1 = s1, n1 = n1, s2 = s2, n2 = n2, conf.level = 0.98) # GMisc
+```
+
+## Media
+
+### Una media conociendo $\sigma$ - $Z$
 
 $$\bar{x} \pm z_{\alpha/2} \frac{\sigma}{\sqrt{n}}$$
 
@@ -67,49 +100,87 @@ n = 36
 s = sigma/sqrt(n)
 alfa = .95
 
-ci_z(x = x, sig = sigma, n = n, conf.level = alfa) # intervalo de confianza al 95%
+# MeanCI(x = vec, sd = sigma, conf.level = 1-alfa) # DescTools
+
+# interval_estimate1(x = vec, sigma = sigma, alpha = alfa) # OneTwoSamples
+
+ci_z(x = x, sig = sigma, n = n, conf.level = alfa) # GMisc
 ```
 
-## $t$
+### Una media sin conocer $\sigma$ - $t$
 
 $$\bar{x} \pm t_{\alpha/2,v} \frac{s}{\sqrt{n}}$$
 
 $SE = \text{error estandar}=\frac{s}{\sqrt{n}}$
 
 ```{r}
-vec = c(9.4, 12.2, 10.7, 11.6)
+vec = c(23.5, 16.6, 25.4, 19.1, 19.3, 22.4, 20.9, 24.9)
 x = mean(vec)
 n = length(vec)
 s = sd(vec)
 alfa = .1
 
-ci_t(x = x, s = s, n = n, conf.level = 1-alfa) # intervalo de confianza al 90%
-interval_estimate1(x = vec, alpha = alfa) # intervalo de confianza al 90%
+MeanCI(x = vec, conf.level = 1-alfa) # DescTools
+
+interval_estimate1(x = vec, alpha = alfa) # OneTwoSamples
+
+ci_t(x = x, s = s, n = n, conf.level = 1-alfa) # GMisc
 ```
 
-## $\chi^2$
+### Dos medias independientes sin conocer $\sigma$
 
-$$\frac{(n-1)s^2}{\chi^2_{\alpha/2,v}} < \sigma^2 < \frac{(n-1)s^2}{\chi^2_{1-\alpha/2,v}}$$
+#### Varianzas iguales
+
+$$(\bar{x}_1-\bar{x}_2) \pm t_{\alpha/2,v} \cdot s_p \sqrt{\frac{1}{n_1} + \frac{1}{n_2}}$$
+
+$SE = \text{error estandar} = s_p \sqrt{\frac{1}{n_1} + \frac{1}{n_2}}$
+
+$s_p^2 = \frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}$
 
 ```{r}
-vec = c(46.4, 46.1, 45.8, 47.0, 46.1, 45.9, 45.8, 46.9, 45.2, 46.0)
-s = sd(vec)
-n = length(vec)
-v = n-1
-alfa = .05
+A = c(3.2, 3.1, 3.1, 3.3, 2.9, 2.9, 3.5, 3.0)
+B = c(3.1, 3.1, 2.8, 3.1, 3.0, 2.6, 3.0, 3.0, 3.1, 2.8)
+a = .05
 
-ci_chisq(s = s, n = n, conf.level = 1-alfa) # intervalo de confianza al 95%
-interval_var1(x = vec, alpha = alfa) # intervalo de confianza al 95%
+interval_estimate2(x = A, y = B, var.equal = T, alpha = a) # OneTwoSamples
+
+ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
+      x2 = mean(B), s2 = sd(B), n2 = length(B), 
+      var.equal = T, conf.level = 1-a, digits = 3) # GMisc
 ```
 
-## $F$
+#### Varianzas diferentes
 
-$$\frac{s^2_1}{s^2_2} \frac{1}{F_{\alpha/2(v_1,v_2)}} < \frac{\sigma^2_1}{\sigma^2_2} < \frac{s^2_1}{s^2_2} F_{\alpha/2(v_2,v_1)}$$
+$$(\bar{x}_1-\bar{x}_2) \pm t_{\alpha/2,v} \cdot \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}$$
+
+$SE = \text{error estandar} = \sqrt{\frac{s_1^2}{n_1} + \frac{s_2^2}{n_2}}$
+
+$v = \frac{(s_1^2/n_1 + s_2^2/n_2)^2}{[(s_1^2/n_1)^2/(n_1-1)] + [(s_2^2/n_2)^2/(n_2-1)]}$
 
 ```{r}
-n1 = 15; n2 = 12
-s1 = 3.07; s2 = 0.8
-ci_F(s1 = s1, n1 = n1, s2 = s2, n2 = n2, conf.level = 0.98) # intervalo de confianza al 98%
+interval_estimate2(x = A, y = B, var.equal = F, alpha = a) # OneTwoSamples
+
+ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
+      x2 = mean(B), s2 = sd(B), n2 = length(B), 
+      var.equal = F, conf.level = 1-a, digits = 3) # GMisc
+```
+
+### Dos medias dependientes sin conocer $\sigma$
+
+$$\bar{d} \pm t_{\alpha/2,v} \frac{s_d}{\sqrt{n}}$$
+
+$SE = \text{error estandar}=\frac{s_d}{\sqrt{n}}$
+
+```{r}
+m1 = c(13.5,14.6,12.7,15.5,11.1,16.4,13.2,19.3,16.7,18.4)
+m2 = c(13.6,14.6,12.6,15.7,11.1,16.6,13.2,19.5,16.8,18.7)
+diferencia = m2 - m1
+a = .05
+
+interval_estimate1(x = diferencia, alpha = a) # OneTwoSamples
+
+ci_t(x = mean(diferencia), s = sd(diferencia), 
+     n = length(diferencia), conf.level = 1-a, digits = 4) # GMisc
 ```
 
 # Valor-p
