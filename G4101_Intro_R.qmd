@@ -36,7 +36,7 @@ library(tidyverse)
 
 ## Directorio de trabajo
 
-Mas importante para documentos `.R` que para `.Rmd`
+Mas importante para documentos `.R` que para `.Rmd` o `.qmd`
 
 ```{r eval=FALSE}
 getwd()
@@ -65,7 +65,7 @@ sqrt(125)
 
 ## Crear objetos
 
-Objetos se pueden crear usando los operadores `<-` o `=`. Al crear un objeto este no se despliega en la consola a menos que uno lo llame directamente o que a la hora de crealo sea encerrado con parentesis.
+Objetos se pueden crear usando los operadores `<-` o `=`. Al crear un objeto este no se despliega en la consola a menos que uno lo llame directamente o que a la hora de crearlo sea encerrado en parentesis.
 
 ```{r}
 x <- 14
@@ -170,10 +170,6 @@ Tibbles son un tipo especial de DataFrame, donde la principal diferencia es que 
 ```{r}
 tb = tibble(Visitas=x,Revision=y,Dias=dias,Extra=map(6:10,~rnorm(.x)))
 tb
-```
-
-```{r}
-
 ```
 
 
@@ -310,7 +306,7 @@ Para resumir datos la funcion principal es `summarise`, que colapsa una o varias
 
 Para seleccionar columnas la funcion es `select`, la cual puede usar numeros o nombres y los nombres no tienen que llevar comillas.
 
-Para filtrar datos de acuerdo a criterior se usa la funcion `filter`, asi como operadores logicos y funciones auxualiares.
+Para filtrar datos de acuerdo a criterios se usa la funcion `filter`, asi como operadores logicos y funciones auxiliares.
 
 `arrange` se usa para ordenar los datos de acuerdo a una o mas variables.
 
@@ -326,7 +322,7 @@ dat1 %>%
 dat1 %>% 
   group_by(Gender) %>% 
   select(Age) %>% 
-  summarise_all(mean)
+  summarise(across(everything(),mean))
 
 dat1 %>% 
   group_by(Gender) %>% 
@@ -388,7 +384,7 @@ airquality %>%
 
 El paquete por exelencia para crear graficos en **R** es *ggplot2*. Este se basa en la gramatica de graficos (grammar of graphics), de ahi el *gg* en el nombre. 
 
-La estructura basica de cualquier graficos es
+La estructura basica de cualquier grafico es
 
 ```{r eval = FALSE}
 ggplot(data = <DATA>) +
@@ -399,7 +395,7 @@ ggplot(data = <DATA>) +
   <THEME_FUNCTION>
 ```
 
-donde las partes pricipales son `ggplot` y `geom_*`, el resto no son necesarias. Dentro de `geom_*` se mapean la variables del DataFrame a los argumentos de la funcion (x, y, col, fill, size, shape).
+donde las partes principales son `ggplot` y `geom_*`, el resto no son necesarias. Dentro de `geom_*` se mapean la variables del DataFrame a los argumentos de la funcion (x, y, col, fill, size, shape).
 
 ## Histograma
 

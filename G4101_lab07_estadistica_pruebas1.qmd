@@ -214,6 +214,8 @@ DF %>%
 var.test(values ~ ind, DF, conf.level = 1-alfa)
 ```
 
+Si las varianzas son diferentes la prueba se llama prueba-t de Welch, si son iguales se llama prueba-t de dos muestras.
+
 ### Prueba
 
 ```{r}

@@ -105,6 +105,8 @@ bartlett.test(values ~ ind, data = Stacked) %>%
 var.igual = T
 ```
 
+Si las varianzas son diferentes la prueba se llama ANOVA de Welch, si son iguales se llama simplemente ANOVA.
+
 ## Prueba
 
 ```{r}
