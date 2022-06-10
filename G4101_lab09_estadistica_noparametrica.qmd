@@ -196,6 +196,8 @@ mol %>%
   mutate(ranking = rank(values)) %>% 
   group_by(ind) %>% 
   summarise(n = n(), 
+            valor_medio = mean(values),
+            valor_mediana = median(values)
             rango_medio = mean(ranking), 
             w = sum(ranking)) %>% 
   mutate(u = w - (n*(n+1))/2)
@@ -283,6 +285,8 @@ Stacked %>%
   mutate(ranking = rank(values)) %>% 
   group_by(ind) %>% 
   summarise(n = n(), 
+            valor_medio = mean(values),
+            valor_mediana = median(values),
             rango_medio = mean(ranking), 
             w = sum(ranking))
 ```
