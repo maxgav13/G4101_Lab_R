@@ -117,44 +117,85 @@ aov.fit %>%
   tidy()
 
 # sin igualdad de varianzas
-oneway.test(values ~ ind, Stacked, var.equal = F) %>% 
+aov.fit2 = oneway.test(values ~ ind, Stacked, var.equal = F) 
+
+aov.fit2 %>% 
   tidy()
 ```
 
 ## Tamanho del efecto
 
+Para ANOVA con varianzas iguales
+
+$$
+\epsilon^2 = \frac{SC_{efecto} - v_{efecto}CM_{error}}{SC_{total}}
+$$
+
+$$
+\omega^2 = \frac{v_{efecto}(CM_{efecto}-CM_{error})}{SC_{total}+CM_{error}}=\frac{SC_{efecto} - v_{efecto}CM_{error}}{SC_{total}+CM_{error}}
+$$
+
 $$
 \eta^2 = \frac{SC_{efecto}}{SC_{total}}
 $$
 
+Para ANOVA de Welch o ANOVA con varianzas iguales
+
 $$
-\omega^2 = \frac{v_{efecto}(CM_{efecto}-CM_{error})}{SC_{total}+CM_{error}}
+\epsilon^2 = \frac{F-1}{F + \frac{v_{error}}{v_{efecto}}}
 $$
 
-### Eta-cuadrado ($\eta^2$)
+$$
+\omega^2 = \frac{F-1}{F+\frac{v_{error+1}}{v_{efecto}}}
+$$
+
+$$
+\eta^2 = \frac{F \cdot v_{efecto}}{F \cdot v_{efecto}+v_{error}}
+$$
+
+### Epsilon-cuadrado ($\epsilon^2$)
 
 ```{r}
-# MOTE
-aov.eta = eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = alfa)
-
-aov.eta %>% 
-  as_tibble_row()
-
 # effectsize
-effectsize::eta_squared(aov.fit, ci = 1-alfa, alternative = 'two')
+epsilon_squared(aov.fit, ci = 1-alfa, alternative = 'two')
+F_to_epsilon2(10.8,2,9,alternative = 'two')
+
+epsilon_squared(aov.fit2, ci = 1-alfa, alternative = 'two')
+F_to_epsilon2(9.72,2,6,alternative = 'two')
 ```
 
 ### Omega-cuadrado ($\omega^2$)
 
 ```{r}
-# MOTE
+# effectsize
+omega_squared(aov.fit, ci = 1-alfa, alternative = 'two')
+# F_to_omega2(10.8,2,9,alternative = 'two')
+
+omega_squared(aov.fit2, ci = 1-alfa, alternative = 'two')
+# F_to_omega2(9.72,2,6,alternative = 'two')
+
+# MOTE (solo si varianzas son iguales)
 aov.omega = omega.F(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = alfa)
 
 aov.omega %>% 
   as_tibble_row()
+```
 
+### Eta-cuadrado ($\eta^2$)
+
+```{r}
 # effectsize
-omega_squared(aov.fit, ci = 1-alfa, alternative = 'two')
+effectsize::eta_squared(aov.fit, ci = 1-alfa, alternative = 'two')
+# F_to_eta2(10.8,2,9,alternative = 'two')
+
+effectsize::eta_squared(aov.fit2, ci = 1-alfa, alternative = 'two')
+# F_to_eta2(9.72,2,6,alternative = 'two')
+
+# MOTE
+aov.eta = eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = alfa)
+
+aov.eta %>% 
+  as_tibble_row()
 ```
 
 ## Analisis Post-hoc

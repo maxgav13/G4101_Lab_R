@@ -140,11 +140,11 @@ r = \frac{|Z|}{\sqrt{N}}
 $$
 
 $$
-r_b = \frac{2 \cdot(w_+ - w_-)}{N(N+1)}
+r_b = \frac{2 \cdot(w_+ - w_-)}{N \cdot (N+1)}
 $$
 
 $$
-cles \ (PS) = \frac{2 \cdot w_{max}}{N(N+1)} 
+cles \ (PS) = \frac{2 \cdot w_{max}}{N \cdot (N+1)} 
 $$
 
 ### Correlacion ($r$)
@@ -197,7 +197,7 @@ mol %>%
   group_by(ind) %>% 
   summarise(n = n(), 
             valor_medio = mean(values),
-            valor_mediana = median(values)
+            valor_mediana = median(values),
             rango_medio = mean(ranking), 
             w = sum(ranking)) %>% 
   mutate(u = w - (n*(n+1))/2)
@@ -218,11 +218,11 @@ r = \frac{|Z|}{\sqrt{N}}
 $$
 
 $$
-r_b = \frac{2(\bar{R}_1-\bar{R}_2)}{N}
+r_b = \frac{2 \cdot (\bar{R}_1-\bar{R}_2)}{N}
 $$
 
 $$
-\delta = \frac{2U}{n_1n_2}-1 
+\delta = \frac{2 \cdot U}{n_1n_2}-1 
 $$
 
 $$
@@ -307,7 +307,6 @@ $$
 $$
 
 ```{r}
-# eta-cuadrado = (H - k + 1) / (N - k)
 (7.65 - 3 + 1) / (12 - 3)
 ```
 
@@ -321,11 +320,10 @@ kruskal_effsize(Stacked, values ~ ind,
 ### Epsilon-cuadrado ($\epsilon^2$)
 
 $$
-\epsilon^2 = \frac{H}{(N^2-1)/(N+1)}
+\epsilon_{ord}^2 = \frac{H}{(N^2-1)/(N+1)}
 $$
 
 ```{r}
-# epsilon-cuadrado = (H) / ((N^2 - 1)/(N + 1))
 (7.65) / ((12^2 - 1)/(12 + 1))
 ```
 
