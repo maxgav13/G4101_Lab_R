@@ -57,6 +57,8 @@ set_flextable_defaults(
 
 Se determina si la longitud de los intervalos varia en el tiempo/espacio
 
+$$H_0 : \text{longitud de intervalos es igual}$$
+
 ```{r}
 x = c(0.5,2.3,3.2,4.2,4.9,7,11.4,12.7,14.6,
       16,21.5,22.5,25.8,30.3,31.9,36.2,42.8)
@@ -76,6 +78,8 @@ cor.test(i,rankh) %>% tidy()
 
 Se determina si la secuencia, dicotomica, es aleatoria o no. Si se tienen datos continuos se tienen que dicotomizar, se pueden usar los criterios con respecto a la mediana (`median`) o arriba-abajo (`up-down`).
 
+$$H_0 : \text{secuencia es aleatoria}$$
+
 ```{r}
 dens = c(3.57,3.63,2.86,2.94,3.42,2.85,3.67,3.78,3.86,
          4.02,4.56,4.62,4.31,4.58,5.02,4.68,4.37,4.88,
@@ -92,7 +96,11 @@ RunsTest(dens2,correct = F) %>% tidy() # test de corridas
 
 La idea es determinar si un modelo es significativo o no, o sea si los coeficientes (especialmente la pendiente $\hat{b}_1$) son significativos
 
+$$H_0 : \hat{b}_1 = 0$$
+
 En el caso de un modelo mas complejo de uno lineal la idea es determinar si la adicion de los nuevos terminos es significativa y explica (se ajusta) mejor (a) los datos
+
+$$H_0 : \hat{b}_n = 0$$
 
 ```{r reg-data}
 alpha = 0.05

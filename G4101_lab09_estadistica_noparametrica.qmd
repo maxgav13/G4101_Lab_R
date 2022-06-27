@@ -300,6 +300,22 @@ kruskal.test(values ~ ind, data = Stacked) %>%
 
 ## Tamanho del efecto
 
+### Epsilon-cuadrado ($\epsilon_{ord}^2$)
+
+$$
+\epsilon_{ord}^2 = \frac{H}{(N^2-1)/(N+1)}
+$$
+
+```{r}
+(7.65) / ((12^2 - 1)/(12 + 1))
+```
+
+```{r}
+# effectsize
+rank_epsilon_squared(values ~ ind, data = Stacked, 
+                     ci = 1-alfa, alternative = 'two')
+```
+
 ### Eta-cuadrado ($\eta_H^2$)
 
 $$
@@ -315,22 +331,6 @@ $$
 set.seed(101)
 kruskal_effsize(Stacked, values ~ ind,
                 ci = T, conf.level = 1-alfa)
-```
-
-### Epsilon-cuadrado ($\epsilon^2$)
-
-$$
-\epsilon_{ord}^2 = \frac{H}{(N^2-1)/(N+1)}
-$$
-
-```{r}
-(7.65) / ((12^2 - 1)/(12 + 1))
-```
-
-```{r}
-# effectsize
-rank_epsilon_squared(values ~ ind, data = Stacked, 
-                     ci = 1-alfa, alternative = 'two')
 ```
 
 ## Analisis Post-hoc
