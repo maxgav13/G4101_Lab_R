@@ -141,17 +141,18 @@ $$H_0: \bar{\theta}_1 = \bar{\theta}_2$$
 Recordar realizar los ajustes necesarios si se trabaja con datos no-direccionales
 
 ```{r}
-theta_2 = c(225, 208, 172, 198, 204, 183, 190, 212, 247, 
+theta2 = c(225, 208, 172, 198, 204, 183, 190, 212, 247, 
             127, 167, 234, 217, 192, 212, 171, 169, 210, 
             245, 222, 185, 227, 193, 178, 187, 182, 194, 
-            217, 168, 211, 234, 204, 221, 198, 261, 228, 146, 201, 146, 231)
+            217, 168, 211, 234, 204, 221, 198, 261, 228, 
+           146, 201, 146, 231)
 
-theta_2rad = rads(theta_2)
-thetaall = c(theta0,theta_2)
+theta2rad = rads(theta2)
+thetaall = c(theta0,theta2)
 thetaallrad = rads(thetaall)
 
 (R1 = est.rho(thetarad)*length(theta))
-(R2 = est.rho(theta_2rad)*length(theta_2))
+(R2 = est.rho(theta2rad)*length(theta2))
 (Rt = est.rho(thetaallrad)*length(thetaall))
 (kt = est.kappa(thetaallrad))
 

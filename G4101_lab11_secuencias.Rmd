@@ -284,7 +284,7 @@ ggplot(DF, aes(index,value)) +
 ```{r ts-mod}
 mod = lm(value ~ index, data = DF)
 
-model_parameters(mod) # resumen del modelo
+model_parameters(mod,digits=3,ci_digits=3) # resumen del modelo
 model_performance(mod) # ajuste del modelo
 
 DF2 = augment(mod)  # data frame incluyendo residuales 
@@ -317,6 +317,8 @@ DF2 %>% plot_acf_diagnostics(index,.resid,
 ## Objeto dataframe
 
 ```{r acf-diag}
+n = nrow(DF2)
+lag.max = n/3
 ac.1 = DF2 %>% tk_acf_diagnostics(index, .resid, .lags = nrow(.)/3)
 ac.1
 ```
@@ -328,7 +330,7 @@ lag.t = ac.1 %>% filter(ACF<0)
 
 (tau.1 = ac.1$lag[ac.1$ACF==rtau.1]) # lag donde ocurre el valor maximo de autocorrelacion
 
-(z.1 = rtau.1*sqrt(nrow(DF2)-tau.1+3)) # test de significancia de autocorrelacion
+(z.1 = rtau.1*sqrt(n-tau.1+3)) # test de significancia de autocorrelacion
 ```
 
 ## Objeto serie temporal

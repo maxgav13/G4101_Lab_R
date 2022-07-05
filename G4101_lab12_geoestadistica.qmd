@@ -175,11 +175,13 @@ dat.vgm = variogram(g) # variograma experimental
 head(dat.vgm)
 plot(dat.vgm)
 
-dat.vgm = variogram(g, cutoff = 600) # variograma experimental hasta cierta distancia (cutoff)
+extension = 600
+
+dat.vgm = variogram(g, cutoff = extension) # variograma experimental hasta cierta distancia (cutoff)
 
 plot(dat.vgm)
-plot(variogram(g, cutoff = 600, width = 120))
-plot(variogram(g, cutoff = 600, width = 20))
+plot(variogram(g, cutoff = extension, width = 120))
+plot(variogram(g, cutoff = extension, width = 20))
 
 ggplot(dat.vgm,aes(x = dist, y = gamma)) + 
   geom_point(size = 2) + 
@@ -198,7 +200,7 @@ Representacion en 2D de la variable donde:
 -   `cutoff`: es la extension lateral
 
 ```{r variog-map}
-map.vgm <- variogram(g, width = 80, cutoff = 600, map = TRUE)
+map.vgm <- variogram(g, width = 80, cutoff = extension, map = TRUE)
 
 ggplot(data.frame(map.vgm), aes(x = map.dx, y = map.dy, fill = map.var1)) +
   geom_raster() + 
@@ -216,7 +218,7 @@ Variogramas en diferentes direcciones donde:
 
 ```{r variog-dir}
 dat.vgm2 = variogram(g, alpha = c(0,45,90,135),
-                     tol.hor = 22.5, cutoff = 600) # con direcciones y tolerancia angular
+                     tol.hor = 22.5, cutoff = extension) # con direcciones y tolerancia angular
 
 ggplot(dat.vgm2,aes(x = dist, y = gamma,
                     col = factor(dir.hor), shape = factor(dir.hor))) + 
@@ -247,7 +249,8 @@ pep = 0.020
 ### Ajuste de variograma teorico
 
 ```{r ajuste, cache=TRUE, dependson='params'}
-(dat.fit = fit.variogram(dat.vgm, model = vgm(meseta, mod, rango, pep)))
+(dat.fit = fit.variogram(dat.vgm, 
+                         model = vgm(meseta, mod, rango, pep)))
 
 # error del ajuste
 (fit.rmse = sqrt(attributes(dat.fit)$SSErr/(nrow(datos)))) 
@@ -313,8 +316,10 @@ ggplot(as.data.frame(kcv.ok), aes(residual)) +
 Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es caso mas sencillo y que aplica en la mayoria de las situaciones.
 
 ```{r kriging, cache=TRUE}
-ok = krige(as.formula(paste(myvar,'~1')), locations = datos_sf,
-           newdata = datosint2, model = varmod)
+ok = krige(as.formula(paste(myvar,'~1')), 
+           locations = datos_sf,
+           newdata = datosint2, 
+           model = varmod)
 
 ```
 
