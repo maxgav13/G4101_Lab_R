@@ -32,7 +32,8 @@ library(gstat)          # geoestadistica
 library(sp)             # objetos espaciales vectoriales
 library(sf)             # objetos espaciales vectoriales
 library(plotly)         # graficos interactivos
-library(raster)         # objetos espaciales raster
+# library(raster)         # objetos espaciales raster
+# library(terra)         # objetos espaciales raster
 library(stars)          # arreglos de objetos espaciales
 library(viridis)        # colores
 library(DescTools)      # analisis de datos
@@ -57,8 +58,7 @@ y_vmap = "Distancia N-S [m]"
 ## Importar datos
 
 ```{r datos}
-datos <- rio::import("data/BroomsBarn.txt", setclass = 'tibble') %>% 
-  mutate(x = x*40, y = y*40)
+datos <- rio::import("data/BroomsBarn3.csv", setclass = 'tibble')
 datos %>% glimpse()
 ```
 
@@ -67,10 +67,45 @@ datos %>% glimpse()
 Importante realizar este paso para determinar si la variable esta normalmente distribuida o no; de no estarlo habria que transformarla.
 
 ```{r AED}
-# datos = datos %>% 
-#   mutate(logK = log(K), logP = log(P))
-
 myvar = 'K' # variable a modelar
+
+Desc(datos[[myvar]])
+
+(S = var(datos[[myvar]])) # varianza de la variable
+
+ggplot(datos, aes_string(myvar)) + 
+  geom_histogram(aes(y = stat(density)), bins = 10, 
+                 col = 'black', fill = 'blue', alpha = .5) + 
+  geom_vline(xintercept = mean(datos[[myvar]]), col = 'red') +
+  geom_density(col = 'blue') +
+  labs(y = 'Densidad')
+```
+
+## Transformacion de datos
+
+Se usa la transformacion de Box-Cox donde se debe hallar el parametro $\lambda$ para transformar la variable lo mas cercano a una variable con distribucion normal. La transformacion logaritmica (natrual, base $e$) es un caso especial donde $\lambda=0$.
+
+$$
+\begin{cases}
+  \frac{x^\lambda-1}{\lambda} & \text{si } \lambda \neq 0\\
+  log(x) & \text{si } \lambda = 0
+  \end{cases}
+$$
+
+```{r box-cox}
+transformar = T
+
+if (isTRUE(transformar)) {
+  bc = MASS::boxcox(datos[[myvar]] ~ 1)
+  bc.lambda = bc$x[which.max(bc$y)]
+  # bc.lambda = bc %>% as_tibble() %>% slice_max(y,n = 1) %>% pull(x)
+  var.trans = BoxCox(datos[[myvar]], bc.lambda)
+  datos[[str_glue('{myvar}.trans')]] = var.trans 
+}
+```
+
+```{r}
+myvar = str_glue('{myvar}.trans') # variable a modelar
 
 Desc(datos[[myvar]])
 
@@ -95,8 +130,9 @@ datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>%
   mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) %>% 
   select(X, Y, everything())
 datos_sf
-# datos_sp = as(datos_sf, 'Spatial')
-# coordnames(datos_sp) = c('X','Y')
+
+datos_sp = as(datos_sf, 'Spatial')
+coordnames(datos_sp) = c('X','Y')
 ```
 
 ## Calculo de distancias
@@ -168,14 +204,16 @@ Creacion del variograma. La funcion basica (`gstat`) realiza un buen trabajo ini
 En general se recomienda que no haya pocos puntos representados en las diferentes distancias.
 
 ```{r variog-omni}
-g = gstat(formula = as.formula(paste(myvar,'~1')), data = datos_sf) # objeto gstat para hacer geoestadistica
+# objeto gstat para hacer geoestadistica
+g = gstat(formula = as.formula(paste(myvar,'~1')), 
+          data = datos_sf) 
 
 dat.vgm = variogram(g) # variograma experimental
 
 head(dat.vgm)
 plot(dat.vgm)
 
-extension = 600
+extension = 600 # distancia maxima del variograma
 
 dat.vgm = variogram(g, cutoff = extension) # variograma experimental hasta cierta distancia (cutoff)
 
@@ -240,10 +278,10 @@ ggplot(dat.vgm2,aes(x = dist, y = gamma,
 Es buena practica interpretar el variograma experimenta y escoger un modelo apropiado, asi como valores iniciales para dicho modelo
 
 ```{r params}
-meseta = 0.08
+meseta = 0.006
 mod = "Sph"
 rango = 400
-pep = 0.020
+pep = 0.0015
 ```
 
 ### Ajuste de variograma teorico
@@ -270,7 +308,8 @@ Una vez escogido el modelo y ajustado a los datos se realiza la validacion cruza
 
 ```{r xval, cache=TRUE, dependson='ajuste'}
 kcv.ok = krige.cv(as.formula(paste(myvar,'~1')), 
-                  locations = datos_sf, model = varmod)
+                  locations = datos_sf, 
+                  model = varmod)
 ```
 
 ```{r xval-metrics, dependson='xval'}
@@ -313,14 +352,23 @@ ggplot(as.data.frame(kcv.ok), aes(residual)) +
 
 ## Interpolacion usando kriging ordinario
 
-Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es caso mas sencillo y que aplica en la mayoria de las situaciones.
+Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es el caso mas sencillo y que aplica en la mayoria de las situaciones.
 
 ```{r kriging, cache=TRUE}
 ok = krige(as.formula(paste(myvar,'~1')), 
            locations = datos_sf,
            newdata = datosint2, 
            model = varmod)
+```
 
+```{r krigingTG, dependson='box-cox', cache=TRUE}
+if (isTRUE(transformar)) {
+  okTG = krigeTg(as.formula(paste(str_remove(myvar,'.trans'),'~1')), 
+                 locations = datos_sf,
+                 newdata = datosint2, 
+                 model = varmod,
+                 lambda = lambda) 
+}
 ```
 
 ```{r}
@@ -329,6 +377,8 @@ ok = krige(as.formula(paste(myvar,'~1')),
 ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok), 
                                data = data.frame(ok), 
                                proj4string = CRS(proj4string(datos_sp)))
+
+ok_sp2 = as(ok,'Spatial')
 ```
 
 ## Genera GeoTifs para usar en GIS
@@ -347,7 +397,9 @@ rgdal::writeGDAL(ok_sp['var1.var'], 'figs/krige_var.tif')
 
 p1 = ggplot() + 
   geom_stars(data = ok, aes(fill = var1.pred, x = x, y = y)) + 
-  scale_fill_gradientn(colours = viridis(10), na.value = NA) + 
+  geom_contour(aes(x,y,z=var1.pred), data.frame(ok),
+               col='white',size=0.1,bins = 10) + 
+  scale_fill_viridis(option = 'D', na.value = NA) + 
   coord_sf() + 
   labs(x = x_map, y = y_map, 
        title = 'Prediccion', 
@@ -366,21 +418,53 @@ p2
 # gridExtra::grid.arrange(p1,p2,ncol=2)
 ```
 
-# Visualizacion 3D
+# Interactivos
 
-Visuzalicion 3D de los datos
+## mapview
 
-```{r 3D, eval=knitr::is_html_output()}
+Para poder visualizar los datos con **mapview** es necesario que estos tengan un sistema de coordenadas, sino no va a mostrar el mapa
+
+Para este ejemplo le asigno temporalmente el sistema de coordenadas CRTM05 (codigo EPSG 5367) para poder visualizar los datos
+
+```{r}
+ok %>% 
+  st_set_crs(5367) %>% # esto no es necesario si los datos tienen un crs
+  mapview(layer.name=myvar,col.regions=viridis(10,option = 'D'))
+```
+
+## plotly
+
+Para poder visualizar los datos con plotly estos tienen que estar en formato de matriz, que es lo que hace este primer bloque de codigo. Pueden cambiar la variable a visualizar cambiando el texto dentro de \[\[\]\] por el nombre de la variable respectiva.
+
+```{r}
 okmat = matrix(ok[['var1.pred']],
                nrow = length(dx),
                ncol = length(dy))
 
 x <- abs(ncol(okmat) * dint - seq_len(ncol(okmat)) * dint)
 y <- seq_len(ncol(okmat)) * dint
+```
+
+### 2D
+
+```{r warning=FALSE, eval=knitr::is_html_output()}
+plot_ly(x = ~y, y = ~x, z = ~t(okmat)) %>% 
+    add_contour(contours = list(showlabels = TRUE),
+                line = list(smoothing = 0.85,color='white'),
+                colors=viridis(10,option = 'D'), 
+                colorbar=list(title='')) %>% 
+    layout(xaxis = list(title=x_map),
+           yaxis = list(title=y_map,scaleanchor  = "x"))
+```
+
+### 3D
+
+```{r 3D, warning=FALSE, eval=knitr::is_html_output()}
 
 plot_ly() %>% 
   add_surface(x = ~y, y = ~x, z = ~t(okmat), 
-              colors=bpy.colors(), colorbar=list(title='')) %>% 
+              colors=viridis(10,option = 'D'), 
+              colorbar=list(title='')) %>% 
   layout(scene = list(xaxis=list(title=x_map), 
                       yaxis=list(title=y_map), 
                       zaxis=list(title=''),
