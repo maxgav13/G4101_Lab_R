@@ -61,13 +61,17 @@ $$H_0 : \text{longitud de intervalos es igual}$$
 
 ```{r}
 x = c(0.5,2.3,3.2,4.2,4.9,7,11.4,12.7,14.6,
-      16,21.5,22.5,25.8,30.3,31.9,36.2,42.8)
+      16,21.5,22.5,25.8,30.3,31.9,36.2,42.8) %>% 
+  sort()
+
 n = length(x)
 i = seq(1,n-1,1)
 h = NULL
+
 for (j in 1:n-1) {
   h[j] = x[j+1]-x[j]
 }
+
 rankh = rank(h,ties.method = "average")
 (rs = 1-(6*sum((i-rankh)^2))/(length(i)*(length(i)^2-1)))
 cor.test(i,h,method = "spearman") %>% tidy()

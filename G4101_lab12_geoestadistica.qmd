@@ -28,6 +28,8 @@ execute:
 #| label: setup
 #| include: false
 
+library(MOTE)
+library(papaja)
 library(gstat)          # geoestadistica
 library(sp)             # objetos espaciales vectoriales
 library(sf)             # objetos espaciales vectoriales
@@ -67,56 +69,91 @@ datos %>% glimpse()
 Importante realizar este paso para determinar si la variable esta normalmente distribuida o no; de no estarlo habria que transformarla.
 
 ```{r AED}
-myvar = 'K' # variable a modelar
+myvar0 = 'K' # variable a modelar
 
-Desc(datos[[myvar]])
+Desc(datos[[myvar0]])
 
-(S = var(datos[[myvar]])) # varianza de la variable
+(S = var(datos[[myvar0]])) # varianza de la variable
 
-ggplot(datos, aes_string(myvar)) + 
+ggplot(datos, aes_string(myvar0)) + 
   geom_histogram(aes(y = stat(density)), bins = 10, 
                  col = 'black', fill = 'blue', alpha = .5) + 
-  geom_vline(xintercept = mean(datos[[myvar]]), col = 'red') +
+  geom_vline(xintercept = mean(datos[[myvar0]]), col = 'red') +
   geom_density(col = 'blue') +
   labs(y = 'Densidad')
+```
+
+```{r}
+transformar = T
+
+if (isFALSE(transformar)) {
+  myvar = myvar0 
+} else {
+  myvar = str_glue('{myvar0}.trans') 
+}
 ```
 
 ## Transformacion de datos
 
-Se usa la transformacion de Box-Cox donde se debe hallar el parametro $\lambda$ para transformar la variable lo mas cercano a una variable con distribucion normal. La transformacion logaritmica (natrual, base $e$) es un caso especial donde $\lambda=0$.
+::: callout-note
+Si se ocupa transformar la variable y si se quiere obtener el resultado en la escala original de la variable, esto solo se puede lograr por medio de Kriging Ordinario ($y \sim 1$), no aplica para cualquier otro tipo de Kriging. La teoría y funciones aqui implementadas, para re-transformar el resultado de la interpolacion, solo se han desarrollado para esta variante del Kriging.
+:::
+
+Se usa la transformacion de Box-Cox donde se debe hallar el parametro $\lambda$ para transformar la variable lo mas cercano a una variable normalmente distribuida. La transformacion logaritmica (natural, base $e$) es un caso especial donde $\lambda=0$.
 
 $$
 \begin{cases}
-  \frac{x^\lambda-1}{\lambda} & \text{si } \lambda \neq 0\\
-  log(x) & \text{si } \lambda = 0
+  \frac{x^\lambda-1}{\lambda} & \text{para } \lambda \neq 0\\
+  log(x) & \text{para } \lambda = 0
   \end{cases}
 $$
 
-```{r box-cox}
-transformar = T
+La siguiente tabla muestra los valores mas tipicos de $\lambda$ con su respectiva transformacion, donde tipicamente se usan valores entre -2 y 2, pero puede ir desde -5 a 5.
 
++--------------+----------------+
+| $\lambda$    | Transformacion |
++:============:+:==============:+
+| -2           | $1/x^2$        |
++--------------+----------------+
+| -1           | $1/x$          |
++--------------+----------------+
+| -0.5         | $1/\sqrt{x}$   |
++--------------+----------------+
+| 0            | $log(x)$       |
++--------------+----------------+
+| 0.5          | $\sqrt{x}$     |
++--------------+----------------+
+| 1            | $x$            |
++--------------+----------------+
+| 2            | $x^2$          |
++--------------+----------------+
+
+```{r box-cox}
 if (isTRUE(transformar)) {
-  bc = MASS::boxcox(datos[[myvar]] ~ 1)
+  bc = MASS::boxcox(datos[[myvar0]] ~ 1)
   bc.lambda = bc$x[which.max(bc$y)]
-  # bc.lambda = bc %>% as_tibble() %>% slice_max(y,n = 1) %>% pull(x)
-  var.trans = BoxCox(datos[[myvar]], bc.lambda)
-  datos[[str_glue('{myvar}.trans')]] = var.trans 
+  # (bc.lambda = bc %>% as_tibble() %>% slice_max(y,n = 1) %>% pull(x))
+  var.trans = BoxCox(datos[[myvar0]], bc.lambda)
+  datos[[myvar]] = var.trans 
+  str_glue('El lambda para {myvar0} es {apa(bc.lambda,3)}')
 }
 ```
 
-```{r}
-myvar = str_glue('{myvar}.trans') # variable a modelar
+La funcion `MASS::boxcox` realiza la busqueda de $\lambda$ y muestra un grafico donde la linea punteada central es el valor optimo y las otras lineas punteadas representan el IC al 95%.
 
-Desc(datos[[myvar]])
-
-(S = var(datos[[myvar]])) # varianza de la variable
-
-ggplot(datos, aes_string(myvar)) + 
-  geom_histogram(aes(y = stat(density)), bins = 10, 
-                 col = 'black', fill = 'blue', alpha = .5) + 
-  geom_vline(xintercept = mean(datos[[myvar]]), col = 'red') +
-  geom_density(col = 'blue') +
-  labs(y = 'Densidad')
+```{r dependson='box-cox'}
+if (isTRUE(transformar)) {
+  Desc(datos[[myvar]])
+  
+  (S = var(datos[[myvar]])) # varianza de la variable
+  
+  ggplot(datos, aes_string(myvar)) + 
+    geom_histogram(aes(y = stat(density)), bins = 10, 
+                   col = 'black', fill = 'blue', alpha = .5) + 
+    geom_vline(xintercept = mean(datos[[myvar]]), col = 'red') +
+    geom_density(col = 'blue') +
+    labs(y = 'Densidad')
+}
 ```
 
 # Datos espaciales
@@ -273,9 +310,30 @@ ggplot(dat.vgm2,aes(x = dist, y = gamma,
 
 ## Modelado
 
+### Ejemplo de modelos teoricos
+
+Se muestran los modelos teoricos mas comunes, simulando una estructura con $C_0=0,C_1=10,a=15$, donde $a$ es el rango efectivo. Para el caso de los modelos exponencial y gaussiano el rango del modelo es $a/3$ y $a/\sqrt{3}$, respectivamente.
+
+```{r}
+show.vgms(models = c('Sph','Pen','Cir','Exp','Gau'),
+          sill = 10,
+          range = c(15,15,15,round(15/3,2),round(15/sqrt(3),2)),
+          max = 25,n = 100,as.groups = T,plot = F) %>% 
+  tibble() %>% 
+  ggplot(aes(distance,semivariance,col=model)) + 
+  geom_line() + 
+  geom_vline(xintercept = 15,lty=2) + 
+  scale_color_brewer(palette = 'Dark2') + 
+  theme(legend.position = c(.8,.5), 
+        legend.background = element_rect('white',size = .2)) + 
+  labs(x = 'Distancia', y = 'Semivarianza', col = 'Modelo', 
+       subtitle = 'Modelos teóricos mas comunes', 
+       caption = 'Rango efectivo: 15, Meseta: 10, Pepita: 0')
+```
+
 ### Valores iniciales para el variograma teorico
 
-Es buena practica interpretar el variograma experimenta y escoger un modelo apropiado, asi como valores iniciales para dicho modelo
+Es buena practica interpretar el variograma experimental y escoger un modelo apropiado, asi como valores iniciales para dicho modelo.
 
 ```{r params}
 meseta = 0.006
@@ -287,19 +345,21 @@ pep = 0.0015
 ### Ajuste de variograma teorico
 
 ```{r ajuste, cache=TRUE, dependson='params'}
-(dat.fit = fit.variogram(dat.vgm, 
-                         model = vgm(meseta, mod, rango, pep)))
+(vm.fit.sph = fit.variogram(dat.vgm, 
+                            model = vgm(meseta, mod, rango, pep)))
+
 
 # error del ajuste
-(fit.rmse = sqrt(attributes(dat.fit)$SSErr/(nrow(datos)))) 
+(fit.rmse = sqrt(attributes(vm.fit.sph)$SSErr/(nrow(datos)))) 
 
 # omnidireccional
-plot(dat.vgm, dat.fit, xlab = x_var, ylab = y_var) 
+plot(dat.vgm, vm.fit.sph, xlab = x_var, ylab = y_var) 
 
 # direccionales
-plot(dat.vgm2, dat.fit, as.table = T, xlab = x_var, ylab = y_var) 
+plot(dat.vgm2, vm.fit.sph, as.table = T, xlab = x_var, ylab = y_var) 
 
-varmod = dat.fit # modelo ajustado
+# proporcion pepita
+vm.fit.sph[1,"psill"]/sum(vm.fit.sph[,"psill"])
 ```
 
 ### Validacion cruzada
@@ -309,15 +369,19 @@ Una vez escogido el modelo y ajustado a los datos se realiza la validacion cruza
 ```{r xval, cache=TRUE, dependson='ajuste'}
 kcv.ok = krige.cv(as.formula(paste(myvar,'~1')), 
                   locations = datos_sf, 
-                  model = varmod)
+                  model = vm.fit.sph)
 ```
 
 ```{r xval-metrics, dependson='xval'}
 summary(kcv.ok$residual)
 
-xval.rmse = sqrt(mean(kcv.ok$residual^2)) # RMSE - menor es mejor
+xval.rmse = RMSE(kcv.ok$observed, kcv.ok$var1.pred) # RMSE - menor es mejor
+
+xval.mape = MAPE(kcv.ok$var1.pred, kcv.ok$observed)
 
 xval.msdr = mean(kcv.ok$residual^2/kcv.ok$var1.var) # MSDR - ~1 es mejor
+
+xval.g = (1 - (sum((kcv.ok$observed - kcv.ok$var1.pred)^2) / sum((kcv.ok$observed - mean(kcv.ok$observed))^2)))
 
 xval.mod = lm(observed ~ var1.pred, as.data.frame(kcv.ok))
 
@@ -325,8 +389,10 @@ xval.r2 = xval.mod %>% broom::glance() %>% pull(r.squared)
 
 correl = signif(CorCI(cor(kcv.ok$observed, kcv.ok$var1.pred), nrow(kcv.ok)),3)
 
-metricas = tibble(metric = c('rmse','msdr','r','R2'), 
-                  estimate = c(xval.rmse,xval.msdr,correl[1],xval.r2))
+metricas = tibble(metric = c('rmse','mape','msdr','g','r','R2'), 
+                  estimate = c(xval.rmse,xval.mape,
+                               xval.msdr,xval.g,
+                               correl[1],xval.r2))
 metricas
 
 CIbeta = signif(broom::tidy(xval.mod, conf.int=T)[2,c(2,6,7)],4)
@@ -355,19 +421,20 @@ ggplot(as.data.frame(kcv.ok), aes(residual)) +
 Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es el caso mas sencillo y que aplica en la mayoria de las situaciones.
 
 ```{r kriging, cache=TRUE}
-ok = krige(as.formula(paste(myvar,'~1')), 
-           locations = datos_sf,
-           newdata = datosint2, 
-           model = varmod)
-```
 
-```{r krigingTG, dependson='box-cox', cache=TRUE}
+varmod = vm.fit.sph # modelo escogido
+
 if (isTRUE(transformar)) {
-  okTG = krigeTg(as.formula(paste(str_remove(myvar,'.trans'),'~1')), 
-                 locations = datos_sf,
-                 newdata = datosint2, 
-                 model = varmod,
-                 lambda = lambda) 
+  ok = krigeTg(as.formula(paste(str_remove(myvar,'.trans'),'~1')), 
+               locations = datos_sf,
+               newdata = datosint2, 
+               model = varmod,
+               lambda = lambda) 
+} else {
+  ok = krige(as.formula(paste(myvar,'~1')), 
+             locations = datos_sf,
+             newdata = datosint2, 
+             model = varmod)
 }
 ```
 
@@ -381,41 +448,42 @@ ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok),
 ok_sp2 = as(ok,'Spatial')
 ```
 
-## Genera GeoTifs para usar en GIS
-
-```{r geotifs}
-#| eval: false
-
-rgdal::writeGDAL(ok_sp['var1.pred'], 'figs/krige_pred.tif')
-rgdal::writeGDAL(ok_sp['var1.var'], 'figs/krige_var.tif')
-```
-
-## Mapas de las predicciones y varianzas
+## Mapas de prediccion y desviacion estandar
 
 ```{r mapas-resultados, dependson='kriging', warning=FALSE}
 #| layout-ncol: 2
 
-p1 = ggplot() + 
-  geom_stars(data = ok, aes(fill = var1.pred, x = x, y = y)) + 
-  geom_contour(aes(x,y,z=var1.pred), data.frame(ok),
+if (isTRUE(transformar)) {
+  pred.var = 'var1TG.pred' 
+  var.var = 'var1TG.var'
+} else {
+  pred.var = 'var1.pred' 
+  var.var = 'var1.var'
+}
+
+ok.gg1 = ggplot() + 
+  geom_stars(data = ok, aes(fill = .data[[pred.var]], x = x, y = y)) + 
+  geom_contour(aes(x,y,z=.data[[pred.var]]), data.frame(ok),
                col='white',size=0.1,bins = 10) + 
-  scale_fill_viridis(option = 'D', na.value = NA) + 
+  scale_fill_viridis(option = 'D', direction = 1, na.value = NA) + 
   coord_sf() + 
   labs(x = x_map, y = y_map, 
        title = 'Prediccion', 
-       fill = myvar)
+       fill = myvar0)
 
-p2 = ggplot() + 
-  geom_stars(data = ok, aes(fill = var1.var, x = x, y = y)) + 
-  scale_fill_gradientn(colours = brewer.pal(9,'RdPu'), na.value = NA) + 
+ok.gg2 = ggplot() + 
+  geom_stars(data = ok, aes(fill = sqrt(.data[[var.var]]), x = x, y = y)) + 
+  # scale_fill_gradientn(colours = brewer.pal(9,'RdPu'),
+  #                      trans = 'reverse', na.value = NA) + 
+  scale_fill_distiller(palette = 'RdPu', direction = 1, na.value = NA) +
   coord_sf() + 
   labs(x = x_map, y = y_map, 
-       title = 'Varianza',
-       fill = myvar)
+       title = 'Desviacion estandar',
+       fill = myvar0)
 
-p1
-p2
-# gridExtra::grid.arrange(p1,p2,ncol=2)
+ok.gg1
+ok.gg2
+# gridExtra::grid.arrange(ok.gg1,ok.gg2,ncol=2)
 ```
 
 # Interactivos
@@ -428,8 +496,10 @@ Para este ejemplo le asigno temporalmente el sistema de coordenadas CRTM05 (codi
 
 ```{r}
 ok %>% 
+  select(pred.var) %>% # capa a graficar
   st_set_crs(5367) %>% # esto no es necesario si los datos tienen un crs
-  mapview(layer.name=myvar,col.regions=viridis(10,option = 'D'))
+  mapview(layer.name='Pred',
+          col.regions=viridis(10,option = 'D'))
 ```
 
 ## plotly
@@ -437,7 +507,7 @@ ok %>%
 Para poder visualizar los datos con plotly estos tienen que estar en formato de matriz, que es lo que hace este primer bloque de codigo. Pueden cambiar la variable a visualizar cambiando el texto dentro de \[\[\]\] por el nombre de la variable respectiva.
 
 ```{r}
-okmat = matrix(ok[['var1.pred']],
+okmat = matrix(ok[[pred.var]],
                nrow = length(dx),
                ncol = length(dy))
 
@@ -452,7 +522,7 @@ plot_ly(x = ~y, y = ~x, z = ~t(okmat)) %>%
     add_contour(contours = list(showlabels = TRUE),
                 line = list(smoothing = 0.85,color='white'),
                 colors=viridis(10,option = 'D'), 
-                colorbar=list(title='')) %>% 
+                colorbar=list(title=myvar0)) %>% 
     layout(xaxis = list(title=x_map),
            yaxis = list(title=y_map,scaleanchor  = "x"))
 ```
@@ -464,10 +534,19 @@ plot_ly(x = ~y, y = ~x, z = ~t(okmat)) %>%
 plot_ly() %>% 
   add_surface(x = ~y, y = ~x, z = ~t(okmat), 
               colors=viridis(10,option = 'D'), 
-              colorbar=list(title='')) %>% 
+              colorbar=list(title=myvar0)) %>% 
   layout(scene = list(xaxis=list(title=x_map), 
                       yaxis=list(title=y_map), 
                       zaxis=list(title=''),
                       aspectmode = 'manual', 
                       aspectratio = list(x = 1, y = 1, z = .5)))
+```
+
+# GeoTifs para SIG
+
+```{r geotifs}
+#| eval: false
+
+rgdal::writeGDAL(ok_sp[pred.var], 'figs/krige_pred.tif')
+rgdal::writeGDAL(ok_sp[var.var], 'figs/krige_var.tif')
 ```
