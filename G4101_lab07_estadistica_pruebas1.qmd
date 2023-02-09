@@ -31,7 +31,6 @@ execute:
 library(MOTE)           # tamanho del efecto
 library(papaja)         # presentacion datos
 library(GMisc)          # intervalos de confianza
-library(OneTwoSamples)  # intervalos y pruebas
 library(DescTools)      # pruebas
 library(rstatix)        # pruebas y tamanho efecto
 library(broom)          # resumenes tidy modelos
@@ -52,12 +51,8 @@ $$H_0 : \sigma^2 = \sigma_0^2$$
 alfa = .05
 w = airquality %>% pull(Temp)
 
-var_test1(x = w, sigma2 = 7^2, side = 0) # OneTwoSample
-
 chi1 = VarTest(x = w, sigma.squared = 7^2, conf.level = 1-alfa) # DescTools
 chi1
-
-interval_var1(x = w) # OneTwoSample
 
 ci_chisq(s = sd(w), n = length(w), digits = 4) # GMisc
 ```
@@ -81,8 +76,6 @@ chi2 = var.test(x,y,ratio = 1,conf = 1-alfa)
 chi2 %>% 
   tidy()
 
-var_test2(x,y,side = 0) # OneTwoSample
-interval_var2(x,y) # OneTwoSample
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
 
 # usando dataframe

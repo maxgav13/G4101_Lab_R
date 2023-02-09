@@ -16,10 +16,14 @@ format:
     html-math-method: katex
   pdf: default
   docx: default
+# knitr: 
+#   opts_chunk: 
+#     fig.path: "figs/"
 execute:
   warning: false
   error: false
   echo: true
+bibliography: references.bib
 ---
 
 # Introduccion
@@ -28,7 +32,7 @@ execute:
 Para poder usar este tipo de documentos es necesario primero instalar Quarto en su equipo. Seguir las instrucciones en el sitio web [Quarto](http://quarto.org).
 :::
 
-Este es un documento Quarto (`.qmd`). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Render* (![](imgs/rstudio-render-button.png){width="20" height="17"}).
+Este es un documento Quarto (`.qmd`). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Render* (![](imgs/rstudio-render-button.png){width="20" height="17"}). @agresti2002 es una referencia clasica para datos categoricos.
 
 Los documentos se pueden crear en modo *Source* o *Visual*. En modo *Visual* (@fig-visual-opts) se puede trabajar el documento como un editor de texto clasico.
 
@@ -54,6 +58,11 @@ library(plotly)
 library(dygraphs)
 library(rio)
 library(tidyverse)
+
+options(
+  # OutDec = ',',
+  digits = 3
+)
 
 set_flextable_defaults(
   # decimal.mark = ',',
@@ -155,6 +164,8 @@ ggplot(airquality, aes(Solar.R, Temp)) +
   geom_point(size=2, shape=2, col='firebrick') + 
   labs(x='Radiacion solar', y='Temperatura')
 ```
+
+@fig-airq-1 y @fig-airq-2 muestran la relacion de la velocidad del viento y radiacion solar con la temperatira.
 
 ## Widgets HTML
 

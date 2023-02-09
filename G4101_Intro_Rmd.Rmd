@@ -2,6 +2,8 @@
 title: "Intro a R Markdown"
 author: "Maximiliano Garnier Villarreal"
 output:
+  word_document:
+    toc: yes
   html_document:
     df_print: paged
     highlight: textmate
@@ -13,8 +15,6 @@ output:
     df_print: kable
     keep_tex: yes
     number_sections: yes
-    toc: yes
-  word_document:
     toc: yes
 always_allow_html: yes
 ---
@@ -34,6 +34,7 @@ Se puede agregar una nueva seccion haciendo click en *Insert Chunk* (![](imgs/rs
 El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, así como parametros opcionales globales. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
 
 ```{r setup, include=TRUE, message=FALSE, warning=FALSE}
+
 library(MOTE)
 library(papaja)
 library(kableExtra)
@@ -75,6 +76,7 @@ knitr::opts_chunk$set(
   out.width = "90%"
 )
 
+theme_set(theme_minimal(base_size = 14))
 ```
 
 # Tipos de resultados
@@ -164,7 +166,7 @@ Los documentos *R Markdown* usan una dirección relativa a la ubicación del arc
 Otro punto importante es que se pueden llamar funciones de paquetes sin necesidad de cargarlos usando la sintaxis `paquete::funcion()`. Por ejemplo en el bloque que sigue se usa `rio::import()`, siendo `rio` el paquete e `import()` la función a usar. **Esto puede evitar conflictos cuando se tienen funciones con el mismo nombre en diferentes paquetes**.
 
 ```{r}
-dat <- rio::import("data/PORPERM.csv")
+dat = rio::import("data/PORPERM.csv")
 ```
 
 # Desplegar/formatear valores

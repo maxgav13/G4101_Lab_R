@@ -110,23 +110,15 @@ $$
 
 La siguiente tabla muestra los valores mas tipicos de $\lambda$ con su respectiva transformacion, donde tipicamente se usan valores entre -2 y 2, pero puede ir desde -5 a 5.
 
-+--------------+----------------+
-| $\lambda$    | Transformacion |
-+:============:+:==============:+
-| -2           | $1/x^2$        |
-+--------------+----------------+
-| -1           | $1/x$          |
-+--------------+----------------+
-| -0.5         | $1/\sqrt{x}$   |
-+--------------+----------------+
-| 0            | $log(x)$       |
-+--------------+----------------+
-| 0.5          | $\sqrt{x}$     |
-+--------------+----------------+
-| 1            | $x$            |
-+--------------+----------------+
-| 2            | $x^2$          |
-+--------------+----------------+
+| $\lambda$ | Transformacion |
+|:---------:|:--------------:|
+|    -2     |    $1/x^2$     |
+|    -1     |     $1/x$      |
+|   -0.5    |  $1/\sqrt{x}$  |
+|     0     |    $log(x)$    |
+|    0.5    |   $\sqrt{x}$   |
+|     1     |      $x$       |
+|     2     |     $x^2$      |
 
 ```{r box-cox}
 if (isTRUE(transformar)) {
