@@ -2,14 +2,14 @@
 title: "Intro a R Markdown"
 author: "Maximiliano Garnier Villarreal"
 output:
-  word_document:
-    toc: yes
   html_document:
     df_print: paged
     highlight: textmate
     keep_md: yes
     number_sections: yes
     theme: spacelab
+    toc: yes
+  word_document:
     toc: yes
   pdf_document:
     df_print: kable
@@ -23,15 +23,15 @@ always_allow_html: yes
 
 Este es un documento [R Markdown](http://rmarkdown.rstudio.com). Permite trabajar con texto y ejecutar codigo de manera conjunta para generar un documento completo de su analisis. Para compilar el documento haga click en *Knit* (![](imgs/rstudio-knit-button.png){width="39" height="15"}).
 
-Los documentos se pueden crear en modo *Source* o *Visual*. En modo *Visual* (@fig-visual-opts) se puede trabajar el documento como un editor de texto clasico.
+Los documentos se pueden crear en modo *Source* o *Visual*. En modo *Visual* se puede trabajar el documento como un editor de texto clasico.
 
-![Opciones del editor \*Visual\*](imgs/rstudio-visual-options.png){#fig-visual-opts}
+![Opciones del editor *Visual*](imgs/rstudio-visual-options.png){#fig-visual-opts}
 
 Los bloques de codigo se identifican por `{r}`, con opciones (opcionales) en formato YAML que empiezan con `#|` al inicio de cada bloque o dentro de `{r}`. Para ejecutar un bloque de codigo se puede hacer click en el boton de *Run* (![](imgs/rstudio-run-chunk.png){width="20"}) dentro del bloque, o colocando el cursor dentro del bloque y ejecutando *Cmd+Shift+Enter* (Mac) o *Ctrl+Shift+Enter* (Windows).
 
 Se puede agregar una nueva seccion haciendo click en *Insert Chunk* (![](imgs/rstudio-insert-chunk-button.png){width="25" height="15"}), o ejecutando *Ctrl+Alt+I* (Windows) o *Cmd+Option+I* (Mac).
 
-El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, así como parametros opcionales globales. Los bloques pueden llevar una etiqueta (label) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
+El primer bloque siempre se usa para cargar paquetes y datos a usar durante la sesion, así como parametros opcionales globales. Los bloques pueden llevar una etiqueta (`label`) pero no es necesario; si se usan las etiquetas todas deben ser diferentes, no pueden haber dos bloques de codigo con la misma etiqueta.
 
 ```{r setup, include=TRUE, message=FALSE, warning=FALSE}
 
@@ -189,7 +189,7 @@ knitr::include_graphics('imgs/r_rocks.jpg')
 
 # Salvando y compartiendo
 
-Los documentos *R Markdown* tienen como extension `.Rmd`. Cuando se compila se crea un archivo adjunto con extension `.html`. Este archivo contiene una copia renderizada del cuaderno, que puede ser visualizada en cualquier navegador.
+Los documentos *R Markdown* tienen como extension `.Rmd`. Cuando se compila se crea un archivo adjunto con extension `.html`. Este archivo contiene una copia renderizada del documento, que puede ser visualizada en cualquier navegador.
 
 ## Otros formatos
 
