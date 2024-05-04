@@ -273,6 +273,8 @@ ggbetweenstats(mol, ind, values,
 $$H_0 : \bar{R}_1 = \bar{R}_2 = \bar{R}_3 = \dotsb = \bar{R}_n$$
 
 ```{r}
+dat1 = vroom('data/anova MgO.csv')
+
 G1 = c(7,8,10,11) # Mt Mica
 G2 = c(4,5,7,8) # Sebago Bath
 G3 = c(1,2,4,5) # Black Mt

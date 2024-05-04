@@ -32,7 +32,6 @@ library(broom)
 library(tidyverse)
 ```
 
-
 # Prueba $\chi^2$ de 1 varianza
 
 $$H_0 : \sigma^2 = \sigma_0^2$$
@@ -46,7 +45,6 @@ VarTest(x = w, sigma.squared = 0.5^2,conf.level = .95) # DescTools
 interval_var1(x = w) # OneTwoSample
 ci_chisq(s = sd(w), n = length(w),digits = 4) # GMisc
 ```
-
 
 # Prueba F de 2 varianzas
 
@@ -63,7 +61,6 @@ var_test2(x,y,side = 0) # OneTwoSample
 interval_var2(x,y) # OneTwoSample
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
 ```
-
 
 # Prueba Z de 1 muestra
 
@@ -95,8 +92,6 @@ d.z.mean(mu = mu, m1 = mean(x), sig = sig,
   as_tibble_row() # MOTE
 ```
 
-
-
 # Prueba t de 1 muestra
 
 $$H_0 : \mu = \mu_0$$
@@ -125,7 +120,6 @@ cohens_d(verm, mu = mu, ci = .95) # effectsize
 
 hedges_g(verm, mu = mu, ci = .95) # effectsize
 ```
-
 
 # Prueba t de 2 muestras independientes
 
@@ -189,7 +183,6 @@ g.ind.t(m1 = mean(A), m2 = mean(B),
   as_tibble_row() # MOTE
 ```
 
-
 # Prueba t de 2 muestras dependientes
 
 $$H_0 : \mu_D = \mu_{despues} - \mu_{antes} = 0$$
@@ -230,7 +223,6 @@ lm((Despues-Antes)~1) %>%
   tidy(conf.int=T,conf.level=.95)
 ```
 
-
 # Prueba t de correlacion
 
 $$H_0 : r = 0$$
@@ -252,6 +244,3 @@ correlation::cor_test(cordat,'a','b',
                       method = 'pearson',
                       ci = 1-alfa)
 ```
-
-
-

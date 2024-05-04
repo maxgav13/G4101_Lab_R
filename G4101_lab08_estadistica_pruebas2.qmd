@@ -139,7 +139,7 @@ $$
 \eta^2 = \frac{SC_{efecto}}{SC_{total}}
 $$
 
-Para ANOVA de Welch o ANOVA con varianzas iguales
+Para ANOVA de Welch o ANOVA con varianzas diferentes
 
 $$
 \epsilon^2 = \frac{F-1}{F + \frac{v_{error}}{v_{efecto}}}

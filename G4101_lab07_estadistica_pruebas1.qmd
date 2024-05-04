@@ -114,7 +114,7 @@ t1 %>% tidy()
            qt(1-alfa/2,length(verm)-1)))
 ```
 
-### Tamanho del effecto
+### Tamanho del efecto
 
 $$
 d_s = \frac{\bar{x} - \mu_0}{s}
@@ -231,7 +231,7 @@ t2 = t.test(values ~ ind, DF, conf.level = 1-alfa, var.equal = T)
 t2
 ```
 
-### Tamanho del effecto
+### Tamanho del efecto
 
 Sin igualdad de varianzas
 
@@ -325,7 +325,7 @@ ci_t(x = mean(Despues-Antes), s = sd(Despues-Antes),
      n = length(Antes), conf.level = 1-alfa) # GMisc
 ```
 
-### Tamanho del effecto
+### Tamanho del efecto
 
 $$
 d_{av} = \frac{\bar{d}}{\sqrt{\frac{s_1^2+s_2^2}{2}}}

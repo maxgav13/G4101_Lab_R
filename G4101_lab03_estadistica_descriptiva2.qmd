@@ -68,7 +68,11 @@ theme_gtsummary_language(
 
 Vamos a usar los datos de `airquality`.
 
-```{r datos}
+```{r}
+#| label: datos
+#| tbl-cap: Datos de airquality modificados
+
+
 airq = airquality %>% 
   as_tibble() %>% 
   mutate(Month = as_factor(Month),
@@ -91,7 +95,7 @@ airq %>% head() %>%
 airq2 = airq %>% 
   select(where(is.numeric) & !ends_with(c('_c','_z')))
 
-airq2 %>% head() %>% flextable()
+airq2 %>% head() %>% gt::gt()
 ```
 
 ## Covarianza & Correlacion
@@ -133,6 +137,10 @@ correlation(airq2, method = 'pearson') %>%
   flextable() %>%
   colformat_double() %>% 
   fit_to_width(max_width = 7)
+```
+
+```{r}
+datasummary_correlation(airq2)
 ```
 
 Grafico estatico de coeficientes de correlacion
@@ -391,9 +399,7 @@ tbl_cross(A.tb, percent = 'row', digits = c(0,1))
 
 A.tb %>% 
   tabyl(Tipo,Capa) %>% 
-  adorn_totals(where = c('row','col')) %>% 
-  adorn_percentages(denominator = 'all') %>% 
-  adorn_pct_formatting()
+  adorn_totals(where = c('row','col'))
 
 A.tb %>% 
   tabyl(Tipo,Capa) %>% 

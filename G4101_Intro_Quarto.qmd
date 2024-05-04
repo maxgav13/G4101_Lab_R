@@ -165,7 +165,7 @@ ggplot(airquality, aes(Solar.R, Temp)) +
   labs(x='Radiacion solar', y='Temperatura')
 ```
 
-@fig-airq-1 y @fig-airq-2 muestran la relacion de la velocidad del viento y radiacion solar con la temperatira.
+@fig-airq-1 y @fig-airq-2 muestran la relacion de la velocidad del viento y radiacion solar con la temperatura.
 
 ## Widgets HTML
 
