@@ -149,10 +149,11 @@ hedges_g(verm, mu = mu, ci = 1-alfa) # effectsize
 
 ```{r}
 # effectsize
-d_to_cles(.96) %>% 
-  as_tibble() %>% 
-  janitor::clean_names() %>% 
-  mutate(across(.fns = ~.*100 %>% round(1)))
+d = abs(d1$d)
+
+d_to_p_superiority(d)
+d_to_u3(d)
+d_to_overlap(d)
 ```
 
 ### Grafico resumen
@@ -285,10 +286,11 @@ hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T) # con dataframe
 
 ```{r}
 # effectsize
-d_to_cles(1.17) %>% 
-  as_tibble() %>% 
-  janitor::clean_names() %>% 
-  mutate(across(.fns = ~.*100 %>% round(1)))
+d = abs(g2.ind$d)
+
+d_to_p_superiority(d)
+d_to_u3(d)
+d_to_overlap(d)
 ```
 
 ### Grafico resumen
@@ -382,10 +384,11 @@ d2.rm %>%
 
 ```{r}
 # effectsize
-d_to_cles(.034) %>% 
-  as_tibble() %>% 
-  janitor::clean_names() %>% 
-  mutate(across(.fns = ~.*100 %>% round(1)))
+d = abs(d2.av$d)
+
+d_to_p_superiority(d)
+d_to_u3(d)
+d_to_overlap(d)
 ```
 
 ### Grafico resumen
