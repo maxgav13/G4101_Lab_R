@@ -151,9 +151,13 @@ hedges_g(verm, mu = mu, ci = 1-alfa) # effectsize
 # effectsize
 d = abs(d1$d)
 
-d_to_p_superiority(d)
-d_to_u3(d)
-d_to_overlap(d)
+CLES = tibble(
+  d = d,
+  PS = d_to_p_superiority(d),
+  U3 = d_to_u3(d),
+  OVL = d_to_overlap(d)
+)
+CLES
 ```
 
 ### Grafico resumen
@@ -288,9 +292,13 @@ hedges_g(values ~ ind, data = DF, ci = 1-alfa, pooled_sd = T) # con dataframe
 # effectsize
 d = abs(g2.ind$d)
 
-d_to_p_superiority(d)
-d_to_u3(d)
-d_to_overlap(d)
+CLES = tibble(
+  d = d,
+  PS = d_to_p_superiority(d),
+  U3 = d_to_u3(d),
+  OVL = d_to_overlap(d)
+)
+CLES
 ```
 
 ### Grafico resumen
@@ -386,9 +394,13 @@ d2.rm %>%
 # effectsize
 d = abs(d2.av$d)
 
-d_to_p_superiority(d)
-d_to_u3(d)
-d_to_overlap(d)
+CLES = tibble(
+  d = d,
+  PS = d_to_p_superiority(d),
+  U3 = d_to_u3(d),
+  OVL = d_to_overlap(d)
+)
+CLES
 ```
 
 ### Grafico resumen

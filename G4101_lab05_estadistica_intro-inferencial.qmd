@@ -26,7 +26,7 @@ execute:
 
 ```{r}
 #| label: setup
-#| include: false
+#| include: true
 
 library(DescTools)    # funciones estadisticas
 library(tidyverse)
