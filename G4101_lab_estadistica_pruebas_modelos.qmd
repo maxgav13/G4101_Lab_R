@@ -295,7 +295,9 @@ rc = vroom('data/chi2 independencia.csv') %>%
          Distancia = fct_inorder(Distancia))
 
 rc.tb = rc %>% 
-  count(Distancia, Redondez, .drop = F)
+  count(Distancia, Redondez, .drop = F) %>% 
+  mutate(n = if_else(n == 0, 1, n))
+rc.tb
 ```
 
 ```{r}
@@ -307,4 +309,39 @@ rc.null = glm(n ~ Distancia + Redondez, rc.tb,
 anova(rc.null, rc.full, test = 'Rao') # Chisq, LRT, Rao
 
 anova(rc.full, test = 'Rao')
+```
+
+```{r}
+rc.full2 = nnet::multinom(Redondez ~ Distancia, 
+                          data = rc.tb, weights = n)
+car::Anova(rc.full2)
+```
+
+
+```{r}
+rc = vroom('data/chi2 homogeneidad clastos.csv') %>% 
+  mutate(Clasto = fct_inorder(Clasto),
+         Capa = fct_inorder(factor(Capa)))
+
+rc.tb = rc %>% 
+  count(Clasto, Capa, .drop = F) %>% 
+  mutate(n = if_else(n == 0, 0.5, n))
+rc.tb
+```
+
+```{r}
+rc.full = glm(n ~ Clasto * Capa, rc.tb, 
+              family = poisson)
+rc.null = glm(n ~ Clasto + Capa, rc.tb, 
+              family = poisson)
+
+anova(rc.null, rc.full, test = 'Rao') # Chisq, LRT, Rao
+
+anova(rc.full, test = 'Rao')
+```
+
+```{r}
+rc.full2 = nnet::multinom(Clasto ~ Capa, 
+                          data = rc.tb, weights = n)
+car::Anova(rc.full2)
 ```

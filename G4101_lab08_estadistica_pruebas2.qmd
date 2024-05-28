@@ -425,12 +425,18 @@ z.crit.h
 ```
 
 ```{r}
+# chisq_descriptives(rstatix::chisq_test(clastos)) %>%
+#   mutate(expected = round(expected,5)) %>% 
+#   left_join(pairwise_chisq_test_against_p(clastos,
+#                                           p = (round(CHI.h$expected,5)/N.h),
+#                                           p.adjust.method = "BH")) %>%
+#   mutate(across(where(is.numeric),~round(.x,3))) %>% 
+#   select(1,2,resid,std.resid,p.adj,p.adj.signif)
+
 chisq_descriptives(rstatix::chisq_test(clastos)) %>% 
-  left_join(pairwise_chisq_test_against_p(clastos,
-                                          p = ((CHI.h$expected)/N.h),
-                                          p.adjust.method = "BH")
-  ) %>% 
-  select(-c(group,n))
+    select(1,2,std.resid) %>% 
+    mutate(across(where(is.numeric),~round(.x,3)),
+           signif = ifelse(abs(std.resid)>z.crit.h,'*','ns'))
 ```
 
 ### Graficos resumen
@@ -440,7 +446,7 @@ mosaic(t(clastos),
        direction = 'v',
        gp = shading_hcl(lty = 1,
                         interpolate = z.crit.h,
-                        observed = CHI.h$observed),
+                        observed = t(CHI.h$observed)),
        spacing = spacing_equal(sp = unit(.5,'lines')),
        residuals = t(CHI.h$stdres), 
        residuals_type = "Residuales \nestandarizados", 
@@ -558,12 +564,18 @@ z.crit.i
 ```
 
 ```{r}
+# chisq_descriptives(rstatix::chisq_test(round.dist)) %>%
+#   mutate(expected = round(expected,6)) %>% 
+#   left_join(pairwise_chisq_test_against_p(round.dist,
+#                                           p = (round(CHI.i$expected,6)/N.i),
+#                                           p.adjust.method = "BH")) %>%
+#   mutate(across(where(is.numeric),~round(.x,3))) %>% 
+#   select(1,2,resid,std.resid,p.adj,p.adj.signif)
+
 chisq_descriptives(rstatix::chisq_test(round.dist)) %>% 
-  left_join(pairwise_chisq_test_against_p(round.dist,
-                                          p = ((CHI.i$expected)/N.i),
-                                          p.adjust.method = "BH")
-  ) %>% 
-  select(-c(group,n))
+    select(1,2,std.resid) %>% 
+    mutate(across(where(is.numeric),~round(.x,3)),
+           signif = ifelse(abs(std.resid)>z.crit.i,'*','ns'))
 ```
 
 ### Graficos resumen
@@ -573,7 +585,7 @@ mosaic(t(round.dist),
        direction = 'v',
        gp = shading_hcl(lty = 1,
                         interpolate = z.crit.i,
-                        observed = CHI.i$observed),
+                        observed = t(CHI.i$observed)),
        spacing = spacing_equal(sp = unit(.5,'lines')),
        residuals = t(CHI.i$stdres), 
        residuals_type = "Residuales \nestandarizados", 
