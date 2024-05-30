@@ -99,8 +99,9 @@ ks.test(y, 'pnorm', 2, 10) %>%
   tidy()
 dat <- tibble(x = c(x, y), g = rep(c('1','2'), each = 100))
 ggplot(dat, aes(x, colour = g)) + 
-  stat_ecdf(size=1) +
-  theme(legend.position = c(.8,.3)) +
+  stat_ecdf(linewidth=1) +
+  theme(legend.position = 'inside',
+        legend.position.inside = c(.8,.3)) +
   labs(col='Muestra')
 ```
 
@@ -167,7 +168,7 @@ rank_biserial(verm, mu = 7, ci = 1-alfa)
 
 ```{r}
 # effectsize
-rb_to_cles(.87)
+rb_to_p_superiority(.87)
 ```
 
 ## Grafico resumen
@@ -256,7 +257,7 @@ cliffs_delta(values ~ ind, data = mol, ci = 1-alfa)
 
 ```{r}
 # effectsize
-rb_to_cles(.61)
+rb_to_p_superiority(.61)
 ```
 
 ## Grafico resumen
@@ -343,15 +344,18 @@ DunnTest(values~ind, Stacked, method = 'holm') # DescTools
 
 ```{r}
 KW.post = dunn_test(Stacked, values ~ ind, 
-                    p.adjust.method = 'holm') %>%
-  as_tibble() %>%
-  left_join(sjstats::mwu(Stacked,values,ind)$df %>% 
-              rename(group1 = grp1.label, group2 = grp2.label) %>%
-              select(contains('group'),r)) %>%
-  mutate(r.low = map2_dbl(.x = r, .y = (n1 + n2),
+                    p.adjust.method = 'holm',detailed = T) %>% 
+  mutate(r = map2_dbl(.x = group1, .y = group2,
+                      ~wilcox_effsize(values ~ ind, 
+                                      data = Stacked %>% 
+                                        filter(ind %in% c(.x,.y)) %>% 
+                                        mutate(ind = fct_drop(ind))) %>% 
+                        pull(effsize)),
+         r.low = map2_dbl(.x = r, .y = (n1 + n2),
                           ~CorCI(.x, n = .y, conf.level = 1-alfa)[2]),
          r.high = map2_dbl(.x = r, .y = (n1 + n2),
-                           ~CorCI(.x, n = .y, conf.level = 1-alfa)[3]))
+                           ~CorCI(.x, n = .y, conf.level = 1-alfa)[3])) %>% 
+  relocate(starts_with('r'),.after = estimate)
 KW.post
 ```
 
@@ -407,11 +411,11 @@ m = m %>%
 ```{r}
 m.s = m %>% 
   summarise(across(where(is.numeric),
-                   list(media=mean,
-                        sd=sd,
-                        q1=~quantile(.,alfa/2),
-                        q2=~quantile(.,.5),
-                        q3=~quantile(.,1-alfa/2)),
+                   list(media = ~mean(.x),
+                        sd = ~sd(.x),
+                        q1 = ~quantile(.x,alfa/2),
+                        q2 = ~quantile(.x,.5),
+                        q3 = ~quantile(.x,1-alfa/2)),
                    .names = '{.col}_{.fn}'))
 
 m.s %>% 
@@ -455,10 +459,10 @@ R2 = R2 %>%
 ```{r}
 R2.s = R2 %>% 
   summarise(across(where(is.numeric),
-                   list(media=mean,
-                        q1=~quantile(.,alfa/2),
-                        q2=~quantile(.,.5),
-                        q3=~quantile(.,1-alfa/2)),
+                   list(media = ~mean(.x),
+                        q1 = ~quantile(.,alfa/2),
+                        q2 = ~quantile(.,.5),
+                        q3 = ~quantile(.,1-alfa/2)),
                    .names = '{.col}_{.fn}'))
 R2.s
 
@@ -494,10 +498,10 @@ eta2 = eta2 %>%
 ```{r}
 eta2.s = eta2 %>% 
   summarise(across(where(is.numeric),
-                   list(media=mean,
-                        q1=~quantile(.,alfa/2),
-                        q2=~quantile(.,.5),
-                        q3=~quantile(.,1-alfa/2)),
+                   list(media = ~mean(.x),
+                        q1 = ~quantile(.,alfa/2),
+                        q2 = ~quantile(.,.5),
+                        q3 = ~quantile(.,1-alfa/2)),
                    .names = '{.col}_{.fn}'))
 eta2.s
 
