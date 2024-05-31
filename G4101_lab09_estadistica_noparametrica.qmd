@@ -61,6 +61,17 @@ alfa = .1
 
 cordat = tibble(a,b,c)
 
+cordat %>% 
+  mutate(across(where(is.numeric),
+                list(r=rank),
+                .names = '{.col}_{.fn}'),
+         dr = (a_r - b_r)^2) %>% 
+  summarise(n = n(),
+            sr = sum(dr),
+            r = 1 - ((6*sr)/(n*((n^2)-1))),
+            r.low = CorCI(r,n,conf.level = 1-alfa)[2],
+            r.high = CorCI(r,n,conf.level = 1-alfa)[3])
+
 cor.test(a,b, method = "spearman", conf = 1-alfa) %>% 
   tidy()
 
@@ -112,10 +123,11 @@ $$H_0 : \text{mediana muestra} = \text{mediana hipotetica}$$
 ```{r}
 verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
 alfa = .05
+mu = 7
 
 verm %>% 
   enframe() %>% 
-  mutate(diff = value-7) %>% 
+  mutate(diff = value-mu) %>% 
   filter(diff != 0) %>% 
   mutate(signo = sign(diff), 
          ranking = rank(abs(diff)),
