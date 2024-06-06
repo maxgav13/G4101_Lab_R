@@ -175,15 +175,15 @@ ggplot(DF3, aes(depth, moist)) +
 ```
 
 ```{r reg-lin-plot}
-plot_model(fit1, type = 'pred')
+plot_model(fit1, type = 'pred', show.data = T)
 ```
 
 ```{r reg-cuad-plot}
-plot_model(fit2, type = 'pred')
+plot_model(fit2, type = 'pred', terms = 'depth [n=50]', show.data = T)
 ```
 
 ```{r reg-log-plot}
-plot_model(fit3, type = 'pred')
+plot_model(fit3, type = 'pred', terms = 'depth [n=50]', show.data = T)
 ```
 
 ## Comparacion de modelos
@@ -194,7 +194,8 @@ anova(fit3,fit2)
 ```
 
 ```{r comp-performance}
-comp.mods = compare_performance(fit1,fit2,fit3,rank = T) # performance
+comp.mods = compare_performance(list(lin=fit1,cuad=fit2,log=fit3),
+                                rank = T) # performance
 comp.mods
 plot(comp.mods)
 ```
