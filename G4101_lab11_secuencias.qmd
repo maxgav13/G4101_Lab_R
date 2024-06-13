@@ -67,6 +67,7 @@ x = c(0.5,2.3,3.2,4.2,4.9,7,11.4,12.7,14.6,
 
 n = length(x)
 i = seq(1,n-1,1)
+n.i = length(i)
 h = NULL
 
 for (j in 1:n-1) {
@@ -74,9 +75,16 @@ for (j in 1:n-1) {
 }
 
 rankh = rank(h,ties.method = "average")
-(rs = 1-(6*sum((i-rankh)^2))/(length(i)*(length(i)^2-1)))
+cor.dat = tibble(i,h,rankh)
+
+(rs = 1-(6*sum((i-rankh)^2))/(n.i*(n.i^2-1)))
+CorCI(rs,n.i)
+
 cor.test(i,h,method = "spearman") %>% tidy()
 cor.test(i,rankh) %>% tidy()
+
+cor_test(cor.dat,'i','rankh')
+cor_test(cor.dat,'i','h',method = 'spearman')
 ```
 
 # Prueba de corridas
@@ -197,7 +205,7 @@ anova(fit3,fit2)
 ```{r comp-performance}
 comp.mods = compare_performance(list(lin=fit1,cuad=fit2,log=fit3),
                                 rank = T) # performance
-comp.mods
+comp.mods %>%  tibble()
 plot(comp.mods)
 ```
 
@@ -212,30 +220,30 @@ modelsummary(list(Lineal=fit1,Cuadratico=fit2,Logaritmico=fit3),
 ```
 
 ```{r comp-sjtab}
-sjPlot::tab_model(fit1,fit2,fit3,
-                  title = 'Comparasion de modelos',
-                  show.std = NULL, # 'std', NULL
-                  show.est = T,
-                  show.intercept = T,
-                  show.ci = .95,
-                  collapse.ci = T,
-                  ci.hyphen = ', ',
-                  show.stat = F,
-                  show.p = T,
-                  p.style = "stars",
-                  show.aic = T,
-                  dv.labels = c('Lineal','Cuadrático','Logaritmico'),
-                  digits = 2,
-                  file = 'sjplot_models_lab11.doc')
+tab_model(fit1,fit2,fit3,
+          title = 'Comparasion de modelos',
+          show.std = NULL, # 'std', NULL
+          show.est = T,
+          show.intercept = T,
+          show.ci = .95,
+          collapse.ci = T,
+          ci.hyphen = ', ',
+          show.stat = F,
+          show.p = T,
+          p.style = "stars",
+          show.aic = T,
+          dv.labels = c('Lineal','Cuadrático','Logaritmico'),
+          digits = 2,
+          file = 'sjplot_models_lab11.doc')
 ```
 
 ```{r comp-sjplot}
-sjPlot::plot_models(fit1,fit2,fit3,
-                    std.est = NULL, # 'std', NULL
-                    show.values = T,
-                    show.p = T,
-                    m.labels = c('Lineal','Cuadrático','Logaritmico'),
-                    legend.title = 'Modelo')
+plot_models(fit1,fit2,fit3,
+            std.est = NULL, # 'std', NULL
+            show.values = T,
+            show.p = T,
+            m.labels = c('Lineal','Cuadrático','Logaritmico'),
+            legend.title = 'Modelo')
 ```
 
 ## Graficos de coeficientes
@@ -260,10 +268,14 @@ zoo::autoplot.zoo(AirPassengers) # estatico
 ```
 
 ```{r ts-int1}
+#| eval: false
+
 AirPassengers %>% tidy() %>% dygraphs::dygraph() # interactivo
 ```
 
 ```{r ts-int2}
+#| eval: false
+
 AirPassengers %>% highcharter::hchart() # interactivo
 ```
 
@@ -274,6 +286,10 @@ DF = AirPassengers %>%
 
 DF %>% 
   plot_time_series(index,value,
+                   .interactive = F) # estatico o interactivo
+
+DF %>% 
+  plot_time_series(index,log.value,
                    .interactive = F) # estatico o interactivo
 ```
 
@@ -295,12 +311,16 @@ Pasos:
 ggplot(DF, aes(index,value)) +
   geom_line() +
   geom_smooth(method = 'lm')
+
+ggplot(DF, aes(index,log.value)) +
+  geom_line() +
+  geom_smooth(method = 'lm')
 ```
 
 ### Modelo y residuos
 
 ```{r ts-mod}
-mod = lm(value ~ index, data = DF)
+mod = lm(log.value ~ index, data = DF)
 
 model_parameters(mod, digits=3, ci_digits=3) # resumen del modelo
 model_performance(mod) # ajuste del modelo
