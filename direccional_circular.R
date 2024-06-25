@@ -1,12 +1,52 @@
 
+library(CircStats)
 library(circular)
 library(tidyverse)
 
-datos = fisherB6c$set2
+datos = fisherB6$set2
+a = .05
+
+datos.res = Directional::circ.summary(datos)
+
+# circular dispersion
+
+# rho_2 = sum(cos(rad(2*(datos-datos.res$mesos))))/length(datos)
+tm1 = trig.moment(rad(datos),p = 1)
+tm2 = trig.moment(rad(datos),p = 2)
+(delta_c = (1-tm2[[2]])/(2*tm1[[2]]^2))
+(sigma_c = sqrt(delta_c/length(datos)))
+(cone_c = deg(asin(sigma_c*qnorm(1-a/2))))
+
+if (Rbar < 2/3) {
+  acos(sqrt(2 * N * (2 * R^2 - N * 
+                          qchisq(1-a, 
+                                 1))/(R^2 * (4 * N - qchisq(1-a, 1)))))*180/pi
+} else {
+  acos(sqrt(N^2 - (N^2 - R^2) * 
+                 exp(qchisq(1-a,1)/N))/R)*180/pi
+}
+
+theta = fisherB13$set14
+theta2 = fisherB13$set5
+
+d.1 = abs(sin(rad(theta-179.5)))
+d.2 = abs(sin(rad(theta2-173)))
+
+(d.1.hat = sum(d.1)/length(theta))
+(d.2.hat = sum(d.2)/length(theta2))
+
+(d.hat = c(d.1.hat*length(theta) + d.2.hat*length(theta2))/
+  c(length(theta)+length(theta2)))
+
+((c(length(theta)+length(theta2))-2)*sum(c(length(theta)*(d.1.hat-d.hat)^2, 
+                                           length(theta2)*(d.2.hat-d.hat)^2))) /
+  ((2-1)*(sum(c(sum((d.1-d.1.hat)^2), sum((d.2-d.2.hat)^2)))))
 
 # pasa a datos circulares
-windc = circular(wind, type='angles',units='radians',template='geographics')
-datosc = circular(datos, type='angles',units='degrees',template='geographics')
+windc = circular(wind, type='angles',
+                 units='radians')
+datosc = circular(datos, type='angles',
+                  units='degrees')
 
 # grafico de puntos
 plot(windc, cex=1.5, bin=720, stack=TRUE, sep=0.035, shrink=1.3)

@@ -39,7 +39,7 @@ library(plotly)         # graficos interactivos
 library(stars)          # arreglos de objetos espaciales
 library(viridis)        # colores
 library(DescTools)      # analisis de datos
-library(mapview)        # mapas interactivos
+# library(mapview)        # mapas interactivos
 library(RColorBrewer)   # colores
 library(ggrepel)        # etiquetas en ggplot2
 library(tidyverse)
@@ -75,8 +75,8 @@ Desc(datos[[myvar0]])
 
 (S = var(datos[[myvar0]])) # varianza de la variable
 
-ggplot(datos, aes_string(myvar0)) + 
-  geom_histogram(aes(y = stat(density)), bins = 10, 
+ggplot(datos, aes(.data[[myvar0]])) + 
+  geom_histogram(aes(y = after_stat(density)), bins = 10, 
                  col = 'black', fill = 'blue', alpha = .5) + 
   geom_vline(xintercept = mean(datos[[myvar0]]), col = 'red') +
   geom_density(col = 'blue') +
@@ -129,6 +129,7 @@ if (isTRUE(transformar)) {
   datos[[myvar]] = var.trans 
   str_glue('El lambda para {myvar0} es {apa(bc.lambda,3)}')
 }
+lambda = bc.lambda
 ```
 
 La funcion `MASS::boxcox` realiza la busqueda de $\lambda$ y muestra un grafico donde la linea punteada central es el valor optimo y las otras lineas punteadas representan el IC al 95%.
@@ -139,8 +140,8 @@ if (isTRUE(transformar)) {
   
   (S = var(datos[[myvar]])) # varianza de la variable
   
-  ggplot(datos, aes_string(myvar)) + 
-    geom_histogram(aes(y = stat(density)), bins = 10, 
+  ggplot(datos, aes(.data[[myvar]])) + 
+    geom_histogram(aes(y = after_stat(density)), bins = 10, 
                    col = 'black', fill = 'blue', alpha = .5) + 
     geom_vline(xintercept = mean(datos[[myvar]]), col = 'red') +
     geom_density(col = 'blue') +
@@ -160,8 +161,8 @@ datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>%
   select(X, Y, everything())
 datos_sf
 
-datos_sp = as(datos_sf, 'Spatial')
-coordnames(datos_sp) = c('X','Y')
+# datos_sp = as(datos_sf, 'Spatial')
+# coordnames(datos_sp) = c('X','Y')
 ```
 
 ## Calculo de distancias
@@ -206,7 +207,8 @@ Vista estatica y dinamica de los datos. El mapa dinamico solo se despliega en ve
 ```{r dist-espacial}
 ggplot() + 
   geom_sf(data = outline, col = 'cyan', alpha = .1, size = .75) + 
-  geom_sf(data = datos_sf, aes_string(col = myvar), size = 3, alpha = 0.6) + 
+  geom_sf(data = datos_sf, aes(col = .data[[myvar]]), 
+          size = 3, alpha = 0.6) + 
   scale_color_viridis_c() + 
   labs(x = x_map, y = y_map) + 
   if (!is.na(st_crs(datos_sf))) {
@@ -215,10 +217,10 @@ ggplot() +
 ```
 
 ```{r dist-espacial-int, eval=knitr::is_html_output()}
-mapview(outline, alpha.regions = 0, layer.name='Border', 
-        homebutton = F, legend = F, native.crs = T) + 
-  mapview(datos_sf, zcol = myvar, alpha=0.1, 
-          layer.name = myvar, native.crs = T)
+mapview::mapview(outline, alpha.regions = 0, layer.name='Border', 
+                 homebutton = F, legend = F, native.crs = T) + 
+  mapview::mapview(datos_sf, zcol = myvar, alpha=0.1, 
+                   layer.name = myvar, native.crs = T)
 ```
 
 # Analisis Geoestadistico
@@ -316,8 +318,9 @@ show.vgms(models = c('Sph','Pen','Cir','Exp','Gau'),
   geom_line() + 
   geom_vline(xintercept = 15,lty=2) + 
   scale_color_brewer(palette = 'Dark2') + 
-  theme(legend.position = c(.8,.5), 
-        legend.background = element_rect('white',size = .2)) + 
+  theme(legend.position = 'inside',
+        legend.position.inside = c(.8,.5), 
+        legend.background = element_rect('white',linewidth = .2)) + 
   labs(x = 'Distancia', y = 'Semivarianza', col = 'Modelo', 
        subtitle = 'Modelos teóricos mas comunes', 
        caption = 'Rango efectivo: 15, Meseta: 10, Pepita: 0')
@@ -397,8 +400,8 @@ CIbeta
 ggplot(as.data.frame(kcv.ok), aes(var1.pred, observed)) + 
   geom_point(col = "blue", shape = 1, size = 1.25) + 
   coord_fixed() + 
-  geom_abline(slope = 1, col = "red", size = 1) + 
-  geom_smooth(se = F, method = 'lm', col = 'green', size = 1.25) +
+  geom_abline(slope = 1, col = "red", linewidth = 1) + 
+  geom_smooth(se = F, method = 'lm', col = 'green', linewidth = 1.25) +
   labs(x = "Predecidos", y = "Observados", 
        subtitle = 'Rojo: linea 1:1, Verde: regresion')
 
@@ -488,10 +491,10 @@ Para este ejemplo le asigno temporalmente el sistema de coordenadas CRTM05 (codi
 
 ```{r}
 ok %>% 
-  select(pred.var) %>% # capa a graficar
+  select(all_of(pred.var)) %>% # capa a graficar
   st_set_crs(5367) %>% # esto no es necesario si los datos tienen un crs
-  mapview(layer.name='Pred',
-          col.regions=viridis(10,option = 'D'))
+  mapview::mapview(layer.name='Pred',
+                   col.regions=viridis(10,option = 'D'))
 ```
 
 ## plotly
@@ -539,6 +542,6 @@ plot_ly() %>%
 ```{r geotifs}
 #| eval: false
 
-rgdal::writeGDAL(ok_sp[pred.var], 'figs/krige_pred.tif')
-rgdal::writeGDAL(ok_sp[var.var], 'figs/krige_var.tif')
+write_stars(ok[pred.var], 'figs/krige_pred.tif')
+write_stars(ok[var.var], 'figs/krige_var.tif')
 ```

@@ -29,24 +29,32 @@ execute:
 #| include: false
 
 library(GMisc)
+library(Directional)
+library(circular)
 library(CircStats)
 library(tidyverse)
 
 theme_set(theme_minimal(base_size = 14))
+
+circ_disp = function(theta) {
+  thetarad = theta*pi/180
+  tm1 = trig.moment(thetarad,p = 1)
+  tm2 = trig.moment(thetarad,p = 2)
+  delta = (1-tm2[[2]])/(2*tm1[[2]]^2)
+  delta
+}
 ```
 
-# Analisis de una muestra
-
-## Vector de mediciones angulares
+# Vector de mediciones angulares
 
 ```{r}
-theta0 = c(255, 239, 222, 231, 199, 271, 222, 274, 228, 246, 
-           177, 199, 257, 201, 237, 209, 216, 180, 182, 250, 
-           219, 196, 197, 246, 218, 235, 232, 243, 232, 180, 
-           231, 254, 242, 149, 212, 210, 230, 205, 220, 268)
+theta = c(255, 239, 222, 231, 199, 271, 222, 274, 228, 246, 
+          177, 199, 257, 201, 237, 209, 216, 180, 182, 250, 
+          219, 196, 197, 246, 218, 235, 232, 243, 232, 180, 
+          231, 254, 242, 149, 212, 210, 230, 205, 220, 268)
 ```
 
-## Ajuste para datos no-direccionales
+# Ajuste para datos no-direccionales
 
 Si los datos son no-direccionales deben multiplicarse por 2 para convertirlos a direccionales y realizar los calculos sobre estos
 
@@ -58,16 +66,18 @@ Direccion de datos:
 ```{r}
 d = 1
 
-if (d==0) {
-  theta = theta0*2
-} else {
-  theta = theta0
-}
+theta = case_when(d==1 ~ theta, .default = theta*2)
 
+thetac = circular(theta,units = 'degrees')
 thetarad = theta*pi/180
+N = length(theta)
 ```
 
-## Componentes del vector medio
+# A mano
+
+## Analisis de una muestra
+
+### Componentes del vector medio
 
 ```{r}
 x = sum(sin(thetarad))
@@ -76,7 +86,7 @@ meanrad = atan(x/y) # direccion media en radianes
 meandeg = degs(meanrad) # direccion media en grados
 ```
 
-## Verdadera direccion media
+### Verdadera direccion media
 
 Agregue aqui su codigo sobre *if statements* y asigne el resultado a la variable `meantrue`. Para datos no-direccionales hay que dividir por 2 la direccion verdadera.
 
@@ -87,46 +97,60 @@ meantrue = meandeg + 180
 meantrue = ifelse(d == 0, meantrue/2, meantrue)
 ```
 
-## Otras estadisticas
+### Otras estadisticas
 
 -   $\bar{R}$: resultante media
--   $s_0$: varianza circular
--   $k$: parametro de concentracion
+-   $V$: varianza circular
+-   $v$: desviacion estandar circular
+-   $\kappa$: parametro de concentracion
 
 ```{r}
-(R = sqrt(x^2+y^2)/length(theta)) # resultante media
-(s0 = 1-R) # varianza circular
-(k = ifelse(R<0.65, 
-            R/6*(12+6*R^2+5*R^4), 
-            1/(2*(1-R)-(1-R)^2-(1-R)^3)))
+(R = sqrt(x^2+y^2)) # resultante
+(Rbar = sqrt(x^2+y^2)/N) # resultante media
+(V = 1-Rbar) # varianza circular
+(v = sqrt(-2*log(Rbar))) # desviacion estandar circular
+(k.ml = case_when(Rbar < .53 ~ 2*Rbar + Rbar^3 + 5/6*Rbar^5,
+                  Rbar < .85 ~ -.4 + 1.39*Rbar + .43/(1-Rbar),
+                  .default = (Rbar^3 - 4*Rbar^2 + 3*Rbar)^(-1)))
+(k = case_when(N > 15 ~ k.ml,
+               k.ml < 2 ~ max(c(k.ml - 2*(N*k.ml)^(-1),0)),
+               .default = (N-1)^3*k.ml/(N^3+N)))
+# (k = ifelse(Rbar<0.65, 
+#             Rbar/6*(12+6*Rbar^2+5*Rbar^4), 
+#             1/(2*(1-Rbar)-(1-Rbar)^2-(1-Rbar)^3)))
 ```
 
-## Test de aleatoriedad
+### Prueba de aleatoriedad
 
 $$H_0: k = 0, \text{ los datos siguen una distribucion aleatoria}$$
-
 ```{r}
-R_crit(n = length(theta), conf.level = .95)
-R
+z.r = N*Rbar^2
+p.r = ifelse(N >= 50, exp(-z.r),
+             exp(-z.r)*(1+(2*z.r-z.r^2)/(4*N)-
+                          (24*z.r-132*z.r^2+76*z.r^3-9*z.r^4)/(288*N^2)))
+p.r
 ```
 
-## Test de tendencia (cono de confianza)
+```{r}
+R_crit(n = N, conf.level = 1-a)
+Rbar
+```
 
-Para datos no-direccionales el error estandar hay que dividirlo por 2
+### Prueba de tendencia (cono de confianza)
 
 $$H_0: \bar{\theta} = \theta_0$$
 
 ```{r}
 a = 0.05
-se = (1/sqrt(length(theta)*R*k))*180/pi
-se = ifelse(d == 0, se/2, se) # True se for non-directional data
-(cono = qnorm(1-a/2)*se)
+se = (1/sqrt(N*Rbar*k))
+(cono = asin(se*qnorm(1-a/2))*180/pi)
+# (cono = qnorm(1-a/2)*se)
 cono_sup = meantrue + cono
 cono_inf = meantrue - cono
 cono_inf; meantrue; cono_sup
 ```
 
-## Diagrama de rosas
+### Diagrama de rosas
 
 Diagrama de rosos mostrando la direccion media y cono de confianza
 
@@ -134,7 +158,7 @@ Diagrama de rosos mostrando la direccion media y cono de confianza
 rose_diag_2D(x = theta0, width = 30, dir = d, conf.level = .95)
 ```
 
-# Analisis de dos muestras
+## Analisis de dos muestras
 
 $$H_0: \bar{\theta}_1 = \bar{\theta}_2$$
 
@@ -142,28 +166,127 @@ Recordar realizar los ajustes necesarios si se trabaja con datos no-direccionale
 
 ```{r}
 theta2 = c(225, 208, 172, 198, 204, 183, 190, 212, 247, 
-            127, 167, 234, 217, 192, 212, 171, 169, 210, 
-            245, 222, 185, 227, 193, 178, 187, 182, 194, 
-            217, 168, 211, 234, 204, 221, 198, 261, 228, 
+           127, 167, 234, 217, 192, 212, 171, 169, 210, 
+           245, 222, 185, 227, 193, 178, 187, 182, 194, 
+           217, 168, 211, 234, 204, 221, 198, 261, 228, 
            146, 201, 146, 231)
 
+d = 1
+
+theta2 = case_when(d==1 ~ theta2, .default = theta2*2)
+
+theta2c = circular(theta2,units = 'degrees')
+
 theta2rad = rads(theta2)
-thetaall = c(theta0,theta2)
+```
+
+### Igualdad de parametro de concentracion
+
+```{r}
+(f.k = est.kappa(thetarad)/est.kappa(theta2rad))
+qf(1-a,length(theta)-1,length(theta2)-1)
+```
+
+### Igualdad de direccion media
+
+```{r}
+thetaall = c(theta,theta2)
 thetaallrad = rads(thetaall)
+Nall = length(thetaall)
 
 (R1 = est.rho(thetarad)*length(theta))
 (R2 = est.rho(theta2rad)*length(theta2))
 (Rt = est.rho(thetaallrad)*length(thetaall))
 (kt = est.kappa(thetaallrad))
 
-(f = ifelse(kt > 10, 
-           ((length(thetaall) - 2)*(R1+R2-Rt))/(length(thetaall)-R1-R2),
-           (1+3/(8*kt))*((length(thetaall)-2)*(R1+R2-Rt))/(length(thetaall)-R1-R2)))
+(f = ifelse(kt > 2, 
+           ((Nall - 2)*(R1+R2-Rt))/(Nall-R1-R2),
+           (1+3/(8*kt))*((Nall-2)*(R1+R2-Rt))/(Nall-R1-R2)))
 
 v1 = 1
-v2 = length(thetaall)-2
+v2 = Nall-2
 
 (fcrit = qf(1-a,v1,v2))
 f > fcrit
 pf(f,v1,v2,lower.tail = F)
 ```
+
+# Con funciones
+
+## Una muestra
+
+### Direccion media
+
+```{r}
+# vm.ml(thetarad, bias = F)
+meandeg = deg(circ.mean(thetarad))
+(meantrue = ifelse(meandeg < 0, meandeg+360, meandeg))
+```
+
+### Otras estadisticas
+
+```{r}
+est.rho(thetarad) # resultante media
+est.kappa(thetarad, bias = F) # parametro concentracion
+circ.disp(thetarad) # medidas de dispersion
+sd.circular(thetac) # desviacion estandar
+var.circular(thetac) # varianza
+circ_disp(theta) # dispersion 
+```
+
+### Prueba de aleatoriedad
+
+```{r}
+r.test(theta,degree = T)
+# watson(thetarad)
+# rao.spacing(thetarad)
+# kuiper(thetarad)
+```
+
+### Prueba de tendencia
+
+```{r}
+theta.ci = vm.bootstrap.ci(thetarad, bias = F, alpha = a)
+deg(theta.ci$mu.ci)
+```
+
+### Varios en una
+
+```{r}
+dir_stats_2D(theta,dir = 1,conf.level = 1-a)
+```
+
+```{r}
+Directional::circ.summary(theta,rads = F)
+```
+
+## Dos+ muestras
+
+```{r}
+grps = c(rep(1,length(theta)),
+         rep(2,length(theta2)))
+```
+
+### Prueba de parametro de concentracion
+
+```{r}
+conc.test(u = thetaall,
+          ina = grps) # 2+
+```
+
+### Prueba de direccion media
+
+```{r}
+# Parametros de concentracion iguales
+watson.williams.test(list(thetac,theta2c)) # 2+
+
+rao.homogeneity(list(thetarad,theta2rad)) # 2+
+
+hcfcirc.boot(thetarad,theta2rad) # 2
+hcf.circaov(thetaall,grps) # 2+
+
+# Parametros de concentracion diferentes
+hetcirc.boot(thetarad,theta2rad) # 2
+het.circaov(thetaall,grps) # 2+
+```
+
