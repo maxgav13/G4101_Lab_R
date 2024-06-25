@@ -10,11 +10,13 @@ highlight-style: pygments
 theme: sandstone
 format:
   html:
+    embed-resources: true
     code-fold: true
     code-summary: "Codigo"
     code-tools: true
     html-math-method: katex
-  pdf: default
+  pdf: 
+    prefer-html: false
   docx: default
 execute:
   warning: false
@@ -88,10 +90,15 @@ meandeg = degs(meanrad) # direccion media en grados
 
 ### Verdadera direccion media
 
-Agregue aqui su codigo sobre *if statements* y asigne el resultado a la variable `meantrue`. Para datos no-direccionales hay que dividir por 2 la direccion verdadera.
+Para datos no-direccionales hay que dividir por 2 la direccion verdadera.
 
 ```{r}
-meantrue = meandeg + 180
+meantrue = case_when(
+  x > 0 & y > 0 ~ meandeg,
+  x < 0 & y > 0 ~ meandeg + 360,
+  .default = meandeg + 180
+)
+meantrue
 
 # verdadera direccion media de datos no-direccionales
 meantrue = ifelse(d == 0, meantrue/2, meantrue)
@@ -180,6 +187,14 @@ theta2c = circular(theta2,units = 'degrees')
 theta2rad = rads(theta2)
 ```
 
+```{r}
+thetaall = c(theta,theta2)
+thetaallrad = rads(thetaall)
+Nall = length(thetaall)
+(Rt = circ.disp(thetaallrad)[[2]])
+(kt = est.kappa(thetaallrad))
+```
+
 ### Igualdad de parametro de concentracion
 
 ```{r}
@@ -190,14 +205,8 @@ qf(1-a,length(theta)-1,length(theta2)-1)
 ### Igualdad de direccion media
 
 ```{r}
-thetaall = c(theta,theta2)
-thetaallrad = rads(thetaall)
-Nall = length(thetaall)
-
-(R1 = est.rho(thetarad)*length(theta))
-(R2 = est.rho(theta2rad)*length(theta2))
-(Rt = est.rho(thetaallrad)*length(thetaall))
-(kt = est.kappa(thetaallrad))
+(R1 = circ.disp(thetarad)[[2]])
+(R2 = circ.disp(theta2rad)[[2]])
 
 (f = ifelse(kt > 2, 
            ((Nall - 2)*(R1+R2-Rt))/(Nall-R1-R2),
@@ -263,8 +272,8 @@ Directional::circ.summary(theta,rads = F)
 ## Dos+ muestras
 
 ```{r}
-grps = c(rep(1,length(theta)),
-         rep(2,length(theta2)))
+grps = c(rep(1:2,
+             c(length(theta),length(theta2))))
 ```
 
 ### Prueba de parametro de concentracion
@@ -284,6 +293,9 @@ rao.homogeneity(list(thetarad,theta2rad)) # 2+
 
 hcfcirc.boot(thetarad,theta2rad) # 2
 hcf.circaov(thetaall,grps) # 2+
+
+lrcirc.boot(thetarad,theta2rad) # 2
+lr.circaov(thetaall,grps) # 2+
 
 # Parametros de concentracion diferentes
 hetcirc.boot(thetarad,theta2rad) # 2

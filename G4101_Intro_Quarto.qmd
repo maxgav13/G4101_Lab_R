@@ -10,11 +10,13 @@ highlight-style: pygments
 theme: sandstone
 format:
   html:
+    embed-resources: true
     code-fold: true
     code-summary: "Codigo"
     code-tools: true
     html-math-method: katex
-  pdf: default
+  pdf: 
+    prefer-html: false
   docx: default
 # knitr: 
 #   opts_chunk: 
