@@ -33,7 +33,7 @@ execute:
 library(MOTE)
 library(papaja)
 library(gstat)          # geoestadistica
-library(sp)             # objetos espaciales vectoriales
+# library(sp)             # objetos espaciales vectoriales
 library(sf)             # objetos espaciales vectoriales
 library(plotly)         # graficos interactivos
 # library(raster)         # objetos espaciales raster
@@ -162,9 +162,6 @@ datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>%
   mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) %>% 
   select(X, Y, everything())
 datos_sf
-
-# datos_sp = as(datos_sf, 'Spatial')
-# coordnames(datos_sp) = c('X','Y')
 ```
 
 ## Calculo de distancias
@@ -433,16 +430,6 @@ if (isTRUE(transformar)) {
              newdata = datosint2, 
              model = varmod)
 }
-```
-
-```{r}
-#| eval: false
-
-ok_sp = SpatialPixelsDataFrame(points = st_coordinates(ok), 
-                               data = data.frame(ok), 
-                               proj4string = CRS(proj4string(datos_sp)))
-
-ok_sp2 = as(ok,'Spatial')
 ```
 
 ## Mapas de prediccion y desviacion estandar
