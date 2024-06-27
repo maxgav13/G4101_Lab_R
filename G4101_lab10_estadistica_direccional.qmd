@@ -113,18 +113,15 @@ meantrue = ifelse(d == 0, meantrue/2, meantrue)
 
 ```{r}
 (R = sqrt(S^2+C^2)) # resultante
-(Rbar = sqrt(S^2+C^2)/N) # resultante media
+(Rbar = R/N) # resultante media
 (V = 1-Rbar) # varianza circular
 (v = sqrt(-2*log(Rbar))) # desviacion estandar circular
 (k.ml = case_when(Rbar < .53 ~ 2*Rbar + Rbar^3 + 5/6*Rbar^5,
                   Rbar < .85 ~ -.4 + 1.39*Rbar + .43/(1-Rbar),
                   .default = (Rbar^3 - 4*Rbar^2 + 3*Rbar)^(-1)))
-(k = case_when(N > 15 ~ k.ml,
-               k.ml < 2 ~ max(c(k.ml - 2*(N*k.ml)^(-1),0)),
-               .default = (N-1)^3*k.ml/(N^3+N)))
-# (k = ifelse(Rbar<0.65, 
-#             Rbar/6*(12+6*Rbar^2+5*Rbar^4), 
-#             1/(2*(1-Rbar)-(1-Rbar)^2-(1-Rbar)^3)))
+(k.b = case_when(N > 15 ~ k.ml,
+                 k.ml < 2 ~ max(c(k.ml - 2*(N*k.ml)^(-1),0)),
+                 .default = (N-1)^3*k.ml/(N^3+N)))
 ```
 
 ### Prueba de aleatoriedad
@@ -148,10 +145,15 @@ Rbar
 $$H_0: \bar{\theta} = \theta_0$$
 
 ```{r}
+k = k.ml
 a = 0.05
-se = (1/sqrt(N*Rbar*k))
-(cono = asin(se*qnorm(1-a/2))*180/pi)
-# (cono = qnorm(1-a/2)*se)
+se = (1/sqrt(N * Rbar * k))
+cono = asin(se*qnorm(1-a/2))*180/pi
+if (is.na(cono)) {
+  se = (1/sqrt(N * Rbar * k))*180/pi
+  cono = (se*qnorm(1-a/2))
+}
+cono
 cono_sup = meantrue + cono
 cono_inf = meantrue - cono
 cono_inf; meantrue; cono_sup
@@ -256,8 +258,12 @@ r.test(theta,degree = T)
 ### Prueba de tendencia
 
 ```{r}
-theta.ci = vm.bootstrap.ci(thetarad, bias = F, alpha = a)
-deg(theta.ci$mu.ci)
+samp.ci = vm.bootstrap.ci(thetarad, bias = F, alpha = a)
+theta.ci = deg(samp.ci$mu.ci)
+kappa.ci = samp.ci$kappa.ci
+theta.ci = ifelse(theta.ci < 0, theta.ci+360, theta.ci)
+theta.ci
+kappa.ci
 ```
 
 ### Varios en una
