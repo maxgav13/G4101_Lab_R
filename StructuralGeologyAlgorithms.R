@@ -123,7 +123,7 @@ GreatCircleD = function (strike, dip, wulff = F) {
     rtp <- Rotate(tpa[1], tpa[2], rot[i], trd, plg, "a")
     out[i, ] <- StCoordLine(rtp[1], rtp[2], wulff = wulff)
   }
-  as_tibble(out) %>% set_names(c('xp','yp') %>% arrange(xp))
+  tibble::as_tibble(out) %>% purrr::set_names(c('xp','yp') %>% dplyr::arrange(xp))
 }
 
 SmallCircle = function (trda, plga, coneAngle, wulff = F) {
@@ -186,7 +186,7 @@ SmallCircleD = function (trda, plga, coneAngle, wulff = F) {
                                         wulff = wulff))
     }
   }
-  list(path1 = as_tibble(path1), path2 = as_tibble(path2))
+  list(path1 = tibble::as_tibble(path1), path2 = tibble::as_tibble(path2))
 }
 
 Rotate = function (raz, rdip, rot, trd, plg, ans0) {
@@ -284,7 +284,7 @@ StCoordLineD = function (trd, plg, wulff = F) {
     }
   }
   
-  tibble(xp, yp)
+  tibble::tibble(xp, yp)
 }
 
 StPointD = function (az, iang) {
@@ -595,15 +595,15 @@ dir_3D_eigen = function(trd, plg, a = .05,
     DD[2,r] = 90-TP[2,r]
   }
   
-  STATS = tibble(trd = res[1], 
-                 plg = res[2], 
-                 dir = mean_dir,
-                 dip = mean_dip,
-                 R = R0,
-                 Rbar = Rbar, 
-                 kappa = conc, 
-                 cone = cono,
-                 N = N)
+  STATS = tibble::tibble(trd = res[1], 
+                         plg = res[2], 
+                         dir = mean_dir,
+                         dip = mean_dip,
+                         R = R0,
+                         Rbar = Rbar, 
+                         kappa = conc, 
+                         cone = cono,
+                         N = N)
   
   trd.plot = ifelse(STATS$plg < 0, 
                     ifelse(STATS$trd>180, 
@@ -612,17 +612,17 @@ dir_3D_eigen = function(trd, plg, a = .05,
                     STATS$trd)
   plg.plot = ifelse(STATS$plg < 0, -STATS$plg, STATS$plg)
   
-  PGR = tibble(P = s[1]-s[2], G = 2*(s[2]-s[3]), R = 3*s[3], B = 1-R,
-               s1.s2 = s[1]/s[2], s1.s3 = s[1]/s[3], s2.s3 = s[2]/s[3],
-               r1 = log(s2.s3), r2 = log(s1.s2),
-               K = r2/r1, C = log(s1.s3),
-               I = sum((s-1/3)^2)*15/2, D = sqrt(sum((s-1/3)^2)*3/2))
+  PGR = tibble::tibble(P = s[1]-s[2], G = 2*(s[2]-s[3]), R = 3*s[3], B = 1-R,
+                       s1.s2 = s[1]/s[2], s1.s3 = s[1]/s[3], s2.s3 = s[2]/s[3],
+                       r1 = log(s2.s3), r2 = log(s1.s2),
+                       K = r2/r1, C = log(s1.s3),
+                       I = sum((s-1/3)^2)*15/2, D = sqrt(sum((s-1/3)^2)*3/2))
   
-  STATS2 = tibble(V1_cone = cone.1, 
-                  V2_cone = cone.2,
-                  V3_cone = cone.3, 
-                  k_bipolar = conc.wb, 
-                  k_girdle = conc.wg)
+  STATS2 = tibble::tibble(V1_cone = cone.1, 
+                          V2_cone = cone.2,
+                          V3_cone = cone.3, 
+                          k_bipolar = conc.wb, 
+                          k_girdle = conc.wg)
   
   STATS3 = data.frame(V1 = c(k1,betas.v1),
                       V2 = c(k2,betas.v2),
@@ -630,78 +630,78 @@ dir_3D_eigen = function(trd, plg, a = .05,
     round(3) %>% 
     `row.names<-`(c('kappa','max ellipse','min ellipse'))
   
-  eigenplot = ggplot(tibble(r1=PGR$r1,r2=PGR$r2),aes(r1,r2)) + 
-    geom_abline(slope = c(.2,.5,.8,2,5),intercept = 0,
-                col='purple',linewidth=.2,linetype=2) + 
-    geom_abline(slope = -1,intercept = c(2,4,6),
-                col='darkgreen',linewidth=.2,linetype=2) + 
-    geom_abline(slope = 1,intercept = 0,col='red') + 
-    geom_point(col='dodgerblue',size=2) + 
-    labs(x = expression(log(s[2]/s[3])), y = expression(log(s[1]/s[2]))) +
-    coord_fixed(xlim = c(0,ceiling(max(PGR[,c('r1','r2')])*1.1)),
-                ylim = c(0,ceiling(max(PGR[,c('r1','r2')])*1.1)),
-                expand = F) +
-    theme_bw()
+  eigenplot = ggplot2::ggplot(tibble::tibble(r1=PGR$r1,r2=PGR$r2),aes(r1,r2)) + 
+    ggplot2::geom_abline(slope = c(.2,.5,.8,2,5),intercept = 0,
+                         col='purple',linewidth=.2,linetype=2) + 
+    ggplot2::geom_abline(slope = -1,intercept = c(2,4,6),
+                         col='darkgreen',linewidth=.2,linetype=2) + 
+    ggplot2::geom_abline(slope = 1,intercept = 0,col='red') + 
+    ggplot2::geom_point(col='dodgerblue',size=2) + 
+    ggplot2::labs(x = expression(log(s[2]/s[3])), y = expression(log(s[1]/s[2]))) +
+    ggplot2::coord_fixed(xlim = c(0,ceiling(max(PGR[,c('r1','r2')])*1.1)),
+                         ylim = c(0,ceiling(max(PGR[,c('r1','r2')])*1.1)),
+                         expand = F) +
+    ggplot2::theme_bw()
   
-  pgrplot = ggtern(PGR,aes(R,P,G)) + 
-    geom_point(col='dodgerblue',size=2) +
-    theme_bw() + 
-    theme_tropical() +
-    theme_arrowdefault() + 
-    theme_showgrid() + 
-    theme_clockwise() +
-    theme_rotate()
+  pgrplot = ggter::ggtern(PGR,aes(R,P,G)) + 
+    ggplot2::geom_point(col='dodgerblue',size=2) +
+    ggplot2::theme_bw() + 
+    ggter::theme_tropical() +
+    ggter::theme_arrowdefault() + 
+    ggter::theme_showgrid() + 
+    ggter::theme_clockwise() +
+    ggter::theme_rotate()
   
   if (any(plot == 'all')) {
     stereoplot = ggstereo + 
       # geom_point(aes(x,y),StPointD(d,90-i),size=2,alpha=.5) + 
-      geom_point(aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(trd.plot,plg.plot,cono) %>% 
-                  bind_rows(.id = 'path'),col='gold') +
-      geom_point(aes(x,y),StPointD(trd.plot,90-plg.plot),
-                 col='gold',size=3,alpha=.7,shape=8,stroke=.75) + 
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(TP[1,1],TP[2,1],cone.1) %>% 
-                  bind_rows(.id = 'path'),col='red') +
-      geom_point(aes(x,y),StPointD(TP[1,1],90-TP[2,1]),
-                 col='red',size=3,alpha=.7,shape=8,stroke=.75) + 
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(TP[1,2],TP[2,2],cone.2) %>% 
-                  bind_rows(.id = 'path'),col='green3') +
-      geom_point(aes(x,y),StPointD(TP[1,2],90-TP[2,2]),
-                 col='green3',size=3,alpha=.7,shape=8,stroke=.75) + 
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(TP[1,3],TP[2,3],cone.3) %>% 
-                  bind_rows(.id = 'path'),col='blue') +
-      geom_point(aes(x,y),StPointD(TP[1,3],90-TP[2,3]),
-                 col='blue',size=3,alpha=.7,shape=8,stroke=.75)
+      ggplot2::geom_point(aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(trd.plot,plg.plot,cono) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='gold') +
+      ggplot2::geom_point(aes(x,y),StPointD(trd.plot,90-plg.plot),
+                          col='gold',size=3,alpha=.7,shape=8,stroke=.75) + 
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(TP[1,1],TP[2,1],cone.1) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='red') +
+      ggplot2::geom_point(aes(x,y),StPointD(TP[1,1],90-TP[2,1]),
+                          col='red',size=3,alpha=.7,shape=8,stroke=.75) + 
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(TP[1,2],TP[2,2],cone.2) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='green3') +
+      ggplot2::geom_point(aes(x,y),StPointD(TP[1,2],90-TP[2,2]),
+                          col='green3',size=3,alpha=.7,shape=8,stroke=.75) + 
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(TP[1,3],TP[2,3],cone.3) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='blue') +
+      ggplot2::geom_point(aes(x,y),StPointD(TP[1,3],90-TP[2,3]),
+                          col='blue',size=3,alpha=.7,shape=8,stroke=.75)
   } else if (plot == 'eig') {
     stereoplot = ggstereo + 
-      geom_point(aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(TP[1,1],TP[2,1],cone.1) %>% 
-                  bind_rows(.id = 'path'),col='red') +
-      geom_point(aes(x,y),StPointD(TP[1,1],90-TP[2,1]),
-                 col='red',size=3,alpha=.7,shape=8,stroke=.75) + 
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(TP[1,2],TP[2,2],cone.2) %>% 
-                  bind_rows(.id = 'path'),col='green3') +
-      geom_point(aes(x,y),StPointD(TP[1,2],90-TP[2,2]),
-                 col='green3',size=3,alpha=.7,shape=8,stroke=.75) + 
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(TP[1,3],TP[2,3],cone.3) %>% 
-                  bind_rows(.id = 'path'),col='blue') +
-      geom_point(aes(x,y),StPointD(TP[1,3],90-TP[2,3]),
-                 col='blue',size=3,alpha=.7,shape=8,stroke=.75)
+      ggplot2::geom_point(aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(TP[1,1],TP[2,1],cone.1) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='red') +
+      ggplot2::geom_point(aes(x,y),StPointD(TP[1,1],90-TP[2,1]),
+                          col='red',size=3,alpha=.7,shape=8,stroke=.75) + 
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(TP[1,2],TP[2,2],cone.2) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='green3') +
+      ggplot2::geom_point(aes(x,y),StPointD(TP[1,2],90-TP[2,2]),
+                          col='green3',size=3,alpha=.7,shape=8,stroke=.75) + 
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(TP[1,3],TP[2,3],cone.3) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='blue') +
+      ggplot2::geom_point(aes(x,y),StPointD(TP[1,3],90-TP[2,3]),
+                          col='blue',size=3,alpha=.7,shape=8,stroke=.75)
   } else if (plot == 'mean') {
     stereoplot = ggstereo + 
-      geom_point(aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(trd.plot,plg.plot,cono) %>% 
-                  bind_rows(.id = 'path'),col='gold') +
-      geom_point(aes(x,y),StPointD(trd.plot,90-plg.plot),
-                 col='gold',size=3,alpha=.7,shape=8,stroke=.75)
+      ggplot2::geom_point(aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(trd.plot,plg.plot,cono) %>% 
+                           dplyr::bind_rows(.id = 'path'),col='gold') +
+      ggplot2::geom_point(aes(x,y),StPointD(trd.plot,90-plg.plot),
+                          col='gold',size=3,alpha=.7,shape=8,stroke=.75)
   }
   
   if (any(results == 'basic')) {
@@ -719,7 +719,7 @@ dir_3D_eigen = function(trd, plg, a = .05,
                    orientation_matrix = O,
                    trend_plunge = TP, 
                    dir_dip = DD, 
-                   vector_stats = bind_cols(STATS,x=xh,y=yh,z=zh), 
+                   vector_stats = dplyr::bind_cols(STATS,x=xh,y=yh,z=zh), 
                    axis_stats_watson = STATS2,
                    axis_stats_bingham = STATS3,
                    PointGirdleRandom = PGR,
@@ -750,7 +750,7 @@ dir_sph_ax_aov = function(trd, plg, grp, a = .05,
   d.plot = ifelse(i < 0, ifelse(d+180 > 360, d-180, d+180), d)
   i.plot = ifelse(i < 0, -i, i)
   dat.plot = StCoordLineD(d.plot,i.plot) %>% 
-    mutate(grp=grp)
+    dplyr::mutate(grp=grp)
   
   N = length(trd)
   drad = d * pi/180
@@ -764,12 +764,12 @@ dir_sph_ax_aov = function(trd, plg, grp, a = .05,
   axial_pooled = suppressMessages(dir_3D_eigen(dat.df$d,dat.df$i,a = a))
   
   dat.df.g = dat.df %>% 
-    nest_by(grp) %>% 
-    mutate(N = nrow(data),
-           tau = list(suppressMessages(dir_3D_eigen(data$d,data$i)$eigen_values[1,])),
-           tauh = list(suppressMessages(dir_3D_eigen(data$d,data$i)$eigen_values[2,])),
-           tp = list(suppressMessages(dir_3D_eigen(data$d,data$i,a=a)$trend_plunge)),
-           axc = list(suppressMessages(dir_3D_eigen(data$d,data$i,a=a)$axis_stats_watson)))
+    dplyr::nest_by(grp) %>% 
+    dplyr::mutate(N = nrow(data),
+                  tau = list(suppressMessages(dir_3D_eigen(data$d,data$i)$eigen_values[1,])),
+                  tauh = list(suppressMessages(dir_3D_eigen(data$d,data$i)$eigen_values[2,])),
+                  tp = list(suppressMessages(dir_3D_eigen(data$d,data$i,a=a)$trend_plunge)),
+                  axc = list(suppressMessages(dir_3D_eigen(data$d,data$i,a=a)$axis_stats_watson)))
   
   a11 = sum(x^2)
   a12 = sum(x * y)
@@ -791,40 +791,40 @@ dir_sph_ax_aov = function(trd, plg, grp, a = .05,
   names(eigvec) = c("V1", "V2", "V3")
   row.names(eigvec) = c("x", "y", "z")
   
-  PGR = tibble(P = s[1]-s[2], G = 2*(s[2]-s[3]), 
-               R = 3*s[3], B = 1-R)
+  PGR = tibble::tibble(P = s[1]-s[2], G = 2*(s[2]-s[3]), 
+                       R = 3*s[3], B = 1-R)
   
   if (PGR$P > PGR$G) {
     sig_c = (cosines %*% eigvec[,1] %>% .^4 %>% sum())/nrow(cosines)
     g = 2*(s[1]-sig_c)/(3*s[1]-1)
-    Nr = (((dat.df.g$tau %>% bind_rows() %>% pull(V1) %>% sum()) - 
-            eigval$lambda[1])/g) %>% abs()
-    tp.g = dat.df.g$tp %>% map(~.x[,1]) %>% bind_rows() %>% 
-      mutate(cone = dat.df.g$axc %>% map(~.x[,1]) %>% 
-               bind_rows() %>% pull(),
-             k = dat.df.g$axc %>% map(~.x[,4]) %>% 
-               bind_rows() %>% pull(),
-             lambda = dat.df.g$tau %>% bind_rows() %>% pull(V1),
-             S = dat.df.g$tauh %>% bind_rows() %>% pull(V1),
-             grp = dat.df.g$grp,
-             n = dat.df.g$N) %>% 
-      relocate(grp,n)
+    Nr = (((dat.df.g$tau %>% dplyr::bind_rows() %>% dplyr::pull(V1) %>% sum()) - 
+             eigval$lambda[1])/g) %>% abs()
+    tp.g = dat.df.g$tp %>% purrr::map(~.x[,1]) %>% dplyr::bind_rows() %>% 
+      dplyr::mutate(cone = dat.df.g$axc %>% purrr::map(~.x[,1]) %>% 
+                      dplyr::bind_rows() %>% dplyr::pull(),
+                    k = dat.df.g$axc %>% purrr::map(~.x[,4]) %>% 
+                      dplyr::bind_rows() %>% dplyr::pull(),
+                    lambda = dat.df.g$tau %>% dplyr::bind_rows() %>% dplyr::pull(V1),
+                    S = dat.df.g$tauh %>% dplyr::bind_rows() %>% dplyr::pull(V1),
+                    grp = dat.df.g$grp,
+                    n = dat.df.g$N) %>% 
+      dplyr::relocate(grp,n)
     axist = 'Principal'
   } else {
     sig_c = (cosines %*% eigvec[,3] %>% .^4 %>% sum())/nrow(cosines)
     g = 2*(s[3]-sig_c)/(1-3*s[3])
-    Nr = (((dat.df.g$tau %>% bind_rows() %>% pull(V3) %>% sum()) - 
-            eigval$lambda[3])/g) %>% abs()
-    tp.g = dat.df.g$tp %>% map(~.x[,3]) %>% bind_rows() %>% 
-      mutate(cone = dat.df.g$axc %>% map(~.x[,3]) %>% 
-               bind_rows() %>% pull(),
-             k = dat.df.g$axc %>% map(~.x[,5]) %>% 
-               bind_rows() %>% pull(),
-             lambda = dat.df.g$tau %>% bind_rows() %>% pull(V3),
-             S = dat.df.g$tauh %>% bind_rows() %>% pull(V3),
-             grp = dat.df.g$grp,
-             n = dat.df.g$N) %>% 
-      relocate(grp,n)
+    Nr = (((dat.df.g$tau %>% dplyr::bind_rows() %>% dplyr::pull(V3) %>% sum()) - 
+             eigval$lambda[3])/g) %>% abs()
+    tp.g = dat.df.g$tp %>% purrr::map(~.x[,3]) %>% dplyr::bind_rows() %>% 
+      dplyr::mutate(cone = dat.df.g$axc %>% purrr::map(~.x[,3]) %>% 
+                      dplyr::bind_rows() %>% dplyr::pull(),
+                    k = dat.df.g$axc %>% purrr::map(~.x[,5]) %>% 
+                      dplyr::bind_rows() %>% dplyr::pull(),
+                    lambda = dat.df.g$tau %>% dplyr::bind_rows() %>% dplyr::pull(V3),
+                    S = dat.df.g$tauh %>% dplyr::bind_rows() %>% dplyr::pull(V3),
+                    grp = dat.df.g$grp,
+                    n = dat.df.g$N) %>% 
+      dplyr::relocate(grp,n)
     axist = 'Polar'
   }
   
@@ -834,7 +834,7 @@ dir_sph_ax_aov = function(trd, plg, grp, a = .05,
   if (Nr < chi.crit) {
     q = asin(sqrt(chi.crit)*sqrt(g/(2*N)))*180/pi
     statement = paste('Samples come from a distribution with common',
-                      str_to_lower(axist),'axis')
+                      stringr::str_to_lower(axist),'axis')
   } else {
     statement = paste(axist,'axis differ between samples')
   }
@@ -854,54 +854,54 @@ dir_sph_ax_aov = function(trd, plg, grp, a = .05,
   }
   
   eig.plot = tp.g %>% 
-    mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
-                                        trd-180,trd+180),trd),
-           plg = ifelse(plg < 0, -plg,plg)) %>% 
+    dplyr::mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
+                                               trd-180,trd+180),trd),
+                  plg = ifelse(plg < 0, -plg,plg)) %>% 
     with(StCoordLineD(trd,plg)) %>% 
-    mutate(grp=tp.g$grp)
+    dplyr::mutate(grp=tp.g$grp)
   
   eig.cone.plot = tp.g %>% 
-    mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
-                                        trd-180,trd+180),trd),
-           plg = ifelse(plg < 0, -plg,plg)) %>% 
-    rowwise() %>% 
-    mutate(sc = list(SmallCircleD(trd,plg,cone) %>%
-                       bind_rows(.id = 'path'))) %>% 
-    unnest(sc) %>% 
-    mutate(path = paste0(path,grp))
+    dplyr::mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
+                                               trd-180,trd+180),trd),
+                  plg = ifelse(plg < 0, -plg,plg)) %>% 
+    dplyr::rowwise() %>% 
+    dplyr::mutate(sc = list(SmallCircleD(trd,plg,cone) %>%
+                              dplyr::bind_rows(.id = 'path'))) %>% 
+    tidyr::unnest(sc) %>% 
+    dplyr::mutate(path = paste0(path,grp))
   
-  pgrplot = ggtern(PGR,aes(R,P,G)) + 
-    geom_point(col='dodgerblue',size=2) +
-    theme_bw() + 
-    theme_tropical() +
-    theme_arrowdefault() + 
-    theme_showgrid() + 
-    theme_clockwise() +
-    theme_rotate()
+  pgrplot = ggter::ggtern(PGR,aes(R,P,G)) + 
+    ggplot2::geom_point(col='dodgerblue',size=2) +
+    ggplot2::theme_bw() + 
+    ggter::theme_tropical() +
+    ggter::theme_arrowdefault() + 
+    ggter::theme_showgrid() + 
+    ggter::theme_clockwise() +
+    ggter::theme_rotate()
   
   if (all(PGR$R > c(PGR$P, PGR$G))) {
     stereoplot = ggstereo + 
-      geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
-      scale_color_brewer(palette = 'Dark2')
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
+      ggplot2::scale_color_brewer(palette = 'Dark2')
   } else if (Nr < chi.crit) {
     stereoplot = ggstereo + 
-      geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
-      geom_path(aes(xp,yp,col=grp,group=path),eig.cone.plot) +
-      geom_point(aes(xp,yp,col=grp,shape=grp),eig.plot,
-                 size=4,alpha=.7) +
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(axial_axis[[1]],axial_axis[[2]],q) %>%
-                  bind_rows(.id = 'path'),col=axial_col) +
-      geom_point(aes(xp,yp),StCoordLineD(axial_axis[[1]],axial_axis[[2]]),
-                 size=4,alpha=.7,col=axial_col,shape=8,stroke=.75) +
-      scale_color_brewer(palette = 'Dark2')
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
+      ggplot2::geom_path(aes(xp,yp,col=grp,group=path),eig.cone.plot) +
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),eig.plot,
+                          size=4,alpha=.7) +
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(axial_axis[[1]],axial_axis[[2]],q) %>%
+                           dplyr::bind_rows(.id = 'path'),col=axial_col) +
+      ggplot2::geom_point(aes(xp,yp),StCoordLineD(axial_axis[[1]],axial_axis[[2]]),
+                          size=4,alpha=.7,col=axial_col,shape=8,stroke=.75) +
+      ggplot2::scale_color_brewer(palette = 'Dark2')
   } else {
     stereoplot = ggstereo + 
-      geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
-      geom_path(aes(xp,yp,col=grp,group=path),eig.cone.plot) +
-      geom_point(aes(xp,yp,col=grp,shape=grp),eig.plot,
-                 size=4,alpha=.7) +
-      scale_color_brewer(palette = 'Dark2')
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
+      ggplot2::geom_path(aes(xp,yp,col=grp,group=path),eig.cone.plot) +
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),eig.plot,
+                          size=4,alpha=.7) +
+      ggplot2::scale_color_brewer(palette = 'Dark2')
   }
   
   
@@ -925,28 +925,28 @@ dir_sph_ax_aov = function(trd, plg, grp, a = .05,
         PGR = PGR,
         statement = statement,
         axial_g = tp.g,
-        axial_res = tibble(sigma = sig_c, g = g, 
-                           Nr = Nr, p.value = pchisq(Nr,v,lower.tail = F),
-                           trd = axial_axis[[1]], 
-                           plg = axial_axis[[2]],
-                           cone = q,
-                           k = k,
-                           lambda = tau,
-                           S = tauh)
+        axial_res = tibble::tibble(sigma = sig_c, g = g, 
+                                   Nr = Nr, p.value = pchisq(Nr,v,lower.tail = F),
+                                   trd = axial_axis[[1]], 
+                                   plg = axial_axis[[2]],
+                                   cone = q,
+                                   k = k,
+                                   lambda = tau,
+                                   S = tauh)
       )
     } else if (results == 'full') {
       res.lst = list(
         PGR = PGR,
         statement = statement,
         axial_g = tp.g,
-        axial_res = tibble(sigma = sig_c, g = g, 
-                           Nr = Nr, p.value = pchisq(Nr,v,lower.tail = F),
-                           trd = axial_axis[[1]], 
-                           plg = axial_axis[[2]],
-                           cone = q,
-                           k = k,
-                           lambda = tau,
-                           S = tauh),
+        axial_res = tibble::tibble(sigma = sig_c, g = g, 
+                                   Nr = Nr, p.value = pchisq(Nr,v,lower.tail = F),
+                                   trd = axial_axis[[1]], 
+                                   plg = axial_axis[[2]],
+                                   cone = q,
+                                   k = k,
+                                   lambda = tau,
+                                   S = tauh),
         pgrplot = pgrplot,
         stereoplot = stereoplot
       )
@@ -959,22 +959,22 @@ dir_sph_ax_aov = function(trd, plg, grp, a = .05,
         PGR = PGR,
         statement = statement,
         axial_g = tp.g,
-        axial_res = tibble(sigma = sig_c, g = g, Nr = Nr,
-                           p.value = pchisq(Nr,v,lower.tail = F),
-                           # k = k,
-                           lambda = tau,
-                           S = tauh)
+        axial_res = tibble::tibble(sigma = sig_c, g = g, Nr = Nr,
+                                   p.value = pchisq(Nr,v,lower.tail = F),
+                                   # k = k,
+                                   lambda = tau,
+                                   S = tauh)
       )  
     } else if (results == 'full') {
       res.lst = list(
         PGR = PGR,
         statement = statement,
         axial_g = tp.g,
-        axial_res = tibble(sigma = sig_c, g = g, Nr = Nr,
-                           p.value = pchisq(Nr,v,lower.tail = F),
-                           # k = k,
-                           lambda = tau,
-                           S = tauh),
+        axial_res = tibble::tibble(sigma = sig_c, g = g, Nr = Nr,
+                                   p.value = pchisq(Nr,v,lower.tail = F),
+                                   # k = k,
+                                   lambda = tau,
+                                   S = tauh),
         pgrplot = pgrplot,
         stereoplot = stereoplot
       )  
@@ -1007,16 +1007,16 @@ dir_sph_vc_aov = function(trd, plg, grp, a = .05,
   N = length(trd)
   
   dat.plot = StCoordLineD(d.plot,i.plot) %>% 
-    mutate(grp=grp)
+    dplyr::mutate(grp=grp)
   
   dat.df = data.frame(d,i,grp=grp) 
   
   vector_pooled = suppressMessages(dir_3D_eigen(dat.df$d,dat.df$i,a = a))
   
   dat.vec.aov = dat.df %>% 
-    nest_by(grp) %>% 
-    mutate(cosines = list(with(data,SphToCartD(d,i,0) %>% 
-                                 as_tibble())),
+    dplyr::nest_by(grp) %>% 
+    dplyr::mutate(cosines = list(with(data,SphToCartD(d,i,0) %>% 
+                                        tibble::as_tibble())),
            N = nrow(data),
            R = with(cosines,sqrt(sum(cn)^2+sum(ce)^2+sum(cd)^2)),
            Rbar = R/N,
@@ -1028,36 +1028,36 @@ dir_sph_vc_aov = function(trd, plg, grp, a = .05,
                              .^2 %>% sum())/N)/(N*(R/N)^2)),
            mean = list(CartToSphD(xh,yh,zh)),
            cone = asin(sqrt(-log(a))*sigc)*180/pi) %>% 
-    unnest_wider(mean) %>% 
-    select(-c(data,cosines)) %>% 
-    ungroup()
+    tidyr::unnest_wider(mean) %>% 
+    dplyr::select(-c(data,cosines)) %>% 
+    dplyr::ungroup()
   
   vec_res = dat.vec.aov %>% 
-    summarise(x = sum(xh/sigc^2),
-              y = sum(yh/sigc^2),
-              z = sum(zh/sigc^2),
-              s = sum(1/sigc^2),
-              df = 2*nrow(.)-2) %>% 
-    summarise(Nr = abs(4*(s-sqrt(x^2+y^2+z^2))),
-              df = df,
-              p.value = pchisq(Nr,df,lower.tail = F))
+    dplyr::summarise(x = sum(xh/sigc^2),
+                     y = sum(yh/sigc^2),
+                     z = sum(zh/sigc^2),
+                     s = sum(1/sigc^2),
+                     df = 2*nrow(.)-2) %>% 
+    dplyr::summarise(Nr = abs(4*(s-sqrt(x^2+y^2+z^2))),
+                     df = df,
+                     p.value = pchisq(Nr,df,lower.tail = F))
   
   vec.plot = dat.vec.aov %>% 
-    mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
-                                        trd-180,trd+180),trd),
-           plg = ifelse(plg < 0, -plg,plg)) %>% 
+    dplyr::mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
+                                               trd-180,trd+180),trd),
+                  plg = ifelse(plg < 0, -plg,plg)) %>% 
     with(StCoordLineD(trd,plg)) %>% 
-    mutate(grp=dat.vec.aov$grp)
+    dplyr::mutate(grp=dat.vec.aov$grp)
   
   vec.cone.plot = dat.vec.aov %>% 
-    mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
-                                        trd-180,trd+180),trd),
-           plg = ifelse(plg < 0, -plg,plg)) %>% 
-    rowwise() %>% 
-    mutate(sc = list(SmallCircleD(trd,plg,cone) %>%
-                       bind_rows(.id = 'path'))) %>% 
-    unnest(sc) %>% 
-    mutate(path = paste0(path,grp))
+    dplyr::mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
+                                               trd-180,trd+180),trd),
+                  plg = ifelse(plg < 0, -plg,plg)) %>% 
+    dplyr::rowwise() %>% 
+    dplyr::mutate(sc = list(SmallCircleD(trd,plg,cone) %>%
+                              dplyr::bind_rows(.id = 'path'))) %>% 
+    tidyr::unnest(sc) %>% 
+    dplyr::mutate(path = paste0(path,grp))
   
   v = 2*nrow(dat.vec.aov)-2
   chi.crit = qchisq(1-a,v)
@@ -1065,9 +1065,9 @@ dir_sph_vc_aov = function(trd, plg, grp, a = .05,
   if (vec_res$Nr < chi.crit) {
     q = vector_pooled$vector_stats
     q2 = q %>% 
-      mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
-                                          trd-180,trd+180),trd),
-             plg = ifelse(plg < 0, -plg,plg))
+      dplyr::mutate(trd = ifelse(plg < 0, ifelse(trd+180 > 360,
+                                                 trd-180,trd+180),trd),
+                    plg = ifelse(plg < 0, -plg,plg))
     statement = 'Samples come from a distribution with common mean direction'
   } else {
     statement = 'Mean direction differ between samples'
@@ -1075,37 +1075,37 @@ dir_sph_vc_aov = function(trd, plg, grp, a = .05,
   
   if (vec_res$Nr < chi.crit) {
     stereoplot = ggstereo + 
-      geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
-      geom_path(aes(xp,yp,col=grp,group=path),vec.cone.plot) +
-      geom_point(aes(xp,yp,col=grp,shape=grp),vec.plot,
-                 size=4,alpha=.7) +
-      geom_path(aes(xp,yp,group=path),
-                SmallCircleD(q2$trd,q2$plg,q2$cone) %>%
-                  bind_rows(.id = 'path'),col='gold') +
-      geom_point(aes(xp,yp),StCoordLineD(q2$trd,q2$plg),
-                 size=4,alpha=.7,col='gold',shape=8,stroke=.75) +
-      scale_color_brewer(palette = 'Dark2')
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
+      ggplot2::geom_path(aes(xp,yp,col=grp,group=path),vec.cone.plot) +
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),vec.plot,
+                          size=4,alpha=.7) +
+      ggplot2::geom_path(aes(xp,yp,group=path),
+                         SmallCircleD(q2$trd,q2$plg,q2$cone) %>%
+                           dplyr::bind_rows(.id = 'path'),col='gold') +
+      ggplot2::geom_point(aes(xp,yp),StCoordLineD(q2$trd,q2$plg),
+                          size=4,alpha=.7,col='gold',shape=8,stroke=.75) +
+      ggplot2::scale_color_brewer(palette = 'Dark2')
   } else {
     stereoplot = ggstereo + 
-      geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
-      geom_path(aes(xp,yp,col=grp,group=path),vec.cone.plot) +
-      geom_point(aes(xp,yp,col=grp,shape=grp),vec.plot,
-                 size=4,alpha=.7) +
-      scale_color_brewer(palette = 'Dark2')
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
+      ggplot2::geom_path(aes(xp,yp,col=grp,group=path),vec.cone.plot) +
+      ggplot2::geom_point(aes(xp,yp,col=grp,shape=grp),vec.plot,
+                          size=4,alpha=.7) +
+      ggplot2::scale_color_brewer(palette = 'Dark2')
   }
   
   if (vec_res$Nr < chi.crit) {
     if (any(results == 'basic')) {
       res.lst = list(
         statement = statement,
-        vector_g = dat.vec.aov %>% select(-ends_with('h')),
-        vector_res = bind_cols(vec_res,q)
+        vector_g = dat.vec.aov %>% dplyr::select(-ends_with('h')),
+        vector_res = dplyr::bind_cols(vec_res,q)
       )  
     } else if (results == 'full') {
       res.lst = list(
         statement = statement,
-        vector_g = dat.vec.aov %>% select(-ends_with('h')),
-        vector_res = bind_cols(vec_res,q),
+        vector_g = dat.vec.aov %>% dplyr::select(-ends_with('h')),
+        vector_res = dplyr::bind_cols(vec_res,q),
         stereoplot = stereoplot
       )  
     }
@@ -1113,13 +1113,13 @@ dir_sph_vc_aov = function(trd, plg, grp, a = .05,
     if (any(results == 'basic')) {
       res.lst = list(
         statement = statement,
-        vector_g = dat.vec.aov %>% select(-ends_with('h')),
+        vector_g = dat.vec.aov %>% dplyr::select(-ends_with('h')),
         vector_res = vec_res
       )  
     } else if (results == 'full') {
       res.lst = list(
         statement = statement,
-        vector_g = dat.vec.aov %>% select(-ends_with('h')),
+        vector_g = dat.vec.aov %>% dplyr::select(-ends_with('h')),
         vector_res = vec_res,
         stereoplot = stereoplot
       )  
