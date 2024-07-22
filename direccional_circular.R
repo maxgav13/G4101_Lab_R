@@ -8,9 +8,8 @@ a = .05
 
 datos.res = Directional::circ.summary(datos)
 
-# circular dispersion
+# circular dispersion & confidence cone
 
-# rho_2 = sum(cos(rad(2*(datos-datos.res$mesos))))/length(datos)
 tm1 = trig.moment(rad(datos),p = 1)
 tm2 = trig.moment(rad(datos),p = 2)
 (delta_c = (1-tm2[[2]])/(2*tm1[[2]]^2))
@@ -26,6 +25,23 @@ if (Rbar < 2/3) {
                  exp(qchisq(1-a,1)/N))/R)*180/pi
 }
 
+# test for equal direction
+
+theta = fisherB13$set10
+theta2 = fisherB13$set1
+
+c.1 = cos(rad(172.5))/(1/sqrt(50*.95*9.8))^2
+c.2 = cos(rad(180.6))/(1/sqrt(100*.72*2.1))^2
+
+s.1 = sin(rad(172.5))/(1/sqrt(50*.95*9.8))^2
+s.2 = sin(rad(180.6))/(1/sqrt(100*.72*2.1))^2
+
+(RM = sqrt((c.1+c.2)^2 + (s.1+s.2)^2))
+
+(Y.r = 2*((50*.95*9.8 + 100*.72*2.1) - RM))
+
+# test for equal kappa
+
 theta = fisherB13$set14
 theta2 = fisherB13$set5
 
@@ -38,9 +54,196 @@ d.2 = abs(sin(rad(theta2-173)))
 (d.hat = c(d.1.hat*length(theta) + d.2.hat*length(theta2))/
   c(length(theta)+length(theta2)))
 
-((c(length(theta)+length(theta2))-2)*sum(c(length(theta)*(d.1.hat-d.hat)^2, 
-                                           length(theta2)*(d.2.hat-d.hat)^2))) /
+(f.r = (c(length(theta)+length(theta2))-2)*
+    sum(c(length(theta)*(d.1.hat-d.hat)^2, 
+          length(theta2)*(d.2.hat-d.hat)^2))) /
   ((2-1)*(sum(c(sum((d.1-d.1.hat)^2), sum((d.2-d.2.hat)^2)))))
+
+#
+
+dir_stats_circ = function (x, data = NULL, dir = 1, conf.level = 0.95) {
+  
+  if (is.null(data)) {
+    theta = x
+  } else {
+    theta = data %>% dplyr::pull({{x}})
+  }
+  
+  N = length(theta)
+  
+  circ_disp = function(theta) {
+    thetarad = theta*pi/180
+    tm1 = CircStats::trig.moment(thetarad,p = 1)
+    tm2 = CircStats::trig.moment(thetarad,p = 2)
+    delta = (1-tm2[[2]])/(2*tm1[[2]]^2)
+    delta
+  }
+  
+  if (dir == 0) {
+    theta = theta * 2
+  }
+  thetarad = theta * pi/180
+  x = sum(sin(thetarad))
+  y = sum(cos(thetarad))
+  meanrad = atan(x/y)
+  meandeg = meanrad * 180/pi
+  meantrue = dplyr::case_when(
+    x > 0 & y > 0 ~ meandeg,
+    x < 0 & y > 0 ~ meandeg + 360,
+    .default = meandeg + 180
+  )
+  meantrue = ifelse(dir == 0, meantrue/2, meantrue)
+  
+  R = sqrt(x^2+y^2)
+  Rbar = R/N
+  V = 1 - Rbar
+  v = sqrt(-2*log(Rbar))
+  delta = circ_disp(theta)
+  k = dplyr::case_when(Rbar < .53 ~ 2*Rbar + Rbar^3 + 5/6*Rbar^5,
+                       Rbar < .85 ~ -.4 + 1.39*Rbar + .43/(1-Rbar),
+                       .default = (Rbar^3 - 4*Rbar^2 + 3*Rbar)^(-1))
+  
+  a = 1 - conf.level
+  se = (1/sqrt(N * Rbar * k))
+  cono = suppressWarnings(asin(se*stats::qnorm(1-a/2))*180/pi)
+  if (is.na(cono)) {
+    se = (1/sqrt(N * Rbar * k))*180/pi
+    cono = (se*stats::qnorm(1-a/2))
+  }
+  
+  sigma_c = sqrt(delta/N)
+  cone_c = asin(sigma_c*stats::qnorm(1-a/2))*180/pi
+  
+  cono_sup = meantrue + cono
+  cono_inf = meantrue - cono
+  cono_sup = ifelse(cono_sup > 360, cono_sup - 360, cono_sup)
+  cono_inf = ifelse(cono_inf < 0, 360 + cono_inf, cono_inf)
+  
+  dir.stats = data.frame(theta.hat = round(meantrue, 1), 
+                         N = N,
+                         R = signif(R, 4), 
+                         Rbar = signif(Rbar, 4), 
+                         circ.var = signif(V, 4), 
+                         circ.sd = signif(v, 4),
+                         circ.disp = signif(delta, 4),
+                         kappa = signif(k, 4), 
+                         # lower = round(cono_inf, 1), 
+                         # upper = round(cono_sup, 1), 
+                         cone = round(cono, 2)
+                         )
+  return(dir.stats)
+}
+
+rose_diag_circ = function (x, data = NULL, 
+                           width = 20, dir = 1, 
+                           conf.level = 0.95,
+                           alpha = .7,
+                           fill.col = 'blue',
+                           mean.col = 'red') {
+  
+  if (is.null(data)) {
+    x = x
+  } else {
+    x = data %>% dplyr::pull({{x}})
+  }
+  
+  x = ifelse(x > 360, x - 360, x)
+  
+  if (dir == 0) {
+    y = x + 180
+    # y = ifelse(y > 360, y - 360, y)
+    z = c(x, y)
+  } else {
+    z = x
+  }
+  
+  z = ifelse(z > 360, z - 360, z)
+  
+  if (dir == 0) {
+    max.dir = DescTools::Freq(z,seq(0,180,width)) %>% 
+      tibble::tibble() %>% 
+      dplyr::slice_max(perc) %>% 
+      dplyr::slice_head(n = 1) %>% 
+      dplyr::pull(perc, freq) %>%
+      round(3)*100
+  } else {
+    max.dir = DescTools::Freq(x,seq(0,360,width)) %>% 
+      tibble::tibble() %>% 
+      dplyr::slice_max(perc) %>% 
+      dplyr::slice_head(n = 1) %>% 
+      dplyr::pull(perc, freq) %>%
+      round(3)*100
+  }
+  
+  N = length(x)
+  r = suppressWarnings(dir_stats_circ(x, dir = dir, conf.level = conf.level))
+  
+  labelmeandir = bquote("Mean Direction =" ~ .(format(round(r$theta.hat, 1))) * 
+                          # degree * "" %+-% "" * .(format(round(r$cone, 1))) * 
+                          degree ~ ", N =" ~ .(r$N))
+  
+  labelmeandir2 = paste0("Mean Direction =", format(r$theta.hat,1), 
+                         " (", format(round(r$cone, 1)), ")", 
+                         ", N =", r$N)
+  
+  theta.180 = ifelse(r$theta.hat > 180, r$theta.hat - 180, r$theta.hat + 180)
+  
+  theme_rose = theme_bw() + 
+    theme(title = element_text(size = 14), 
+          axis.title.x = element_blank(), 
+          panel.border = element_blank(), 
+          axis.ticks.y = element_blank(), 
+          axis.text.x = element_text(size = 12, face = "plain", 
+                                     hjust = 0.9, vjust = 1.3), 
+          panel.grid.major = element_line(linewidth = 0.3, 
+                                          colour = "grey60"), 
+          panel.grid.minor = element_line(linewidth = 0.1, 
+                                          colour = "grey60"))
+  
+  if (dir == 1) {
+    plt.dirrose <- ggplot(data.frame(z), aes(z)) + 
+      stat_bin(aes(y = sqrt(after_stat(.data$count)/max(after_stat(.data$count)) * 
+                              100^2)), 
+               breaks = seq(0,360,width), 
+               colour = "black",  alpha = alpha,
+               fill = fill.col, closed = "left") + 
+      scale_x_continuous(breaks = seq(0,360,30), 
+                         minor_breaks = seq(0,360,10),
+                         limits = c(0, 360)) + 
+      geom_vline(xintercept = r$theta.hat, 
+                 col = mean.col, 
+                 linewidth = .5) + 
+      scale_y_continuous(NULL, 
+                         breaks = seq(0,100,20), 
+                         labels = NULL) + 
+      labs(title = labelmeandir, 
+           subtitle = paste0('Max. = ',max.dir,'%')) + 
+      coord_radial(expand = F) +
+      theme_rose
+    
+  } else {
+    plt.dirrose <- ggplot(data.frame(z), aes(z)) + 
+      stat_bin(aes(y = sqrt(after_stat(.data$count)/max(after_stat(.data$count)) * 
+                              100^2)), 
+               breaks = seq(0,360,width), 
+               colour = "black", alpha = alpha,
+               fill = fill.col, closed = "left") + 
+      scale_x_continuous(breaks = seq(0,360,30), 
+                         minor_breaks = seq(0,360,10),
+                         limits = c(0, 360)) + 
+      geom_vline(xintercept = c(r$theta.hat, theta.180), 
+                 col = mean.col, 
+                 linewidth = .5) + 
+      scale_y_continuous(NULL, 
+                         breaks = seq(0,100,20), 
+                         labels = NULL) + 
+      labs(title = labelmeandir, 
+           subtitle = paste0('Max. = ',max.dir,'%')) + 
+      coord_radial(expand = F) +
+      theme_rose
+  }
+  return(plt.dirrose)
+}
 
 # pasa a datos circulares
 windc = circular(wind, type='angles',

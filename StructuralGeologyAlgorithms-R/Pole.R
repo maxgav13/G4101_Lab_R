@@ -37,6 +37,7 @@ if (k == 0){
     }
     #Calculate trd1 and make sure it is between 0 and 2*pi
     out[1] <- ZeroTwoPi(dipaz - east)
+    names(out) = c('strike','dip')
 #Else calculate pole given its plane
 } else if (k == 1){
     cned <- SphToCart(trd,plg,k)

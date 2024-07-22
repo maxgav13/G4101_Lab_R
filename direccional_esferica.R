@@ -28,7 +28,12 @@ PGR = tibble(file = as_factor(c('B2','B4','B5','B6',
          s1.s2 = s1/s2, s1.s3 = s1/s3, s2.s3 = s2/s3,
          r1 = log(s2.s3), r2 = log(s1.s2),
          K = r2/r1, C = log(s1.s3),
-         sample = as.factor(1:nrow(.)))
+         sample = as.factor(1:nrow(.))) %>% 
+  rowwise() %>% 
+  mutate(I = sum((c_across(s1:s3)-1/3)^2)*15/2, 
+         D = sqrt(sum((c_across(s1:s3)-1/3)^2)*3/2)) %>% 
+  ungroup() %>% 
+  relocate(I,D,K,C,.after = B)
 PGR
 
 gg_pgr = ggtern(PGR,aes(R,P,G)) + 
@@ -39,7 +44,8 @@ gg_pgr = ggtern(PGR,aes(R,P,G)) +
   theme_arrowdefault() + 
   theme_showgrid() + 
   theme_clockwise() +
-  theme_rotate()
+  theme_rotate() + 
+  theme_hidemask()
 gg_pgr
 
 gg_eigen = ggplot(PGR,aes(r1,r2)) + 
@@ -94,15 +100,7 @@ dat
 
 dat.spher = 
   tibble(trd = c(12,18,22,15,10,20),
-         plg = c(42,40,48,30,42,30)
-         # ,x = cos(circular::rad(plg))*cos(circular::rad(trd)),
-         # y = cos(circular::rad(plg))*sin(circular::rad(trd)),
-         # z = sin(circular::rad(plg))
-         )
-
-# spher.m = dat.spher %>% 
-#   select(x:z) %>% 
-#   as.matrix()
+         plg = c(42,40,48,30,42,30))
 
 spher.tb = with(dat.spher,SphToCartD(trd,plg,0)) %>% 
   as_tibble() %>% 
@@ -188,15 +186,15 @@ if (any(names(dat) %in% 'Dip')) {
     as_tibble() %>% 
     as.matrix()
   
-  V = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir',results = 'full')$eigen_vectors
-  S = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir',results = 'full')$eigen_values[2,]
+  V = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir')$eigen_vectors
+  S = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir')$eigen_values[2,]
 } else if (any(names(dat) %in% 'Trend')) {
   cosines = SphToCartD(dat$Trend,dat$Plunge,0) %>% 
     as_tibble() %>% 
     as.matrix()
   
-  V = dir_3D_eigen(dat$Trend,dat$Plunge,results = 'full')$eigen_vectors
-  S = dir_3D_eigen(dat$Trend,dat$Plunge,results = 'full')$eigen_values[2,]
+  V = dir_3D_eigen(dat$Trend,dat$Plunge)$eigen_vectors
+  S = dir_3D_eigen(dat$Trend,dat$Plunge)$eigen_values[2,]
 }
 
 
@@ -231,6 +229,7 @@ Z.1 = matrix(c(A.1,B.1,B.1,C.1),nrow = 2)
 g.1 = sort(ifelse(sqrt(D.1/eigen(Z.1)$values) >= 1, 
                   .99, 
                   sqrt(D.1/eigen(Z.1)$values)),T)
+g.1 = sqrt(D.1/eigen(Z.1)$values)
 
 betas.v1 = asin(g.1)*180/pi
 betas.v1
@@ -254,6 +253,20 @@ watson_k1 = rio::import('data/spherical_watson_kappas.xlsx',
 wk1 = with(watson_k1,
            pracma::interp1(s1,k,S[1]))
 wk1
+
+watson_kappa = function(s) {
+  
+  conc = case_when(
+    1/3 <= s & s <= .34 ~ 3.75*(3*s-1),
+    .34 < s & s <= .64 ~ -5.95 + 14.9*s + 1.48*(1-s)^(-1) - 11.05*s^2,
+    s > .64 ~ -7.96 + 21.5*s + (1-s)^(-1) - 13.25*s^2,
+    0 <= s & s <= .06 ~ -((2*s)^(-1)),
+    .06 < s & s <= .32 ~ -(.961 - 7.08*s + .466/s),
+    .32 < s & s <= 1/3 ~ -(3.75*(1-3*s))
+  )
+  conc
+
+}
 
 if (1/3 <= S[1] & S[1] <= .34) {
   conc.wb = 3.75*(3*S[1]-1)
@@ -297,15 +310,15 @@ if (any(names(dat) %in% 'Dip')) {
     as_tibble() %>% 
     as.matrix()
   
-  V = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir',results = 'full')$eigen_vectors
-  S = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir',results = 'full')$eigen_values[2,]
+  V = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir')$eigen_vectors
+  S = dir_3D_eigen(dat$`Dip Direction`,dat$Dip,type = 'dir')$eigen_values[2,]
 } else if (any(names(dat) %in% 'Trend')) {
   cosines = SphToCartD(dat$Trend,dat$Plunge,0) %>% 
     as_tibble() %>% 
     as.matrix()
   
-  V = dir_3D_eigen(dat$Trend,dat$Plunge,results = 'full')$eigen_vectors
-  S = dir_3D_eigen(dat$Trend,dat$Plunge,results = 'full')$eigen_values[2,]
+  V = dir_3D_eigen(dat$Trend,dat$Plunge)$eigen_vectors
+  S = dir_3D_eigen(dat$Trend,dat$Plunge)$eigen_values[2,]
 }
 
 ## 6.4.2(ii) Confidence ellipse for polar axis of girdle distr
@@ -338,7 +351,7 @@ Z.3 = matrix(c(A.3,B.3,B.3,C.3),nrow = 2)
 g.3 = sort(ifelse(sqrt(D.3/eigen(Z.3)$values) >= 1, 
                   .99, 
                   sqrt(D.3/eigen(Z.3)$values)),T)
-
+g.3 = sqrt(D.3/eigen(Z.3)$values)
 
 betas.v3 = asin(g.3)*180/pi
 betas.v3
@@ -420,6 +433,7 @@ Z.2 = matrix(c(A.2,B.2,B.2,C.2),nrow = 2)
 g.2 = sort(ifelse(sqrt(D.2/eigen(Z.2)$values) >= 1, 
                   .99, 
                   sqrt(D.2/eigen(Z.2)$values)),T)
+g.2 = sqrt(D.2/eigen(Z.2)$values)
 
 betas.v2 = asin(g.2)*180/pi
 betas.v2
@@ -496,3 +510,7 @@ asin(sqrt(qchisq(.95,2))*sqrt(.0908/(2*77)))*180/pi
 asin(sqrt(qchisq(.95,2))*sqrt(.0379/(2*136)))*180/pi
 
 
+map2(dat$Trend,dat$Plunge,~(Pole(.x*pi/180,.y*pi/180,0)*180/pi) %>% 
+       as_tibble_row()) %>% 
+  list_rbind() %>% 
+  mutate(dir = s2d(strike))
