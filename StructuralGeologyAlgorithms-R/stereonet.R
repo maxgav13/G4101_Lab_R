@@ -63,11 +63,11 @@ ggstereo = function(wulff = F,
     #   dplyr::bind_rows(.id = 'c')
     
     
-    smallc = purrr::map(sc,~SmallCircleD(0,0,.x) %>% 
+    smallc = purrr::map(sc,~SmallCircleD(0,0,.x,wulff = wulff) %>% 
                           bind_rows(.id = 'path')) %>% 
       dplyr::bind_rows(.id = 'c') %>% 
       dplyr::mutate(c = paste0(c,path))
-    greatc = purrr::map2(gc$strike,gc$dip,~GreatCircleD(.x,.y)) %>% 
+    greatc = purrr::map2(gc$strike,gc$dip,~GreatCircleD(.x,.y,wulff = wulff)) %>% 
       dplyr::bind_rows(.id = 'c')
 
   }

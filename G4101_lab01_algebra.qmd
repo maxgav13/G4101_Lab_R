@@ -24,7 +24,7 @@ execute:
   echo: true
 ---
 
-# Algebra
+# Algebra lineal
 
 ## Vectores
 

@@ -33,8 +33,8 @@ m %>% plot_predictions(by = 'cyl')
 emmeans(m, pairwise ~ cyl)$emmeans %>% plot
 emmeans(m, pairwise ~ cyl)$contrasts %>% plot
 
-estimate_means(m, at = 'cyl')
-estimate_contrasts(m, at = 'cyl', p_adjust = 'tukey')
+estimate_means(m, by = 'cyl')
+estimate_contrasts(m, by = 'cyl', p_adjust = 'tukey')
 
 # single numerical predictor
 

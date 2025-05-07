@@ -55,35 +55,6 @@ $$\hat{\theta}_i < \hat{\theta} < \hat{\theta}_s$$
 
 donde $\hat{\theta}_i = \text{limite inferior}$ y $\hat{\theta}_s = \text{limite superior}$
 
-## Varianza
-
-### $\chi^2$
-
-$$\frac{(n-1)s^2}{\chi^2_{\alpha/2,v}} < \sigma^2 < \frac{(n-1)s^2}{\chi^2_{1-\alpha/2,v}}$$
-
-```{r}
-vec = c(46.4, 46.1, 45.8, 47.0, 46.1, 45.9, 45.8, 46.9, 45.2, 46.0)
-s = sd(vec)
-n = length(vec)
-v = n-1
-alfa = .05
-
-VarCI(vec) # DescTools
-
-ci_chisq(s = s, n = n, conf.level = 1-alfa) # GMisc
-```
-
-### $F$
-
-$$\frac{s^2_1}{s^2_2} \frac{1}{F_{\alpha/2(v_1,v_2)}} < \frac{\sigma^2_1}{\sigma^2_2} < \frac{s^2_1}{s^2_2} F_{\alpha/2(v_2,v_1)}$$
-
-```{r}
-n1 = 15; n2 = 12
-s1 = 3.07; s2 = 0.8
-
-ci_F(s1 = s1, n1 = n1, s2 = s2, n2 = n2, conf.level = 0.98) # GMisc
-```
-
 ## Media
 
 ### Una media conociendo $\sigma$ - $Z$
@@ -97,11 +68,12 @@ x = 2.6
 sigma = .3
 n = 36
 s = sigma/sqrt(n)
-alfa = .95
+alfa = .05
 
 # MeanCI(x = vec, sd = sigma, conf.level = 1-alfa) # DescTools
+# OneTwoSamples::interval_estimate4(vec, sigma = sigma, alpha = alfa)
 
-ci_z(x = x, sig = sigma, n = n, conf.level = alfa) # GMisc
+ci_z(x = x, sig = sigma, n = n, conf.level = 1-alfa) # GMisc
 ```
 
 ### Una media sin conocer $\sigma$ - $t$
@@ -118,6 +90,7 @@ s = sd(vec)
 alfa = .1
 
 MeanCI(x = vec, conf.level = 1-alfa) # DescTools
+OneTwoSamples::interval_estimate4(vec, side = 0, alpha = alfa)
 
 ci_t(x = x, s = s, n = n, conf.level = 1-alfa) # GMisc
 ```
@@ -140,6 +113,8 @@ a = .05
 ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
       x2 = mean(B), s2 = sd(B), n2 = length(B), 
       var.equal = T, conf.level = 1-a, digits = 3) # GMisc
+
+OneTwoSamples::interval_estimate5(A, B, var.equal = T, alpha = a)
 ```
 
 #### Varianzas diferentes
@@ -155,6 +130,8 @@ $v = \frac{(s_1^2/n_1 + s_2^2/n_2)^2}{[(s_1^2/n_1)^2/(n_1-1)] + [(s_2^2/n_2)^2/(
 ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
       x2 = mean(B), s2 = sd(B), n2 = length(B), 
       var.equal = F, conf.level = 1-a, digits = 3) # GMisc
+
+OneTwoSamples::interval_estimate5(A, B, var.equal = F, alpha = a)
 ```
 
 ### Dos medias dependientes sin conocer $\sigma$
@@ -171,6 +148,43 @@ a = .05
 
 ci_t(x = mean(diferencia), s = sd(diferencia), 
      n = length(diferencia), conf.level = 1-a, digits = 4) # GMisc
+
+MeanDiffCI(m2, m1, conf.level = 1-a, paired = T)
+```
+
+## Varianza
+
+### $\chi^2$
+
+$$\frac{(n-1)s^2}{\chi^2_{\alpha/2,v}} < \sigma^2 < \frac{(n-1)s^2}{\chi^2_{1-\alpha/2,v}}$$
+
+```{r}
+vec = c(46.4, 46.1, 45.8, 47.0, 46.1, 45.9, 45.8, 46.9, 45.2, 46.0)
+s = sd(vec)
+n = length(vec)
+v = n-1
+alfa = .05
+
+VarCI(vec) # DescTools
+
+ci_chisq(s = s, n = n, conf.level = 1-alfa) # GMisc
+
+OneTwoSamples::interval_var3(vec, side = 0, alpha = alfa)
+```
+
+### $F$
+
+$$\frac{s^2_1}{s^2_2} \frac{1}{F_{\alpha/2(v_1,v_2)}} < \frac{\sigma^2_1}{\sigma^2_2} < \frac{s^2_1}{s^2_2} F_{\alpha/2(v_2,v_1)}$$
+
+```{r}
+n1 = 15; n2 = 12
+s1 = 3.07; s2 = 0.8
+
+ci_F(s1 = s1, n1 = n1, s2 = s2, n2 = n2, conf.level = 0.98) # GMisc
+```
+
+```{r}
+OneTwoSamples::interval_var4(A, B, side = 0, alpha = .02)
 ```
 
 # Valor-p

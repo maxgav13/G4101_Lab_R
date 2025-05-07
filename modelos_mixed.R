@@ -104,6 +104,20 @@ broom.mixed::augment(sb.nlme3,data = sb) %>%
   geom_line(aes(y=.fixed),col='blue') +
   facet_wrap(~plot)
 
+pred.grid = expand_grid(time=1:80,plot=factor(1:3))
+
+pred.dat = predict(sb.nlme3,
+                   pred.grid,
+                   level = 0:1) %>% 
+  as_tibble() %>% 
+  bind_cols(pred.grid %>% select(-plot))
+
+ggplot() + 
+  geom_point(aes(time,lfmc),sb) +
+  geom_line(aes(time,predict.plot),pred.dat,col='orange') +
+  geom_line(aes(time,predict.fixed),pred.dat,col='blue') +
+  facet_wrap(~plot)
+
 ## lme4
 
 sb.nlmer = nlmer(lfmc ~ SSdlf(time, upper, lower, mid, scale) ~ upper | plot,

@@ -139,7 +139,8 @@ rose_diag_circ = function (x, data = NULL,
                            conf.level = 0.95,
                            alpha = .7,
                            fill.col = 'blue',
-                           mean.col = 'red') {
+                           mean.col = 'red',
+                           show.mean = T) {
   
   if (is.null(data)) {
     x = x
@@ -178,11 +179,13 @@ rose_diag_circ = function (x, data = NULL,
   N = length(x)
   r = suppressWarnings(dir_stats_circ(x, dir = dir, conf.level = conf.level))
   
-  labelmeandir = bquote("Mean Direction =" ~ .(format(round(r$theta.hat, 1))) * 
+  labelmeandir = bquote("Mean direction =" ~ .(format(round(r$theta.hat, 1))) * 
                           # degree * "" %+-% "" * .(format(round(r$cone, 1))) * 
-                          degree ~ ", N =" ~ .(r$N))
+                          degree 
+                        # ~ ", N =" ~ .(r$N)
+                        )
   
-  labelmeandir2 = paste0("Mean Direction =", format(r$theta.hat,1), 
+  labelmeandir2 = paste0("Mean direction =", format(r$theta.hat,1), 
                          " (", format(round(r$cone, 1)), ")", 
                          ", N =", r$N)
   
@@ -210,16 +213,20 @@ rose_diag_circ = function (x, data = NULL,
       scale_x_continuous(breaks = seq(0,360,30), 
                          minor_breaks = seq(0,360,10),
                          limits = c(0, 360)) + 
-      geom_vline(xintercept = r$theta.hat, 
-                 col = mean.col, 
-                 linewidth = .5) + 
       scale_y_continuous(NULL, 
                          breaks = seq(0,100,20), 
                          labels = NULL) + 
-      labs(title = labelmeandir, 
-           subtitle = paste0('Max. = ',max.dir,'%')) + 
+      labs(caption = paste0('Max. = ',max.dir,'%',', N = ', N)) +
       coord_radial(expand = F) +
       theme_rose
+    
+    if (show.mean) {
+      plt.dirrose = plt.dirrose + 
+        geom_vline(xintercept = r$theta.hat, 
+                   col = mean.col, 
+                   linewidth = .5) +
+        labs(subtitle = labelmeandir)
+    }
     
   } else {
     plt.dirrose <- ggplot(data.frame(z), aes(z)) + 
@@ -231,17 +238,23 @@ rose_diag_circ = function (x, data = NULL,
       scale_x_continuous(breaks = seq(0,360,30), 
                          minor_breaks = seq(0,360,10),
                          limits = c(0, 360)) + 
-      geom_vline(xintercept = c(r$theta.hat, theta.180), 
-                 col = mean.col, 
-                 linewidth = .5) + 
       scale_y_continuous(NULL, 
                          breaks = seq(0,100,20), 
                          labels = NULL) + 
-      labs(title = labelmeandir, 
-           subtitle = paste0('Max. = ',max.dir,'%')) + 
+      labs(caption = paste0('Max. = ',max.dir,'%',', N = ', N)) +
       coord_radial(expand = F) +
       theme_rose
+    
+    if (show.mean) {
+      plt.dirrose = plt.dirrose + 
+        geom_vline(xintercept = c(r$theta.hat, theta.180), 
+                   col = mean.col, 
+                   linewidth = .5) +
+        labs(subtitle = labelmeandir)
+    }
+    
   }
+  
   return(plt.dirrose)
 }
 

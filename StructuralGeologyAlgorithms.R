@@ -170,7 +170,7 @@ SmallCircle = function (trda, plga, coneAngle, wulff = F, closed = F) {
   
 }
 
-SmallCircleD = function (trda, plga, coneAngle, wulff = F, closed = T) {
+SmallCircleD = function (trda, plga, coneAngle, wulff = F, closed = F) {
   trda = (trda)*pi/180
   plga = (plga)*pi/180
   coneAngle = (coneAngle)*pi/180
@@ -438,7 +438,7 @@ dir_stats_spher = function(trd, plg, data = NULL, conf.level = .95,
   sig_s = sqrt(d.sig/(N*Rbar^2))
   cone_s = suppressWarnings(asin(sqrt(-log(a))*sig_s)*180/pi)
   cone_s = ifelse(is.na(cone_s),
-                  sqrt(-log(a))*sig_c*180/pi,
+                  sqrt(-log(a))*sig_s*180/pi,
                   cone_s)
   
   if (N < 16){
@@ -693,56 +693,62 @@ dir_stats_spher = function(trd, plg, data = NULL, conf.level = .95,
     ggtern::theme_rotate() +
     ggtern::theme_hidemask()
   
+  mean.shape = 'triangle' # 8
+  eigen.shape = 'square'
+  
   if (any(plot == 'all')) {
     stereoplot = ggstereo() + 
       # geom_point(ggplot2::aes(x,y),StPointD(d,90-i),size=2,alpha=.5) + 
-      ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
+      ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(d.plot,i.plot),
+                          size=2,alpha=.5) +
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(trd.plot,plg.plot,cono) %>% 
+                         SmallCircleD(trd.plot,plg.plot,cono,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='gold') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(trd.plot,90-plg.plot),
-                          col='gold',size=3,alpha=.7,shape=8,stroke=.75) + 
+                          col='gold',size=3,alpha=.7,shape=mean.shape,stroke=.75) + 
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(TP[1,1],TP[2,1],cone.1) %>% 
+                         SmallCircleD(TP[1,1],TP[2,1],cone.1,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='red') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(TP[1,1],90-TP[2,1]),
-                          col='red',size=3,alpha=.7,shape=8,stroke=.75) + 
+                          col='red',size=3,alpha=.7,shape=eigen.shape,stroke=.75) + 
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(TP[1,2],TP[2,2],cone.2) %>% 
+                         SmallCircleD(TP[1,2],TP[2,2],cone.2,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='green3') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(TP[1,2],90-TP[2,2]),
-                          col='green3',size=3,alpha=.7,shape=8,stroke=.75) + 
+                          col='green3',size=3,alpha=.7,shape=eigen.shape,stroke=.75) + 
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(TP[1,3],TP[2,3],cone.3) %>% 
+                         SmallCircleD(TP[1,3],TP[2,3],cone.3,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='blue') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(TP[1,3],90-TP[2,3]),
-                          col='blue',size=3,alpha=.7,shape=8,stroke=.75)
+                          col='blue',size=3,alpha=.7,shape=eigen.shape,stroke=.75)
   } else if (plot == 'eig') {
     stereoplot = ggstereo() + 
-      ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
+      ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(d.plot,i.plot),
+                          size=2,alpha=.5) +
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(TP[1,1],TP[2,1],cone.1) %>% 
+                         SmallCircleD(TP[1,1],TP[2,1],cone.1,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='red') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(TP[1,1],90-TP[2,1]),
-                          col='red',size=3,alpha=.7,shape=8,stroke=.75) + 
+                          col='red',size=3,alpha=.7,shape=eigen.shape,stroke=.75) + 
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(TP[1,2],TP[2,2],cone.2) %>% 
+                         SmallCircleD(TP[1,2],TP[2,2],cone.2,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='green3') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(TP[1,2],90-TP[2,2]),
-                          col='green3',size=3,alpha=.7,shape=8,stroke=.75) + 
+                          col='green3',size=3,alpha=.7,shape=eigen.shape,stroke=.75) + 
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(TP[1,3],TP[2,3],cone.3) %>% 
+                         SmallCircleD(TP[1,3],TP[2,3],cone.3,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='blue') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(TP[1,3],90-TP[2,3]),
-                          col='blue',size=3,alpha=.7,shape=8,stroke=.75)
+                          col='blue',size=3,alpha=.7,shape=eigen.shape,stroke=.75)
   } else if (plot == 'mean') {
     stereoplot = ggstereo() + 
-      ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(d.plot,i.plot),size=2,alpha=.5) +
+      ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(d.plot,i.plot),
+                          size=2,alpha=.5) +
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(trd.plot,plg.plot,cono) %>% 
+                         SmallCircleD(trd.plot,plg.plot,cono,closed = T) %>% 
                            dplyr::bind_rows(.id = 'path'),col='gold') +
       ggplot2::geom_point(ggplot2::aes(x,y),StPointD(trd.plot,90-plg.plot),
-                          col='gold',size=3,alpha=.7,shape=8,stroke=.75)
+                          col='gold',size=3,alpha=.7,shape=mean.shape,stroke=.75)
   }
   
     res.lst = list(eigen_values = t(round(eigval,4)),
@@ -921,6 +927,8 @@ dir_aov_sph_ax = function(trd, plg, grp, data = NULL, conf.level = .95,
     ggtern::theme_rotate() +
     ggtern::theme_hidemask()
   
+  eigen.shape = 'square' # 8
+  
   if (all(PGR$R > c(PGR$P, PGR$G))) {
     stereoplot = ggstereo() + 
       ggplot2::geom_point(ggplot2::aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
@@ -932,10 +940,10 @@ dir_aov_sph_ax = function(trd, plg, grp, data = NULL, conf.level = .95,
       ggplot2::geom_point(ggplot2::aes(xp,yp,col=grp,shape=grp),eig.plot,
                           size=4,alpha=.7) +
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(axial_axis[[1]],axial_axis[[2]],q) %>%
+                         SmallCircleD(axial_axis[[1]],axial_axis[[2]],q,closed = T) %>%
                            dplyr::bind_rows(.id = 'path'),col=axial_col) +
       ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(axial_axis[[1]],axial_axis[[2]]),
-                          size=4,alpha=.7,col=axial_col,shape=8,stroke=.75) +
+                          size=4,alpha=.7,col=axial_col,shape=eigen.shape,stroke=.75) +
       ggplot2::scale_color_brewer(palette = 'Dark2')
   } else {
     stereoplot = ggstereo() + 
@@ -1090,6 +1098,8 @@ dir_aov_sph_vc = function(trd, plg, grp, data = NULL, conf.level = .95,
     statement = 'Mean direction differs between samples'
   }
   
+  mean.shape = 'triangle' # 8
+  
   if (vec_res$Nr < chi.crit) {
     stereoplot = ggstereo() + 
       ggplot2::geom_point(ggplot2::aes(xp,yp,col=grp,shape=grp),dat.plot,size=2,alpha=.5) +
@@ -1097,10 +1107,10 @@ dir_aov_sph_vc = function(trd, plg, grp, data = NULL, conf.level = .95,
       ggplot2::geom_point(ggplot2::aes(xp,yp,col=grp,shape=grp),vec.plot,
                           size=4,alpha=.7) +
       ggplot2::geom_path(ggplot2::aes(xp,yp,group=path),
-                         SmallCircleD(q2$trd,q2$plg,q2$cone) %>%
+                         SmallCircleD(q2$trd,q2$plg,q2$cone,closed = T) %>%
                            dplyr::bind_rows(.id = 'path'),col='gold') +
       ggplot2::geom_point(ggplot2::aes(xp,yp),StCoordLineD(q2$trd,q2$plg),
-                          size=4,alpha=.7,col='gold',shape=8,stroke=.75) +
+                          size=4,alpha=.7,col='gold',shape=mean.shape,stroke=.75) +
       ggplot2::scale_color_brewer(palette = 'Dark2')
   } else {
     stereoplot = ggstereo() + 
@@ -1137,7 +1147,8 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
                             width1 = 20, width2 = 5, alpha = .7,
                             fill.col = 'blue', mean.col = 'red',
                             type = c('line','dir','strike'),
-                            plot = 'all') {
+                            show = 'all',
+                            show.mean = T) {
   
   if (is.null(data)) {
     trd = trd
@@ -1160,6 +1171,7 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
   
   d = ifelse(i < 0, ifelse(d+180 > 360, d-180, d+180), d)
   i = ifelse(i < 0, -i, i)
+  d = ifelse(d > 360, d-360, d)
   
   dat.rose = purrr::map2(d,i,~(Pole(.x*pi/180,.y*pi/180,0)*180/pi) %>% 
          tibble::as_tibble_row()) %>% 
@@ -1223,8 +1235,8 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
     mean.dip = r$dir_dip[2,1]
     mean.dir = r$dir_dip[1,1]
     mean.strike = d2s(mean.dir)
-    mean.trd = r$vector_stats$trd
-    mean.plg = r$vector_stats$plg
+    mean.trd = r$trend_plunge[1,1]
+    mean.plg = r$trend_plunge[2,1]
   } else if (PGR$G > PGR$P) {
     mean.strike = r$dir_dip[1,3]
     mean.dip = r$dir_dip[2,3]
@@ -1233,21 +1245,31 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
     mean.plg = r$vector_stats$plg
   }
   
-  labelmeandir = bquote("Dip Direction =" ~ .(format(round(mean.dir, 1))) * 
+  labelmeandir = bquote("Mean dip direction =" ~ .(format(round(mean.dir, 1))) * 
                           # degree * "" %+-% "" * .(format(round(r$cone, 1))) * 
-                          degree ~ ", N =" ~ .(N))
+                          degree 
+                        # ~ ", N =" ~ .(N)
+                        )
   
-  labelmeanstrike = bquote("Strike =" ~ .(format(round(mean.strike, 1))) * 
-                             degree ~ ", N =" ~ .(N))
+  labelmeanstrike = bquote("Mean strike =" ~ .(format(round(mean.strike, 1))) * 
+                             degree 
+                           # ~ ", N =" ~ .(N)
+                           )
   
-  labelmeandip = bquote("Dip Angle =" ~ .(format(round(mean.dip, 1))) * 
-                          degree ~ ", N =" ~ .(N))
+  labelmeandip = bquote("Mean dip angle =" ~ .(format(round(mean.dip, 1))) * 
+                          degree 
+                        # ~ ", N =" ~ .(N)
+                        )
   
-  labelmeantrd = bquote("Trend =" ~ .(format(round(mean.trd, 1))) * 
-                          degree ~ ", N =" ~ .(N))
+  labelmeantrd = bquote("Mean trend =" ~ .(format(round(mean.trd, 1))) * 
+                          degree 
+                        # ~ ", N =" ~ .(N)
+                        )
   
-  labelmeanplg = bquote("Plunge =" ~ .(format(round(mean.plg, 1))) * 
-                          degree ~ ", N =" ~ .(N))
+  labelmeanplg = bquote("Mean plunge =" ~ .(format(round(mean.plg, 1))) * 
+                          degree 
+                        # ~ ", N =" ~ .(N)
+                        )
   
   theme_rose = theme_bw() + 
     theme(title = element_text(size = 14), 
@@ -1261,6 +1283,8 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
           panel.grid.minor = element_line(linewidth = 0.1, 
                                           colour = "grey60"))
   
+  strike.180 = ifelse(mean.strike > 180, mean.strike - 180, mean.strike + 180)
+  
   plt.dirrose <- ggplot(dat.rose, aes(dir)) + 
     stat_bin(aes(y = sqrt(after_stat(.data$count)/max(after_stat(.data$count)) * 
                             100^2)), 
@@ -1270,19 +1294,13 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
     scale_x_continuous(breaks = seq(0,360,30), 
                        minor_breaks = seq(0,360,10),
                        limits = c(0, 360)) + 
-    geom_vline(xintercept = mean.dir,
-               col = mean.col,
-               linewidth = .5) +
     scale_y_continuous(NULL, 
                        breaks = seq(0,100,20), 
                        labels = NULL) + 
-    # labs(title = paste('Dip direction, N =', N)) +
-    labs(title = labelmeandir, 
-         subtitle = paste0('Max. = ',max.dir,'%')) +
+    labs(subtitle = 'Dip direction',
+         caption = paste0('Max. = ',max.dir,'%',', N = ', N)) +
     coord_radial(expand = F) +
     theme_rose
-  
-  strike.180 = ifelse(mean.strike > 180, mean.strike - 180, mean.strike + 180)
   
   plt.strikerose <- ggplot(data.frame(strike), aes(strike)) + 
     stat_bin(aes(y = sqrt(after_stat(.data$count)/max(after_stat(.data$count)) * 
@@ -1292,16 +1310,12 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
              fill = fill.col, closed = "left") + 
     scale_x_continuous(breaks = seq(0,360,30), 
                        minor_breaks = seq(0,360,10),
-                       limits = c(0, 360)) + 
-    geom_vline(xintercept = c(mean.strike,strike.180),
-               col = mean.col,
-               linewidth = .5) +
+                       limits = c(0, 360)) +
     scale_y_continuous(NULL, 
                        breaks = seq(0,100,20), 
                        labels = NULL) + 
-    # labs(title = paste('Strike, N =', N)) +
-    labs(title = labelmeanstrike, 
-         subtitle = paste0('Max. = ',max.strike,'%')) +
+    labs(subtitle = 'Strike',
+         caption = paste0('Max. = ',max.strike,'%',', N = ', N)) +
     coord_radial(expand = F) + 
     theme_rose
   
@@ -1312,15 +1326,11 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
              colour = "black",  alpha = alpha, 
              fill = fill.col, closed = "left") + 
     scale_x_continuous(breaks = seq(0,90,10), limits = c(0, 90)) + 
-    geom_vline(xintercept = mean.dip,
-               col = mean.col,
-               linewidth = .5) +
     scale_y_continuous(NULL, 
                        breaks = seq(0,100,20), 
                        labels = NULL) + 
-    # labs(title = paste('Dip angle, N =', N)) +
-    labs(title = labelmeandip, 
-         subtitle = paste0('Max. = ',max.dip,'%')) +
+    labs(subtitle = 'Dip angle',
+         caption = paste0('Max. = ',max.dip,'%',', N = ', N)) +
     coord_radial(start = pi/2, end = pi, expand = F) + 
     theme_rose
   
@@ -1333,14 +1343,11 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
     scale_x_continuous(breaks = seq(0,360,30), 
                        minor_breaks = seq(0,360,10),
                        limits = c(0, 360)) + 
-    geom_vline(xintercept = mean.trd,
-               col = mean.col,
-               linewidth = .5) +
     scale_y_continuous(NULL, 
                        breaks = seq(0,100,20), 
                        labels = NULL) + 
-    labs(title = labelmeantrd, 
-         subtitle = paste0('Max. = ',max.trd,'%')) +
+    labs(subtitle = 'Trend',
+         caption = paste0('Max. = ',max.trd,'%',', N = ', N)) +
     coord_radial(expand = F) +
     theme_rose
   
@@ -1350,31 +1357,60 @@ rose_diag_spher = function (trd, plg, data = NULL, conf.level = .95,
              breaks = seq(0,90,width2),
              colour = "black",  alpha = alpha, 
              fill = fill.col, closed = "left") + 
-    scale_x_continuous(breaks = seq(0,90,10), limits = c(0, 90)) + 
-    geom_vline(xintercept = mean.plg,
-               col = mean.col,
-               linewidth = .5) +
+    scale_x_continuous(breaks = seq(0,90,10), limits = c(0, 90)) +
     scale_y_continuous(NULL, 
                        breaks = seq(0,100,20), 
-                       labels = NULL) + 
-    labs(title = labelmeanplg, 
-         subtitle = paste0('Max. = ',max.plg,'%')) +
+                       labels = NULL) +
+    labs(subtitle = 'Plunge',
+         caption = paste0('Max. = ',max.plg,'%',', N = ', N)) +
     coord_radial(start = pi/2, end = pi, expand = F) + 
     theme_rose
+  
+  if (show.mean) {
+    plt.dirrose = plt.dirrose + 
+      geom_vline(xintercept = mean.dir, 
+                 col = mean.col, 
+                 linewidth = .5) +
+      labs(subtitle = labelmeandir)
+    
+    plt.strikerose = plt.strikerose + 
+      geom_vline(xintercept = c(mean.strike,strike.180),
+                 col = mean.col,
+                 linewidth = .5) +
+      labs(subtitle = labelmeanstrike)
+    
+    plt.diprose = plt.diprose +
+      geom_vline(xintercept = mean.dip,
+                 col = mean.col,
+                 linewidth = .5) +
+      labs(subtitle = labelmeandip)
+    
+    plt.trdrose = plt.trdrose +
+      geom_vline(xintercept = mean.trd,
+                 col = mean.col,
+                 linewidth = .5) +
+      labs(subtitle = labelmeantrd)
+    
+    plt.plgrose = plt.plgrose  + 
+      geom_vline(xintercept = mean.plg,
+                 col = mean.col,
+                 linewidth = .5) + 
+      labs(subtitle = labelmeanplg)
+    
+  }
   
   l.all = list(strike = plt.strikerose, 
                dir = plt.dirrose, 
                dip = plt.diprose,
-               trd = plt.trdrose,
-               plg = plt.plgrose)
+               trend = plt.trdrose,
+               plunge = plt.plgrose)
   
-  if (plot == 'all') {
+  if (any(show == 'all')) {
     l.res = l.all
   } else {
-    l.res = purrr::map(plot,~l.all[[.x]]) %>% 
-      purrr::set_names(plot) 
+    l.res = purrr::map(show,~l.all[[.x]]) %>% 
+      purrr::set_names(show) 
   }
-  
   
   return(l.res)
   
