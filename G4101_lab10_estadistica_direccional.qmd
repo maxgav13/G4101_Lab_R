@@ -102,6 +102,7 @@ meantrue
 
 # verdadera direccion media de datos no-direccionales
 meantrue = ifelse(d == 0, meantrue/2, meantrue)
+meantrue
 ```
 
 ### Otras estadisticas
@@ -136,6 +137,7 @@ p.r
 ```
 
 ```{r}
+a = .05
 R_crit(n = N, conf.level = 1-a)
 Rbar
 ```
