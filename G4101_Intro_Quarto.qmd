@@ -169,13 +169,15 @@ ggplot(airquality, aes(Solar.R, Temp)) +
 
 @fig-airq-1 y @fig-airq-2 muestran la relacion de la velocidad del viento y radiacion solar con la temperatura.
 
+::: {.content-visible when-format="html"}
+
 ## Widgets HTML
 
-Si el analisis en **R** involucra componentes interactivos, estos tambien son compatibles con los resultados en el archivo *html*. La opcion `eval=knitr::is_html_output()` se incluye para que el codigo sea evaluado unicamente cuando el formato de salida es *html*, ya que estos no pueden desplegarse en *pdf* o *word*.
+Si el analisis en **R** involucra componentes interactivos, estos tambien son compatibles con los resultados en el archivo *html*. Estos **NO** pueden desplegarse en *pdf* o *word*, por lo que se incluyen solo cuando el documento se renderiza a *html*.
 
 La @fig-dygraph muestra un grafico interactivo de una serie temporal, creado con el siguiente codigo.
 
-```{r eval=knitr::is_html_output()}
+```{r}
 #| label: fig-dygraph
 #| fig-cap: "Grafico interactivo creado con **dygraph**."
 
@@ -185,12 +187,14 @@ dygraph(nhtemp, main = "Temperaturas de New Haven") %>%
 
 La @fig-plotly es la version interactiva del grafico de ggplot anteriormente generado (@fig-disp).
 
-```{r eval=knitr::is_html_output()}
+```{r}
 #| label: fig-plotly
 #| fig-cap: "Grafico interactivo creado con **plotly**."
 
 ggplotly(q)
 ```
+
+:::
 
 # Formulas
 
