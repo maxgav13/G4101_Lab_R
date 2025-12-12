@@ -41,7 +41,9 @@ theme_set(theme_minimal(base_size = 14))
 
 Para distribuciones simetricas los intervalos de confianza siguen la forma
 
-$$\hat{\theta} \pm MoE$$ donde
+$$\hat{\theta} \pm MoE$$
+
+donde
 
 $$\hat{\theta} = \text{estadistico o estimador}$$
 

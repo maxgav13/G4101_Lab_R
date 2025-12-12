@@ -210,11 +210,11 @@ Coeficientes del modelo
 ```{r mod-lin-param}
 mod1 %>% tidy() %>%
   flextable() %>%
-  colformat_double()
+  colformat_double(digits = 3)
 
 mod1 %>% model_parameters() %>%
   flextable() %>%
-  colformat_double()
+  colformat_double(digits = 3)
 ```
 
 Ajuste del modelo
@@ -222,12 +222,12 @@ Ajuste del modelo
 ```{r mod-lin-fit}
 mod1 %>% glance() %>%
   flextable() %>%
-  colformat_double() %>% 
+  colformat_double(digits = 3) %>% 
   fit_to_width(max_width = 7)
 
 mod1 %>% model_performance() %>%
   flextable() %>%
-  colformat_double()
+  colformat_double(digits = 3)
 ```
 
 ```{r mod-lin-cv}
