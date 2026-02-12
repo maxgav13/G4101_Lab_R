@@ -128,6 +128,7 @@ meantrue
 ### Prueba de aleatoriedad
 
 $$H_0: k = 0, \text{ los datos siguen una distribucion aleatoria}$$
+
 ```{r}
 z.r = N*Rbar^2
 p.r = ifelse(N >= 50, exp(-z.r),
@@ -163,7 +164,7 @@ cono_inf; meantrue; cono_sup
 
 ### Diagrama de rosas
 
-Diagrama de rosos mostrando la direccion media y cono de confianza
+Diagrama de rosas mostrando la direccion media y cono de confianza
 
 ```{r}
 rose_diag_2D(x = theta, width = 10, dir = d, conf.level = 1-a)
@@ -193,6 +194,7 @@ theta2rad = rads(theta2)
 
 ```{r}
 thetaall = c(theta,theta2)
+thetaallc = circular(thetaall,units = 'degrees')
 thetaallrad = rads(thetaall)
 Nall = length(thetaall)
 circ.disp(thetaallrad)
@@ -293,6 +295,10 @@ conc.test(u = thetaall,
           rads = F) # 2+
 ```
 
+```{r}
+equal.kappa.test(thetaallc, grps)
+```
+
 ### Prueba de direccion media
 
 ```{r}
@@ -300,6 +306,8 @@ conc.test(u = thetaall,
 watson.williams.test(list(thetac, theta2c)) # 2+
 
 rao.homogeneity(list(thetarad, theta2rad)) # 2+
+
+aov.circular(thetaallc, grps, method = "LRT") # 2+
 
 hcfcirc.boot(thetarad, theta2rad, rads = T) # 2
 hcf.circaov(thetaall, grps, rads = F) # 2+

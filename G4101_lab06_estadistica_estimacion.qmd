@@ -158,7 +158,7 @@ MeanDiffCI(m2, m1, conf.level = 1-a, paired = T)
 
 ### $\chi^2$
 
-$$\frac{(n-1)s^2}{\chi^2_{\alpha/2,v}} < \sigma^2 < \frac{(n-1)s^2}{\chi^2_{1-\alpha/2,v}}$$
+$$\frac{(n-1)s^2}{\chi^2_{1-\alpha/2,v}} < \sigma^2 < \frac{(n-1)s^2}{\chi^2_{\alpha/2,v}}$$
 
 ```{r}
 vec = c(46.4, 46.1, 45.8, 47.0, 46.1, 45.9, 45.8, 46.9, 45.2, 46.0)

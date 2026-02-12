@@ -81,7 +81,7 @@ chi2 %>%
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
 
 # usando dataframe
-var.test(hwy ~ manufacturer, data = mpg,
+var.test(cty ~ manufacturer, data = mpg,
          subset = manufacturer %in% c('audi','ford'))
 ```
 
@@ -94,7 +94,7 @@ Aplica para todas las pruebas-t y su respectivo $d$
 $$
 PS = \Phi \Bigg(\frac{|d|}{\sqrt{2}}\Bigg) \\
 U_3 = \Phi(|d|) \\
-OVL = 2 \cdot \Phi \Bigg(\frac{-|d|}{\sqrt{2}}\Bigg)
+OVL = 2 \cdot \Phi \Bigg(\frac{-|d|}{2}\Bigg)
 $$
 
 ## Prueba-t de 1 muestra

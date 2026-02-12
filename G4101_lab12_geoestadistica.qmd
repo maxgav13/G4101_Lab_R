@@ -39,6 +39,7 @@ library(plotly)         # graficos interactivos
 # library(raster)         # objetos espaciales raster
 # library(terra)         # objetos espaciales raster
 library(stars)          # arreglos de objetos espaciales
+library(tmap)
 library(viridis)        # colores
 library(DescTools)      # analisis de datos
 # library(mapview)        # mapas interactivos
@@ -101,7 +102,15 @@ if (isFALSE(transformar)) {
 Si se ocupa transformar la variable y si se quiere obtener el resultado en la escala original de la variable, esto solo se puede lograr por medio de Kriging Ordinario ($y \sim 1$), no aplica para cualquier otro tipo de Kriging. La teoría y funciones aqui implementadas, para re-transformar el resultado de la interpolacion, solo se han desarrollado para esta variante del Kriging.
 :::
 
-Se usa la transformacion de Box-Cox donde se debe hallar el parametro $\lambda$ para transformar la variable lo mas cercano a una variable normalmente distribuida. La transformacion logaritmica (natural, base $e$) es un caso especial donde $\lambda=0$.
+Una opcion es la normalizacion/estandarizacion de la variable a una con media de 0 y desviación estándar de 1, esto se logra utilizando la transformacion de cuantiles (`qqnorm`).
+
+```{r}
+if (isTRUE(transformar)) {
+  var.z = qqnorm(datos[[myvar0]], plot.it = F)$x
+  }
+```
+
+Otra opcion es transformacion de Box-Cox donde se debe hallar el parametro $\lambda$ para transformar la variable lo mas cercano a una variable normalmente distribuida. La transformacion logaritmica (natural, base $e$) es un caso especial donde $\lambda=0$.
 
 $$
 \begin{cases}
@@ -127,8 +136,7 @@ if (isTRUE(transformar)) {
   bc = MASS::boxcox(datos[[myvar0]] ~ 1)
   bc.lambda = bc$x[which.max(bc$y)]
   # (bc.lambda = bc %>% as_tibble() %>% slice_max(y,n = 1) %>% pull(x))
-  var.trans = BoxCox(datos[[myvar0]], bc.lambda)
-  datos[[myvar]] = var.trans 
+  var.bc = BoxCox(datos[[myvar0]], bc.lambda)
   str_glue('El lambda para {myvar0} es {apa(bc.lambda,3)}')
 }
 lambda = bc.lambda
@@ -136,9 +144,24 @@ lambda = bc.lambda
 
 La funcion `MASS::boxcox` realiza la busqueda de $\lambda$ y muestra un grafico donde la linea punteada central es el valor optimo y las otras lineas punteadas representan el IC al 95%.
 
-```{r dependson='box-cox'}
+```{r}
 if (isTRUE(transformar)) {
-  Desc(datos[[myvar]])
+
+  transformacion = "Quantile"  # "Box-Cox" o "Quantile"
+  
+  if (transformacion == "Box-Cox") {
+    datos = datos %>% 
+      mutate(!!myvar := var.bc)
+  } else if (transformacion == "Quantile") {
+    datos = datos %>% 
+      mutate(!!myvar := var.z)
+  }
+}
+```
+
+```{r}
+if (isTRUE(transformar)) {
+  Desc(datos[[myvar]],plotit = F)
   
   (S = var(datos[[myvar]])) # varianza de la variable
   
@@ -233,9 +256,13 @@ Creacion del variograma. La funcion basica (`gstat`) realiza un buen trabajo ini
 
 En general se recomienda que no haya pocos puntos representados en las diferentes distancias.
 
+```{r}
+formula = as.formula(paste(myvar,'~1'))
+```
+
 ```{r variog-omni}
 # objeto gstat para hacer geoestadistica
-g = gstat(formula = as.formula(paste(myvar,'~1')), 
+g = gstat(formula = formula, 
           data = datos_sf) 
 
 dat.vgm = variogram(g) # variograma experimental
@@ -297,8 +324,9 @@ ggplot(dat.vgm2,aes(x = dist, y = gamma,
   ylim(0, max(dat.vgm2$gamma)) +
   xlim(0, max(dat.vgm2$dist)) + 
   scale_color_brewer(palette = 'Dark2') +
-  facet_wrap(~dir.hor) + 
-  geom_text_repel(aes(label = np), size = 3, show.legend = F)
+  # facet_wrap(~dir.hor) + 
+  # geom_text_repel(aes(label = np), size = 3, show.legend = F) +
+  theme(legend.position = 'top')
 ```
 
 ## Modelado
@@ -340,7 +368,8 @@ pep = 0.0015
 
 ```{r ajuste, cache=TRUE, dependson='params'}
 (vm.fit.sph = fit.variogram(dat.vgm, 
-                            model = vgm(meseta, mod, rango, pep)))
+                            model = vgm(meseta, mod, rango, pep)
+                            ))
 
 
 # error del ajuste
@@ -361,7 +390,7 @@ vm.fit.sph[1,"psill"]/sum(vm.fit.sph[,"psill"])
 Una vez escogido el modelo y ajustado a los datos se realiza la validacion cruzada para determinar si es aceptable. Tambien se pueden ajustar diferentes modelos y con los datos de validacion cruzada se determina el mejor.
 
 ```{r xval, cache=TRUE, dependson='ajuste'}
-kcv.ok = krige.cv(as.formula(paste(myvar,'~1')), 
+kcv.ok = krige.cv(formula, 
                   locations = datos_sf, 
                   model = vm.fit.sph)
 ```
@@ -373,20 +402,21 @@ xval.rmse = RMSE(kcv.ok$observed, kcv.ok$var1.pred) # RMSE - menor es mejor
 
 xval.mape = MAPE(kcv.ok$var1.pred, kcv.ok$observed)
 
-xval.msdr = mean(kcv.ok$residual^2/kcv.ok$var1.var) # MSDR - ~1 es mejor
+xval.mae = MAE(kcv.ok$var1.pred, kcv.ok$observed)
 
-xval.g = (1 - (sum((kcv.ok$observed - kcv.ok$var1.pred)^2) / sum((kcv.ok$observed - mean(kcv.ok$observed))^2)))
+xval.msdr = mean(kcv.ok$residual^2/kcv.ok$var1.var) # MSDR - ~1 es mejor
 
 xval.mod = lm(observed ~ var1.pred, as.data.frame(kcv.ok))
 
 xval.r2 = xval.mod %>% broom::glance() %>% pull(r.squared)
 
+bias = mean(kcv.ok$residual) # idealmente 0
+
 correl = signif(CorCI(cor(kcv.ok$observed, kcv.ok$var1.pred), nrow(kcv.ok)),3)
 
-metricas = tibble(metric = c('rmse','mape','msdr','g','r','R2'), 
-                  estimate = c(xval.rmse,xval.mape,
-                               xval.msdr,xval.g,
-                               correl[1],xval.r2))
+metricas = tibble(metric = c('rmse','mae','msdr','r','R2', 'bias'), 
+                  estimate = c(xval.rmse,xval.mae,
+                               xval.msdr,correl[1],xval.r2,bias))
 metricas
 
 CIbeta = signif(broom::tidy(xval.mod, conf.int=T)[2,c(2,6,7)],4)
@@ -410,22 +440,28 @@ ggplot(as.data.frame(kcv.ok), aes(residual)) +
   geom_vline(xintercept = mean(kcv.ok$residual), col = 'red')
 ```
 
-## Interpolacion usando kriging ordinario
+## Interpolacion usando kriging
 
-Aqui se ha trabajado unicamente con Kriging Ordinario (KO) ya que es el caso mas sencillo y que aplica en la mayoria de las situaciones.
+Si se estandariza la variable de respuesta, se utiliza Kriging Simple (KS) para la interpolación ya que este asume que se conoce la media y en este caso la media es 0. Si no se transforma la variable o se transforma con Box-Cox se usa Kriging Ordinario (KO).
 
 ```{r kriging, cache=TRUE}
 
 varmod = vm.fit.sph # modelo escogido
 
-if (isTRUE(transformar)) {
+if (isTRUE(transformar) & transformacion == "Box-Cox") {
   ok = krigeTg(as.formula(paste(str_remove(myvar,'.trans'),'~1')), 
                locations = datos_sf,
                newdata = datosint2, 
                model = varmod,
                lambda = lambda) 
+} else if (isTRUE(transformar) & transformacion == "Quantile") {
+  ok = krige(formula, 
+             locations = datos_sf,
+             newdata = datosint2, 
+             model = varmod,
+             beta = 0)
 } else {
-  ok = krige(as.formula(paste(myvar,'~1')), 
+  ok = krige(formula, 
              locations = datos_sf,
              newdata = datosint2, 
              model = varmod)
@@ -437,14 +473,39 @@ if (isTRUE(transformar)) {
 ```{r mapas-resultados, dependson='kriging', warning=FALSE}
 #| layout-ncol: 2
 
-if (isTRUE(transformar)) {
+if (isTRUE(transformar) & transformacion == "Box-Cox") {
   pred.var = 'var1TG.pred' 
   var.var = 'var1TG.var'
+} else if (isTRUE(transformar) & transformacion == "Quantile") {
+  # pred.var = approx(datos[myvar], datos[myvar0], xout = ok$var1.pred)$y
+  # var.var = approx(datos[myvar], datos[myvar0], xout = ok$var1.var)$y
+  x_vals <- datos[[myvar]]
+  y_vals <- datos[[myvar0]]
+  ord <- order(x_vals, na.last = NA)
+
+  ok$var1.pred_unq <- approx(
+    x = x_vals[ord],
+    y = y_vals[ord],
+    xout = as.numeric(ok$var1.pred),
+    rule = 2
+  )$y
+
+  ok$var1.var_unq <- approx(
+    x = x_vals[ord],
+    y = y_vals[ord],
+    xout = as.numeric(ok$var1.var),
+    rule = 2
+  )$y
+
+  pred.var = 'var1.pred_unq'
+  var.var  = 'var1.var_unq'
 } else {
   pred.var = 'var1.pred' 
   var.var = 'var1.var'
 }
+```
 
+```{r}
 ok.gg1 = ggplot() + 
   geom_stars(data = ok, aes(fill = .data[[pred.var]], x = x, y = y)) + 
   geom_contour(aes(x,y,z=.data[[pred.var]]), data.frame(ok),
@@ -470,11 +531,20 @@ ok.gg2
 # gridExtra::grid.arrange(ok.gg1,ok.gg2,ncol=2)
 ```
 
+```{r}
+res.df = as_tibble(ok) |> 
+  select(pred = all_of(pred.var), var = all_of(var.var)) |> 
+  mutate(sd = sqrt(var)) |> 
+  drop_na()
+
+summary(res.df)
+```
+
 # Interactivos
 
 ## mapview
 
-Para poder visualizar los datos con **mapview** es necesario que estos tengan un sistema de coordenadas, sino no va a mostrar el mapa
+Para poder visualizar los datos con **mapview** es necesario que estos tengan un sistema de coordenadas, sino no no va a mostrar el mapa
 
 Para este ejemplo le asigno temporalmente el sistema de coordenadas CRTM05 (codigo EPSG 5367) para poder visualizar los datos
 

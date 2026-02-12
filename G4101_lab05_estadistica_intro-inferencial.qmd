@@ -129,13 +129,13 @@ Inferencia sobre dos $s^2$
 n1 = 6
 n2 = 9
 v1 = n1-1
-v2 = n2-2
+v2 = n2-1
 s2_1 = 4
 s2_2 = 2
 f = s2_1 / s2_2
 
 # probabilidad de F > 2 con 5 y 8 grados de libertad
-pf(q = 2, df1 = 5, df2 = 8, lower.tail = F) 
+pf(q = 2, df1 = v1, df2 = v2, lower.tail = F) 
 ```
 
 ```{r}

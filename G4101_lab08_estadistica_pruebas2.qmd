@@ -560,7 +560,7 @@ cramers_v(round.dist, ci = 1-alfa, alternative = 'two')
 
 ```{r}
 ncomp.i = prod(dim(round.dist))
-new.a.i = a/ncomp.i
+new.a.i = alfa/ncomp.i
 z.crit.i = qnorm(new.a.i/2) %>% abs()
 z.crit.i
 ```
