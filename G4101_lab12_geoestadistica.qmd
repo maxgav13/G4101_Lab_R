@@ -32,6 +32,7 @@ execute:
 
 library(MOTE)
 library(papaja)
+library(spatialsample)  # validacion cruzada espacial
 library(gstat)          # geoestadistica
 # library(sp)             # objetos espaciales vectoriales
 library(sf)             # objetos espaciales vectoriales
@@ -74,7 +75,7 @@ Importante realizar este paso para determinar si la variable esta normalmente di
 ```{r AED}
 myvar0 = 'K' # variable a modelar
 
-Desc(datos[[myvar0]])
+Desc(datos[[myvar0]], plotit = F)
 
 (S = var(datos[[myvar0]])) # varianza de la variable
 
@@ -183,7 +184,8 @@ Se le indica cuales son las columnas que tienen las coordenadas (X,Y) y de conoc
 ```{r datos-sf}
 datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>% 
   mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) %>% 
-  select(X, Y, everything())
+  select(X, Y, everything()) |> 
+  mutate(.point_id = row_number())
 datos_sf
 ```
 
@@ -238,6 +240,18 @@ ggplot() +
   }
 ```
 
+```{r}
+tm_shape(outline) + 
+  tm_borders(fill_alpha = 0.1, border.col = 'cyan') +
+  tm_shape(datos_sf) + 
+  tm_dots(fill = myvar, size = 1, fill_alpha = 0.8, 
+          fill.scale = tm_scale_continuous(values = 'brewer.spectral'), 
+          fill.legend = tm_legend(title = myvar, reverse = TRUE)) + 
+  tm_grid(lines = F) +
+  tm_xlab(x_map) +
+  tm_ylab(y_map, rotation = 90)
+```
+
 ```{r dist-espacial-int, eval=knitr::is_html_output()}
 mapview::mapview(outline, alpha.regions = 0, layer.name='Border', 
                  homebutton = F, legend = F, native.crs = T) + 
@@ -278,13 +292,14 @@ plot(dat.vgm)
 plot(variogram(g, cutoff = extension, width = 120))
 plot(variogram(g, cutoff = extension, width = 20))
 
-ggplot(dat.vgm,aes(x = dist, y = gamma)) + 
-  geom_point(size = 2) + 
+variog.omni = ggplot(dat.vgm,aes(x = dist, y = gamma)) + 
+  geom_point(size = 2, col='blue', shape=21) + 
   labs(x = x_var, y = y_var) +
   geom_hline(yintercept = S, col = 'red', linetype = 2) +
+  # geom_text_repel(aes(label = np), size = 3)
   ylim(0, max(dat.vgm$gamma)) +
-  xlim(0, max(dat.vgm$dist)) + 
-  geom_text_repel(aes(label = np), size = 3)
+  xlim(0, max(dat.vgm$dist))
+variog.omni
 ```
 
 ## Mapa de la superficie del variograma
@@ -315,7 +330,7 @@ Variogramas en diferentes direcciones donde:
 dat.vgm2 = variogram(g, alpha = c(0,45,90,135),
                      tol.hor = 22.5, cutoff = extension) # con direcciones y tolerancia angular
 
-ggplot(dat.vgm2,aes(x = dist, y = gamma,
+variog.dir = ggplot(dat.vgm2,aes(x = dist, y = gamma,
                     col = factor(dir.hor), shape = factor(dir.hor))) + 
   geom_point(size = 2) + 
   # geom_line() +
@@ -327,6 +342,7 @@ ggplot(dat.vgm2,aes(x = dist, y = gamma,
   # facet_wrap(~dir.hor) + 
   # geom_text_repel(aes(label = np), size = 3, show.legend = F) +
   theme(legend.position = 'top')
+variog.dir
 ```
 
 ## Modelado
@@ -358,10 +374,10 @@ show.vgms(models = c('Sph','Pen','Cir','Exp','Gau'),
 Es buena practica interpretar el variograma experimental y escoger un modelo apropiado, asi como valores iniciales para dicho modelo.
 
 ```{r params}
-meseta = 0.006
+meseta = .8
 mod = "Sph"
 rango = 400
-pep = 0.0015
+pep = 0.2
 ```
 
 ### Ajuste de variograma teorico
@@ -385,34 +401,104 @@ plot(dat.vgm2, vm.fit.sph, as.table = T, xlab = x_var, ylab = y_var)
 vm.fit.sph[1,"psill"]/sum(vm.fit.sph[,"psill"])
 ```
 
+```{r}
+angle_to_dir3 <- function(theta_deg) {
+  v <- c(cos(theta_deg * pi / 180), sin(theta_deg * pi / 180), 0)
+  v / sqrt(sum(v^2))
+}
+```
+
+```{r}
+df.fit = variogramLine(vm.fit.sph, maxdist = max(dat.vgm$dist), n = 100) %>% 
+  as_tibble()
+
+variog.omni + 
+  geom_line(data = df.fit, aes(dist, gamma), col = 'black', linewidth = .5, linetype='dashed', inherit.aes = F)
+
+variog.dir + 
+  geom_line(data = df.fit, aes(dist, gamma), col = 'black', linewidth = .5, linetype='dashed', inherit.aes = F)
+```
+
 ### Validacion cruzada
 
-Una vez escogido el modelo y ajustado a los datos se realiza la validacion cruzada para determinar si es aceptable. Tambien se pueden ajustar diferentes modelos y con los datos de validacion cruzada se determina el mejor.
+Una vez escogido el modelo y ajustado a los datos se realiza la validacion cruzada para determinar si es aceptable. Tambien se pueden ajustar diferentes modelos y con los datos de validacion cruzada se determina el mejor. La escogencia de `nfold` depende del numero de datos, si se tienen pocos datos se recomienda usar leave-one-out (`nfold = nrow(datos_sf)`) y si se tienen muchos datos se puede usar k-fold (`nfold = 5 o 10`).
+
+```{r}
+#| eval: false
+datos_sf = datos_sf |> mutate(.point_id = row_number())
+
+datos_sf = datos_sf |> select(-c(fold,starts_with(".poi")))
+```
+
+```{r}
+kfolds = 5
+cluster_folds <- spatial_clustering_cv(datos_sf, v = kfolds)
+
+fold_tbl <- map_dfr(cluster_folds$splits,
+                    ~ assessment(.x) %>% select(.point_id),
+                    .id = "fold")
+
+datos_sf = datos_sf |> 
+  st_join(fold_tbl, by = ".point_id") %>%
+  mutate(fold = factor(fold))
+
+datos_sf
+```
 
 ```{r xval, cache=TRUE, dependson='ajuste'}
-kcv.ok = krige.cv(formula, 
-                  locations = datos_sf, 
-                  model = vm.fit.sph)
+tipo.cv = 'kfold' # 'kfold', 'loo' o 'spatial'
+kfolds = 5
+if (tipo.cv == 'spatial') {
+  nfolds = datos_sf$fold
+} else if (tipo.cv == 'kfold') {
+  nfolds = kfolds
+} else if (tipo.cv == 'loo') {
+  nfolds = nrow(datos_sf)
+} else {
+  stop("Tipo de validación cruzada no reconocido. Use 'kfold', 'loo' o 'spatial'.")
+}
+
+beta = ifelse(transformar & transformacion == "Quantile", 0, NULL) # 0 para KS
+
+kcv = krige.cv(formula, 
+               locations = datos_sf,
+               model = vm.fit.sph,
+               nfold = nfolds, 
+               beta = beta)
+```
+
+El siguiente grafico muestra la distribucion espacial de los datos usados para la validacion cruzada, donde cada color representa un fold diferente. En el caso de leave-one-out cada punto es un fold diferente.
+
+```{r}
+datos_sf$fold = factor(kcv$fold)
+
+ggplot() + 
+  geom_sf(data = outline, col = 'cyan', alpha = .1, size = .75) + 
+  geom_sf(data = datos_sf, aes(col = fold), 
+          size = 3, alpha = 0.6) + 
+  scale_color_viridis_d() + 
+  labs(x = x_map, y = y_map) + 
+  if (!is.na(st_crs(datos_sf))) {
+    coord_sf(datum = st_crs(datos_sf))
+  }
 ```
 
 ```{r xval-metrics, dependson='xval'}
-summary(kcv.ok$residual)
+xval.rmse = RMSE(kcv$observed, kcv$var1.pred) # RMSE - menor es mejor
 
-xval.rmse = RMSE(kcv.ok$observed, kcv.ok$var1.pred) # RMSE - menor es mejor
+xval.mape = MAPE(kcv$var1.pred, kcv$observed)
 
-xval.mape = MAPE(kcv.ok$var1.pred, kcv.ok$observed)
+xval.mae = MAE(kcv$var1.pred, kcv$observed)
 
-xval.mae = MAE(kcv.ok$var1.pred, kcv.ok$observed)
+xval.msdr = mean(kcv$residual^2/kcv$var1.var) # MSDR - ~1 es mejor
 
-xval.msdr = mean(kcv.ok$residual^2/kcv.ok$var1.var) # MSDR - ~1 es mejor
-
-xval.mod = lm(observed ~ var1.pred, as.data.frame(kcv.ok))
+xval.mod = lm(observed ~ var1.pred, as.data.frame(kcv))
 
 xval.r2 = xval.mod %>% broom::glance() %>% pull(r.squared)
 
-bias = mean(kcv.ok$residual) # idealmente 0
+bias = mean(kcv$residual) # idealmente 0
 
-correl = signif(CorCI(cor(kcv.ok$observed, kcv.ok$var1.pred), nrow(kcv.ok)),3)
+correl = signif(CorCI(cor(kcv$observed, kcv$var1.pred), nrow(kcv)),3)
 
 metricas = tibble(metric = c('rmse','mae','msdr','r','R2', 'bias'), 
                   estimate = c(xval.rmse,xval.mae,
@@ -426,7 +512,7 @@ CIbeta
 ```{r xval-plots, dependson='xval'}
 #| layout-ncol: 2
 
-ggplot(as.data.frame(kcv.ok), aes(var1.pred, observed)) + 
+ggplot(as.data.frame(kcv), aes(var1.pred, observed)) + 
   geom_point(col = "blue", shape = 1, size = 1.25) + 
   coord_fixed() + 
   geom_abline(slope = 1, col = "red", linewidth = 1) + 
@@ -434,10 +520,10 @@ ggplot(as.data.frame(kcv.ok), aes(var1.pred, observed)) +
   labs(x = "Predecidos", y = "Observados", 
        subtitle = 'Rojo: linea 1:1, Verde: regresion')
 
-ggplot(as.data.frame(kcv.ok), aes(residual)) + 
+ggplot(as.data.frame(kcv), aes(residual)) + 
   geom_histogram(bins = 15, col = 'black', fill = "blue") + 
   labs(x = "Residuales", y = "Fecuencia") + 
-  geom_vline(xintercept = mean(kcv.ok$residual), col = 'red')
+  geom_vline(xintercept = mean(kcv$residual), col = 'red')
 ```
 
 ## Interpolacion usando kriging
@@ -509,7 +595,7 @@ if (isTRUE(transformar) & transformacion == "Box-Cox") {
 ok.gg1 = ggplot() + 
   geom_stars(data = ok, aes(fill = .data[[pred.var]], x = x, y = y)) + 
   geom_contour(aes(x,y,z=.data[[pred.var]]), data.frame(ok),
-               col='white',size=0.1,bins = 10) + 
+               col='white',linewidth=0.1,bins = 10) + 
   scale_fill_viridis(option = 'D', direction = 1, na.value = NA) + 
   coord_sf() + 
   labs(x = x_map, y = y_map, 
@@ -529,6 +615,26 @@ ok.gg2 = ggplot() +
 ok.gg1
 ok.gg2
 # gridExtra::grid.arrange(ok.gg1,ok.gg2,ncol=2)
+```
+
+```{r}
+tm_shape(ok) + 
+  tm_raster(pred.var, 
+            col.scale = tm_scale_continuous(values = 'viridis'), 
+            col.legend = tm_legend(title = myvar0, reverse = TRUE)) + 
+  tm_xlab(x_map) + 
+  tm_ylab(y_map, rotation = 90) + 
+  tm_grid(lines = F) +
+  tm_title('Prediccion')
+
+tm_shape(ok) + 
+  tm_raster(var.var, 
+            col.scale = tm_scale_continuous(values = 'brewer.rd_pu'), 
+            col.legend = tm_legend(title = myvar0, reverse = TRUE)) + 
+  tm_xlab(x_map) + 
+  tm_ylab(y_map, rotation = 90) + 
+  tm_grid(lines = F) +
+  tm_title('Desviacion estandar')
 ```
 
 ```{r}
