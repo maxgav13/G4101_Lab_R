@@ -435,19 +435,23 @@ kfolds = 5
 cluster_folds <- spatial_clustering_cv(datos_sf, v = kfolds)
 
 fold_tbl <- map_dfr(cluster_folds$splits,
-                    ~ assessment(.x) %>% select(.point_id),
-                    .id = "fold")
+                    ~ assessment(.x) |> select(.point_id),
+                    .id = "fold") |> 
+            st_drop_geometry() |>
+            mutate(fold = factor(fold))
 
 datos_sf = datos_sf |> 
-  st_join(fold_tbl, by = ".point_id") %>%
+  left_join(fold_tbl, by = ".point_id") %>%
   mutate(fold = factor(fold))
 
 datos_sf
 ```
 
 ```{r xval, cache=TRUE, dependson='ajuste'}
-tipo.cv = 'kfold' # 'kfold', 'loo' o 'spatial'
+tipo.cv = 'spatial' # 'kfold', 'loo' o 'spatial'
+
 kfolds = 5
+
 if (tipo.cv == 'spatial') {
   nfolds = datos_sf$fold
 } else if (tipo.cv == 'kfold') {
@@ -476,7 +480,7 @@ ggplot() +
   geom_sf(data = outline, col = 'cyan', alpha = .1, size = .75) + 
   geom_sf(data = datos_sf, aes(col = fold), 
           size = 3, alpha = 0.6) + 
-  scale_color_viridis_d() + 
+  scale_color_brewer("Fold", palette = "Spectral") + 
   labs(x = x_map, y = y_map) + 
   if (!is.na(st_crs(datos_sf))) {
     coord_sf(datum = st_crs(datos_sf))
