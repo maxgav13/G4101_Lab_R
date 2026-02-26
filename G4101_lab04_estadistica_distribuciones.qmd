@@ -80,12 +80,12 @@ pbinom(x2,n2,p2)
 #|   - 'Funcion de probabilidad acumulada'
 #| layout-ncol: 2
 
-data.frame(x=x2,y=dbinom(x2,n2,p)) %>% 
+data.frame(x=x2,y=dbinom(x2,n2,p)) |> 
   ggplot(aes(x,y))+
   geom_col(width = .5,fill='blue')+
   theme_bw()
 
-data.frame(x=x2,y=pbinom(x2,n2,p)) %>% 
+data.frame(x=x2,y=pbinom(x2,n2,p)) |> 
   ggplot(aes(x,y))+
   geom_col(width = .5,fill='blue')+
   theme_bw()
@@ -121,12 +121,12 @@ ppois(x4,lambda)
 #|   - 'Funcion de probabilidad acumulada'
 #| layout-ncol: 2
 
-data.frame(x=x4,y=dpois(x4,lambda)) %>% 
+data.frame(x=x4,y=dpois(x4,lambda)) |> 
   ggplot(aes(x,y))+
   geom_col(width = .5,fill='orange')+
   theme_bw()
 
-data.frame(x=x4,y=ppois(x4,lambda)) %>% 
+data.frame(x=x4,y=ppois(x4,lambda)) |> 
   ggplot(aes(x,y))+
   geom_col(width = .5,fill='orange')+
   theme_bw()

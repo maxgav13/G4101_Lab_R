@@ -63,7 +63,7 @@ $$H_0 : \text{longitud de intervalos es igual}$$
 
 ```{r}
 x = c(0.5,2.3,3.2,4.2,4.9,7,11.4,12.7,14.6,
-      16,21.5,22.5,25.8,30.3,31.9,36.2,42.8) %>% 
+      16,21.5,22.5,25.8,30.3,31.9,36.2,42.8) |> 
   sort()
 
 n = length(x)
@@ -81,8 +81,8 @@ cor.dat = tibble(i,h,rankh)
 (rs = 1-(6*sum((i-rankh)^2))/(n.i*(n.i^2-1)))
 CorCI(rs,n.i)
 
-cor.test(i,h,method = "spearman") %>% tidy()
-cor.test(i,rankh) %>% tidy()
+cor.test(i,h,method = "spearman") |> tidy()
+cor.test(i,rankh) |> tidy()
 
 cor_test(cor.dat,'i','rankh')
 cor_test(cor.dat,'i','h',method = 'spearman')
@@ -103,7 +103,7 @@ dens = c(3.57,3.63,2.86,2.94,3.42,2.85,3.67,3.78,3.86,
 
 (dens2 = dichotomy(dens, criteria = 'median')) # dicotomiza los datos
 
-RunsTest(dens2,correct = F) %>% tidy() # test de corridas
+RunsTest(dens2,correct = F) |> tidy() # test de corridas
 ```
 
 # Regresion
@@ -206,7 +206,7 @@ anova(fit3,fit2)
 ```{r comp-performance}
 comp.mods = compare_performance(list(lin=fit1,cuad=fit2,log=fit3),
                                 rank = T) # performance
-comp.mods %>%  tibble()
+comp.mods |>  tibble()
 plot(comp.mods)
 ```
 
@@ -271,25 +271,25 @@ zoo::autoplot.zoo(AirPassengers) # estatico
 ```{r ts-int1}
 #| eval: false
 
-AirPassengers %>% tidy() %>% dygraphs::dygraph() # interactivo
+AirPassengers |> tidy() |> dygraphs::dygraph() # interactivo
 ```
 
 ```{r ts-int2}
 #| eval: false
 
-AirPassengers %>% highcharter::hchart() # interactivo
+AirPassengers |> highcharter::hchart() # interactivo
 ```
 
 ```{r ts-tb}
-DF = AirPassengers %>% 
-  tidy() %>% 
+DF = AirPassengers |> 
+  tidy() |> 
   mutate(log.value = log(value))
 
-DF %>% 
+DF |> 
   plot_time_series(index,value,
                    .interactive = F) # estatico o interactivo
 
-DF %>% 
+DF |> 
   plot_time_series(index,log.value,
                    .interactive = F) # estatico o interactivo
 ```
@@ -343,7 +343,7 @@ ggplot(DF2, aes(index,.resid)) +
 ### Sin remover tendencia
 
 ```{r acf-trend}
-DF %>% plot_acf_diagnostics(index,value,
+DF |> plot_acf_diagnostics(index,value,
                             .lags = nrow(.)/3,
                             .show_white_noise_bars = T,
                             .interactive = T)
@@ -352,7 +352,7 @@ DF %>% plot_acf_diagnostics(index,value,
 ### Despues de remover tendencia
 
 ```{r acf-no-trend}
-DF2 %>% plot_acf_diagnostics(index,.resid,
+DF2 |> plot_acf_diagnostics(index,.resid,
                              .lags = nrow(.)/3,
                              .show_white_noise_bars = T,
                              .interactive = T)
@@ -365,14 +365,14 @@ DF2 %>% plot_acf_diagnostics(index,.resid,
 ```{r acf-diag}
 n = nrow(DF2)
 lag.max = n/3
-delta = diff(DF2 %>% pull(index))[1]
+delta = diff(DF2 |> pull(index))[1]
 
-ac.1 = DF2 %>% tk_acf_diagnostics(index, .resid, .lags = lag.max)
+ac.1 = DF2 |> tk_acf_diagnostics(index, .resid, .lags = lag.max)
 ac.1
 ```
 
 ```{r acf-test}
-lag.t = ac.1 %>% filter(ACF<0)
+lag.t = ac.1 |> filter(ACF<0)
 
 rtau.1 = max(ac.1[which(ac.1$lag==pull(lag.t[1,1])):nrow(ac.1),2]) # valor maximo de autocorrelacion
 
@@ -433,10 +433,10 @@ ac_res
 ### Modelo
 
 ```{r}
-car::durbinWatsonTest(mod,lag.max) %>% 
-  tidy %>% 
-  rownames_to_column('lag') %>% 
-  # filter(autocorrelation > 0) %>% 
+car::durbinWatsonTest(mod,lag.max) |> 
+  tidy |> 
+  rownames_to_column('lag') |> 
+  # filter(autocorrelation > 0) |> 
   slice_max(abs(autocorrelation), n = 10)
 ```
 

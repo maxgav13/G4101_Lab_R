@@ -30,7 +30,9 @@ execute:
 
 Como instalar y cargar paquetes instalados
 
-```{r eval=FALSE}
+```{r}
+#| eval: FALSE
+
 install.packages("devtools")
 library(MASS)
 library(tidyverse)
@@ -40,16 +42,19 @@ library(tidyverse)
 
 Mas importante para documentos `.R` que para `.Rmd` o `.qmd`
 
-```{r eval=FALSE}
+```{r}
+#| eval: FALSE
+
 getwd()
-setwd("~/Documents/UCR/Docencia/G 4101 - Geologia Numerica/2017-I/datasets")
-setwd("~/Documents/R")
+setwd("~/Documents/UCR/Docencia/G 4101 - Geologia Numerica/")
 ```
 
 ## Ayuda en R
 
 
-```{r eval=FALSE}
+```{r}
+#| eval: FALSE
+
 ?mean
 ```
 
@@ -197,6 +202,8 @@ x2
 Una vez se han generado objetos estos pueden ser guardados para compartir con otra gente o cargar en otra sesion para no tener que volver a generarlos.
 
 ```{r}
+#| eval: FALSE
+
 save.image("introR.rdata")
 load("introR.rdata")
 ```
@@ -211,9 +218,9 @@ La mejor opcion para importar datos es usar `import` del paquete **rio**. Uno si
 ```{r}
 data("airquality")
 head(airquality)
-dat1 <- import(file.choose())
-dat1 <- import("data/LungCapData2.csv")
-titanic <- import("data/titanic.csv")
+# dat1 <- import(file.choose())
+dat1 <- rio::import("data/LungCapData2.csv")
+titanic <- rio::import("data/titanic.csv")
 ```
 
 ## Inspeccionando los datos
@@ -291,13 +298,13 @@ keep(y, ~.x < 70)
 
 ## Pipe operator
 
-Uno de los operadores basicos en el *tidyverse* es el pipe operator ( %>% ). Este permite que el resultado antes del operador sea la entrada lo que se va a hacer despues del operador. La ventaja es que permite encadenar operaciones sin necesidad de salvar objetos intermedios y es mas facil de leer que encerrar operaciones una dentro de la otra. Se ejemplifica con un caso sencillo.
+Uno de los operadores basicos en el *tidyverse* es el pipe operator ( |> ). Este permite que el resultado antes del operador sea la entrada lo que se va a hacer despues del operador. La ventaja es que permite encadenar operaciones sin necesidad de salvar objetos intermedios y es mas facil de leer que encerrar operaciones una dentro de la otra. Se ejemplifica con un caso sencillo.
 
 ```{r}
 set.seed(26)
 e = runif(50,-10,10)
 round(sqrt(mean(e^2)),3)
-e %>% .^2 %>% mean() %>% sqrt() %>% round(3)
+e^2 |> mean() |> sqrt() |> round(3)
 ```
 
 Lo anterior se lee: agarre el vector `e`, eleve sus valores al cuadrado, despues calcule la media, despues saquele la raiz y por ultimo redondeelo a 3 cifras.
@@ -316,68 +323,68 @@ Para crear o modificar variables se usa `mutate`.
 
 ```{r}
 aggregate(Age ~ Gender, data = dat1, mean)
-
-dat1 %>% 
-  group_by(Gender) %>% 
+  
+dat1 |> 
+  group_by(Gender) |> 
   summarise(mean(Age))
 
-dat1 %>% 
-  group_by(Gender) %>% 
-  select(Age) %>% 
+dat1 |> 
+  group_by(Gender) |> 
+  select(Age) |> 
   summarise(across(everything(),mean))
 
-dat1 %>% 
-  group_by(Gender) %>% 
+dat1 |> 
+  group_by(Gender) |> 
   summarise(N=n(),mean(Age),mean(Height),mean(LungCap))
 
-dat1 %>% 
-  group_by(Gender,Smoke) %>% 
+dat1 |> 
+  group_by(Gender,Smoke) |> 
   summarise(mean(Age))
 
 filter(airquality,Temp > 85)
 
-airquality %>% 
+airquality |> 
   filter(Temp > 85)
 
-airquality %>% 
+airquality |> 
   filter(Temp > 25, Wind > 10)
 
-airquality %>% 
-  filter(Temp > 25, Wind > 10) %>% 
+airquality |> 
+  filter(Temp > 25, Wind > 10) |> 
   select(Ozone,Solar.R)
 
-airquality %>% 
+airquality |> 
   select(Temp,Wind,Ozone)
 
-airquality %>% 
+airquality |> 
   arrange(Temp)
 
-airquality %>% 
+airquality |> 
   arrange(desc(Temp))
 
-dat1 %>% 
+dat1 |> 
   select(-Smoke)
 
-dat1 %>% 
+dat1 |> 
   pull(Age)
 
 glimpse(titanic)
-titanic = titanic %>% 
+titanic = titanic |> 
   mutate(Pclass = as_factor(Pclass),
          Survived = as_factor(Survived),
          Sex = as_factor(Sex))
 glimpse(titanic)
 
-dat1 %>% 
+dat1 |> 
   mutate(Altura = Height*2.54)
 
-airq = airquality %>% 
+airq = airquality |> 
   mutate(Month = factor(Month,
                         levels = 5:9,
                         labels = c("Mayo", "Junio", "Julio", "Agosto", "Setiembre")))
 airq
 
-airquality %>% 
+airquality |> 
   as_tibble()
 ```
 
@@ -388,7 +395,9 @@ El paquete por exelencia para crear graficos en **R** es *ggplot2*. Este se basa
 
 La estructura basica de cualquier grafico es
 
-```{r eval = FALSE}
+```{r}
+#| eval: FALSE
+
 ggplot(data = <DATA>) +
   <GEOM_FUNCTION>(mapping = aes(<MAPPINGS>),
                   stat = <STAT>, position = <POSITION>) +
@@ -419,10 +428,10 @@ ggplot(airquality,aes(x=Temp)) +
   facet_wrap(~ Month)
 
 ggplot(airquality,aes(x=Temp)) +
-  geom_histogram(bins = 20,aes(y=stat(density)),col="black",fill="blue")
+  geom_histogram(bins = 20,aes(y=after_stat(density)),col="black",fill="blue")
 
 ggplot(airquality,aes(x=Temp)) +
-  geom_histogram(bins = 20,aes(y=stat(density)),col="black",fill="blue") +
+  geom_histogram(bins = 20,aes(y=after_stat(density)),col="black",fill="blue") +
   geom_density(col="red")
 
 ggplot(titanic, aes(x = Age, fill = Survived)) +
@@ -448,11 +457,11 @@ ggplot(titanic, aes(x = Sex, fill = Survived)) +
   facet_wrap(~ Pclass) + 
   geom_bar()
 
-gss_cat %>% 
+gss_cat |> 
   ggplot(aes(marital)) + 
   geom_bar()
 
-gss_cat %>% 
+gss_cat |> 
   ggplot(aes(fct_infreq(marital))) + 
   geom_bar()
 

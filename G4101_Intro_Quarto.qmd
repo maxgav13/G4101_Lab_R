@@ -104,8 +104,8 @@ Para poder referencias tablas en el texto la etiqueta del bloque donde se genera
 #| label: tbl-flext
 #| tbl-cap: "Tabla usando el paquete **flextable**."
 
-mtcars %>% 
-  head() %>% 
+mtcars |> 
+  head() |> 
   flextable()
 ```
 
@@ -113,8 +113,8 @@ mtcars %>%
 #| label: tbl-kb
 #| tbl-cap: "Tabla usando el paquete **kableExtra**."
 
-mtcars %>% 
-  head() %>% 
+mtcars |> 
+  head() |> 
   kable()
 ```
 
@@ -122,8 +122,8 @@ mtcars %>%
 #| label: tbl-gt
 #| tbl-cap: "Tabla usando el paquete **gt**."
 
-mtcars %>% 
-  head() %>% 
+mtcars |> 
+  head() |> 
   gt()
 ```
 
@@ -181,7 +181,7 @@ La @fig-dygraph muestra un grafico interactivo de una serie temporal, creado con
 #| label: fig-dygraph
 #| fig-cap: "Grafico interactivo creado con **dygraph**."
 
-dygraph(nhtemp, main = "Temperaturas de New Haven") %>% 
+dygraph(nhtemp, main = "Temperaturas de New Haven") |> 
   dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
 ```
 
@@ -200,7 +200,7 @@ ggplotly(q)
 
 Expresiones matematicas y formulas se pueden desplegar en linea, dentro del cuerpo del texto ($A = \pi*r^{2}$) o por separado
 
-$$E = mc^{2}$$ Para escribir estas expresiones se usa lenguaje `LaTeX`.
+$E = mc^{2}$ Para escribir estas expresiones se usa lenguaje `LaTeX`.
 
 # Importando datos
 

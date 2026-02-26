@@ -61,10 +61,10 @@ G3 = c(1,2,4,5) # Black Mt
 
 Stacked = stack(list(G1=G1,
                      G2=G2,
-                     G3=G3)) %>% 
+                     G3=G3)) |> 
   as_tibble()
 
-Stacked = Stacked %>% 
+Stacked = Stacked |> 
   mutate(ind = factor(ind,
                       labels = c('Mt Mica', 'Sebago Bath', 'Black Mt')))
 ```
@@ -72,8 +72,8 @@ Stacked = Stacked %>%
 ## Estadisticas por grupo
 
 ```{r}
-Stacked %>% 
-  group_by(ind) %>% 
+Stacked |> 
+  group_by(ind) |> 
   get_summary_stats()
 ```
 
@@ -91,15 +91,15 @@ ggplot(Stacked, aes(ind, values)) +
 
 ```{r}
 # Levene Test
-LeveneTest(values ~ ind, data = Stacked, center = mean) %>% 
+LeveneTest(values ~ ind, data = Stacked, center = mean) |> 
   tidy()
 
 # Brown-Forsythe
-LeveneTest(values ~ ind, data = Stacked, center = median) %>% 
+LeveneTest(values ~ ind, data = Stacked, center = median) |> 
   tidy()
 
 # Bartlett
-bartlett.test(values ~ ind, data = Stacked) %>% 
+bartlett.test(values ~ ind, data = Stacked) |> 
   tidy()
 ```
 
@@ -115,13 +115,13 @@ Si las varianzas son diferentes la prueba se llama ANOVA de Welch, si son iguale
 # con igualdad de varianzas
 aov.fit = aov(values ~ ind, data = Stacked)
 
-aov.fit %>% 
+aov.fit |> 
   tidy()
 
 # sin igualdad de varianzas
 aov.fit2 = oneway.test(values ~ ind, Stacked, var.equal = F) 
 
-aov.fit2 %>% 
+aov.fit2 |> 
   tidy()
 ```
 
@@ -179,7 +179,7 @@ omega_squared(aov.fit2, ci = 1-alfa, alternative = 'two')
 # MOTE (solo si varianzas son iguales)
 aov.omega = omega.F(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = alfa)
 
-aov.omega %>% 
+aov.omega |> 
   as_tibble_row()
 ```
 
@@ -196,7 +196,7 @@ effectsize::eta_squared(aov.fit2, ci = 1-alfa, alternative = 'two')
 # MOTE
 aov.eta = eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = alfa)
 
-aov.eta %>% 
+aov.eta |> 
   as_tibble_row()
 ```
 
@@ -204,24 +204,24 @@ aov.eta %>%
 
 ```{r}
 if (var.igual == T) {
-  CI = Stacked %>% mutate(ind = fct_rev(ind)) %>% 
+  CI = Stacked |> mutate(ind = fct_rev(ind)) |> 
     tukey_hsd(values ~ ind,
-              conf.level = 1-alfa) %>% 
-    select(-c(1,4)) %>% 
+              conf.level = 1-alfa) |> 
+    select(-c(1,4)) |> 
     mutate(contrast = str_c(group2,group1,sep = ' - '),
-           method = 'Tukey') %>% 
-    relocate(contrast) %>% 
-    select(-contains('group')) %>% 
+           method = 'Tukey') |> 
+    relocate(contrast) |> 
+    select(-contains('group')) |> 
     arrange(contrast)
 } else {
-  CI = Stacked %>% mutate(ind = fct_rev(ind)) %>% 
+  CI = Stacked |> mutate(ind = fct_rev(ind)) |> 
     games_howell_test(values ~ ind,
-                      conf.level = 1-alfa) %>% 
-    select(-1) %>% 
+                      conf.level = 1-alfa) |> 
+    select(-1) |> 
     mutate(contrast = str_c(group2,group1,sep = ' - '),
-           method = 'Games-Howell') %>% 
-    relocate(contrast) %>% 
-    select(-contains('group')) %>% 
+           method = 'Games-Howell') |> 
+    relocate(contrast) |> 
+    select(-contains('group')) |> 
     arrange(contrast) 
 }
 CI
@@ -234,26 +234,26 @@ ggplot(CI, aes(contrast, estimate, ymin = conf.low, ymax = conf.high)) +
 ```
 
 ```{r}
-contrastes = combn(levels(Stacked %>% pull(ind)), 2) %>% 
-  as.data.frame() %>% 
+contrastes = combn(levels(Stacked |> pull(ind)), 2) |> 
+  as.data.frame() |> 
   as.list()
 
 ES = map_dfr(contrastes, 
-             ~ effectsize::cohens_d(values ~ ind, data = Stacked %>% 
-                                      filter(ind %in% .x) %>% 
+             ~ effectsize::cohens_d(values ~ ind, data = Stacked |> 
+                                      filter(ind %in% .x) |> 
                                       mutate(ind=fct_drop(ind)),
                                     pooled_sd = var.igual,
-                                    ci = 1-alfa) %>%
-               as_tibble()) %>% 
+                                    ci = 1-alfa) |>
+               as_tibble()) |> 
   mutate(contrast = map_chr(contrastes, 
-                            ~ str_flatten(.x, collapse = ' - '))) %>%
-  select(contrast, everything(),-CI) %>% 
+                            ~ str_flatten(.x, collapse = ' - '))) |>
+  select(contrast, everything(),-CI) |> 
   arrange(contrast)
 ES
 ```
 
 ```{r}
-CI %>% inner_join(ES, by = 'contrast')
+CI |> inner_join(ES, by = 'contrast')
 ```
 
 ## Grafico resumen
@@ -277,10 +277,10 @@ $H_o$: Datos observados siguen la distribucion/proporcion propuesta
 
 ```{r}
 alfa = .05
-obs = c(90, 110) %>% 
+obs = c(90, 110) |> 
   set_names(c('N','S')) # conteos observados
 
-obs.tb = Untable(obs) %>% tibble()
+obs.tb = Untable(obs) |> tibble()
 
 p = c(.5, .5) # proporciones esperadas
 
@@ -291,7 +291,7 @@ N.gof = sum(obs)
 
 ```{r}
 CHI.gof = chisq.test(obs,p=p) 
-CHI.gof %>% 
+CHI.gof |> 
   tidy()
 
 binom.test(x = 110, n = 200, p = .5, conf.level = 1-alfa) # binomial test
@@ -310,7 +310,7 @@ $$
 v.gof = v.chi.sq(x2 = CHI.gof$statistic, n = N.gof, 
                  r = 2, c = length(obs), a = alfa)
 
-v.gof %>% 
+v.gof |> 
   as_tibble_row()
 ```
 
@@ -319,16 +319,16 @@ v.gof %>%
 ```{r}
 ncomp.gof = (length(obs)*(length(obs)-1))/2
 new.a.gof = a/ncomp.gof
-z.crit.gof = qnorm(new.a.gof/2) %>% abs()
+z.crit.gof = qnorm(new.a.gof/2) |> abs()
 z.crit.gof
 ```
 
 ```{r}
-chisq_descriptives(rstatix::chisq_test(obs)) %>% 
+chisq_descriptives(rstatix::chisq_test(obs)) |> 
   left_join(pairwise_chisq_test_against_p(obs,
                                           p = p,
                                           p.adjust.method = 'BH')
-            ) %>% 
+            ) |> 
   select(-c(group,n))
 ```
 
@@ -353,14 +353,14 @@ alfa = .05
 
 dat2 = vroom('data/chi2 homogeneidad clastos.csv')
 
-dat2 = dat2 %>% 
+dat2 = dat2 |> 
   mutate(Clasto = fct_inorder(Clasto),
          Capa = fct_inorder(as.factor(Capa)))
 
 clastos = matrix(data = c(23,10,17,32,8,10,16,16,18,20,14,16), 
                  ncol=4, 
                  dimnames = list(Clasto=c('cuarzo','pedernal','basalto'),
-                                 Capa=1:4)) %>% 
+                                 Capa=1:4)) |> 
   as.table()
 
 table2d_summary(clastos)
@@ -384,7 +384,7 @@ ggplot(data = dat2) +
 
 ```{r}
 CHI.h = chisq.test(clastos)
-CHI.h %>% 
+CHI.h |> 
   tidy()
 ```
 
@@ -402,7 +402,7 @@ v.h = v.chi.sq(x2 = CHI.h$statistic, n = N.h,
                r = nrow(clastos), c = ncol(clastos), 
                a = alfa)
 
-v.h %>% 
+v.h |> 
   as_tibble_row()
 
 # DescTools
@@ -422,21 +422,21 @@ chisq_to_cramers_v(chisq = CHI.h$statistic,
 ```{r}
 ncomp.h = prod(dim(clastos))
 new.a.h = a/ncomp.h
-z.crit.h = qnorm(new.a.h/2) %>% abs()
+z.crit.h = qnorm(new.a.h/2) |> abs()
 z.crit.h
 ```
 
 ```{r}
-# chisq_descriptives(rstatix::chisq_test(clastos)) %>%
-#   mutate(expected = round(expected,5)) %>% 
+# chisq_descriptives(rstatix::chisq_test(clastos)) |>
+#   mutate(expected = round(expected,5)) |> 
 #   left_join(pairwise_chisq_test_against_p(clastos,
 #                                           p = (round(CHI.h$expected,5)/N.h),
-#                                           p.adjust.method = "BH")) %>%
-#   mutate(across(where(is.numeric),~round(.x,3))) %>% 
+#                                           p.adjust.method = "BH")) |>
+#   mutate(across(where(is.numeric),~round(.x,3))) |> 
 #   select(1,2,resid,std.resid,p.adj,p.adj.signif)
 
-chisq_descriptives(rstatix::chisq_test(clastos)) %>% 
-    select(1,2,std.resid) %>% 
+chisq_descriptives(rstatix::chisq_test(clastos)) |> 
+    select(1,2,std.resid) |> 
     mutate(across(where(is.numeric),~round(.x,3)),
            signif = ifelse(abs(std.resid)>z.crit.h,'*','ns'))
 ```
@@ -493,7 +493,7 @@ alfa = .05
 
 dat3 = vroom('data/chi2 independencia.csv')
 
-dat3 = dat3 %>% 
+dat3 = dat3 |> 
   mutate(Redondez = fct_inorder(Redondez),
          Distancia = fct_inorder(Distancia))
 
@@ -504,7 +504,7 @@ round.dist = matrix(data = c(28,23,5,0,21,23,8,2,11,14,
                     dimnames = list(Redondez=c('Angular','Sub-angular',
                                           'Sub-redondeado','Redondeado'),
                                     Distancia=c('0-5','5-10','10-20',
-                                                '20-30','30-40'))) %>% 
+                                                '20-30','30-40'))) |> 
   as.table()
 
 table2d_summary(round.dist)
@@ -528,7 +528,7 @@ ggplot(data = dat3) +
 
 ```{r}
 CHI.i = chisq.test(round.dist)
-CHI.i %>% 
+CHI.i |> 
   tidy()
 ```
 
@@ -546,7 +546,7 @@ v.i = v.chi.sq(x2 = CHI.i$statistic, n = N.i,
                r = nrow(round.dist), c = ncol(round.dist), 
                a = alfa)
 
-v.i %>% 
+v.i |> 
   as_tibble_row()
 
 # DescTools
@@ -561,21 +561,21 @@ cramers_v(round.dist, ci = 1-alfa, alternative = 'two')
 ```{r}
 ncomp.i = prod(dim(round.dist))
 new.a.i = alfa/ncomp.i
-z.crit.i = qnorm(new.a.i/2) %>% abs()
+z.crit.i = qnorm(new.a.i/2) |> abs()
 z.crit.i
 ```
 
 ```{r}
-# chisq_descriptives(rstatix::chisq_test(round.dist)) %>%
-#   mutate(expected = round(expected,6)) %>% 
+# chisq_descriptives(rstatix::chisq_test(round.dist)) |>
+#   mutate(expected = round(expected,6)) |> 
 #   left_join(pairwise_chisq_test_against_p(round.dist,
 #                                           p = (round(CHI.i$expected,6)/N.i),
-#                                           p.adjust.method = "BH")) %>%
-#   mutate(across(where(is.numeric),~round(.x,3))) %>% 
+#                                           p.adjust.method = "BH")) |>
+#   mutate(across(where(is.numeric),~round(.x,3))) |> 
 #   select(1,2,resid,std.resid,p.adj,p.adj.signif)
 
-chisq_descriptives(rstatix::chisq_test(round.dist)) %>% 
-    select(1,2,std.resid) %>% 
+chisq_descriptives(rstatix::chisq_test(round.dist)) |> 
+    select(1,2,std.resid) |> 
     mutate(across(where(is.numeric),~round(.x,3)),
            signif = ifelse(abs(std.resid)>z.crit.i,'*','ns'))
 ```

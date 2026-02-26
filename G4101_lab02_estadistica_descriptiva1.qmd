@@ -62,7 +62,7 @@ theme_gtsummary_language(
 La forma numerica de resumir datos categoricos es por medio de tablas de frecuencias (1 variable) o tablas de contingencia (2 variables). Hay diferentes funciones para realizar estas tareas, aqui se muestran 3: `tabyl` del paquete **janitor**, `freq` del paquete **summarytools**, y `tbl_cross` del paquete **gtsummary**. Los paquetes **janitor** y **gtsummary** permiten generar tablas esteticas y con gran detalle.
 
 ```{r}
-gss_cat %>% glimpse()
+gss_cat |> glimpse()
 
 tabyl(dat = gss_cat, var1 = marital)
 
@@ -70,8 +70,8 @@ tabyl(gss_cat, race)
 
 freq(gss_cat, race)
 
-freq(gss_cat, race) %>% 
-  as_tibble(rownames = 'race') %>% 
+freq(gss_cat, race) |> 
+  as_tibble(rownames = 'race') |> 
   clean_names()
 
 tbl_cross(gss_cat, marital, race, percent = 'cell')
@@ -134,7 +134,7 @@ ggplot(data = airquality, aes(x = Temp)) +
 ```{r}
 ggplot(airquality, aes(Temp)) + 
   geom_histogram(breaks = seq(50,100,10), 
-                 aes(y=stat(count/sum(count))), 
+                 aes(y=after_stat(count/sum(count))), 
                  col='black', fill='lightblue') +
   labs(x='Temperatura', y='Frecuencia relativa')
 ```
@@ -142,7 +142,7 @@ ggplot(airquality, aes(Temp)) +
 ```{r}
 tabyl(airquality,Month)
 
-airq = airquality %>% 
+airq = airquality |> 
   mutate(Month = factor(Month,
                         labels = c("Mayo", "Junio", "Julio", 
                                    "Agosto", "Setiembre")))

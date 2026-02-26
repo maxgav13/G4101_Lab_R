@@ -75,10 +75,10 @@ Vamos a usar los datos de `airquality`.
 #| tbl-cap: Datos de airquality modificados
 
 
-airq = airquality %>% 
-  as_tibble() %>% 
+airq = airquality |> 
+  as_tibble() |> 
   mutate(Month = as_factor(Month),
-         Day = as_factor(Day)) %>% 
+         Day = as_factor(Day)) |> 
   mutate(across(.cols = where(is.numeric),
                 # .cols = 1:4,
                 .fns = list(c = center, z = standardize),
@@ -87,17 +87,17 @@ airq = airquality %>%
                 .names = '{.col}_{.fn}')
                 )
 
-airq %>% head() %>%
-  flextable() %>%
-  colformat_double(j = 7:14) %>%
+airq |> head() |>
+  flextable() |>
+  colformat_double(j = 7:14) |>
   fit_to_width(max_width = 7)
 ```
 
 ```{r datos-num}
-airq2 = airq %>% 
+airq2 = airq |> 
   select(where(is.numeric) & !ends_with(c('_c','_z')))
 
-airq2 %>% head() %>% gt::gt()
+airq2 |> head() |> gt::gt()
 ```
 
 ## Covarianza & Correlacion
@@ -128,16 +128,16 @@ cor(airq2, use = 'pairwise.complete.obs') # matriz de correlacion de Pearson
 
 ```{r cor-tb}
 corrr::correlate(airq2, diagonal = 1, 
-                 method = 'pearson') %>%
-  flextable() %>%
+                 method = 'pearson') |>
+  flextable() |>
   colformat_double()
 ```
 
 ```{r cor-pairs}
-correlation(airq2, method = 'pearson') %>%
-  tibble() %>%
-  flextable() %>%
-  colformat_double() %>% 
+correlation(airq2, method = 'pearson') |>
+  tibble() |>
+  flextable() |>
+  colformat_double() |> 
   fit_to_width(max_width = 7)
 ```
 
@@ -174,18 +174,18 @@ En una regresion simple ($y \sim x$, un predictor) el coeficiente de correlacion
 Usando variables estandarizadas
 
 ```{r cor-z-mod}
-lm(Temp_z ~ Wind_z, data = airq) %>% 
-  tidy() %>%
-  flextable() %>%
+lm(Temp_z ~ Wind_z, data = airq) |> 
+  tidy() |>
+  flextable() |>
   colformat_double()
 ```
 
 Estandarizando el modelo con variables originales
 
 ```{r cor-mod-z}
-lm(Temp ~ Wind, data = airq) %>% 
-  standardize_parameters(method = 'refit') %>%
-  flextable() %>%
+lm(Temp ~ Wind, data = airq) |> 
+  standardize_parameters(method = 'refit') |>
+  flextable() |>
   colformat_double()
 ```
 
@@ -208,25 +208,25 @@ mod1 = lm(Temp ~ Solar.R, data = airq) # modelo de regresion lineal
 Coeficientes del modelo
 
 ```{r mod-lin-param}
-mod1 %>% tidy() %>%
-  flextable() %>%
+mod1 |> tidy() |>
+  flextable() |>
   colformat_double(digits = 3)
 
-mod1 %>% model_parameters() %>%
-  flextable() %>%
+mod1 |> model_parameters() |>
+  flextable() |>
   colformat_double(digits = 3)
 ```
 
 Ajuste del modelo
 
 ```{r mod-lin-fit}
-mod1 %>% glance() %>%
-  flextable() %>%
-  colformat_double(digits = 3) %>% 
+mod1 |> glance() |>
+  flextable() |>
+  colformat_double(digits = 3) |> 
   fit_to_width(max_width = 7)
 
-mod1 %>% model_performance() %>%
-  flextable() %>%
+mod1 |> model_performance() |>
+  flextable() |>
   colformat_double(digits = 3)
 ```
 
@@ -240,9 +240,9 @@ Cuadro resumen del modelo
 tbl_regression(mod1,
                # intercept = T
                estimate_fun = purrr::partial(style_sigfig, digits = 3),
-               pvalue_fun = ~papaja::printp(.x, digits = 3)) %>%
-  modify_header(list(label ~ "",estimate ~ "**Coeficiente**",
-                     p.value ~ "**valor-p**")) %>% 
+               pvalue_fun = ~papaja::printp(.x, digits = 3)) |>
+  modify_header(!!!list(label ~ "",estimate ~ "**Coeficiente**",
+                        p.value ~ "**valor-p**")) |> 
   add_glance_source_note(glance_fun = performance::model_performance,
                          include = c(R2,R2_adjusted,RMSE,Sigma,AIC))
 ```
@@ -265,15 +265,15 @@ mod2 = lm(Temp ~ Solar.R + I(Solar.R^2), data = airq) # modelo de regresion cuad
 Coeficientes del modelo
 
 ```{r mod-cuad-param}
-mod2 %>% tidy()
-mod2 %>% model_parameters()
+mod2 |> tidy()
+mod2 |> model_parameters()
 ```
 
 Ajuste del modelo
 
 ```{r mod-cuad-fit}
-mod2 %>% glance()
-mod2 %>% model_performance()
+mod2 |> glance()
+mod2 |> model_performance()
 ```
 
 ```{r mod-cuad-cv}
@@ -286,9 +286,9 @@ Cuadro resumen del modelo
 tbl_regression(mod2,
                # intercept = T
                estimate_fun = purrr::partial(style_sigfig, digits = 3),
-               pvalue_fun = ~papaja::printp(.x, digits = 3)) %>%
-  modify_header(list(label ~ "",estimate ~ "**Coeficiente**",
-                     p.value ~ "**valor-p**")) %>% 
+               pvalue_fun = ~papaja::printp(.x, digits = 3)) |>
+  modify_header(!!!list(label ~ "",estimate ~ "**Coeficiente**",
+                        p.value ~ "**valor-p**")) |> 
   add_glance_source_note(glance_fun = performance::model_performance,
                          include = c(R2,R2_adjusted,RMSE,Sigma,AIC))
 ```
@@ -391,7 +391,7 @@ A = matrix(data = c(15,24,23,14,11,13),nrow = 2,
            dimnames = list(Tipo=c('X','Y'),
                            Capa=c('A','B','C')))
 
-A.tb = Untable(A) %>% tibble()
+A.tb = Untable(A) |> tibble()
 
 tbl_cross(A.tb)
 tbl_cross(A.tb, percent = 'cell')
@@ -399,16 +399,16 @@ tbl_cross(A.tb, percent = 'column')
 tbl_cross(A.tb, percent = 'row')
 tbl_cross(A.tb, percent = 'row', digits = c(0,1))
 
-A.tb %>% 
-  tabyl(Tipo,Capa) %>% 
+A.tb |> 
+  tabyl(Tipo,Capa) |> 
   adorn_totals(where = c('row','col'))
 
-A.tb %>% 
-  tabyl(Tipo,Capa) %>% 
-  adorn_totals(where = c('row','col')) %>% 
-  adorn_percentages(denominator = 'col') %>% 
+A.tb |> 
+  tabyl(Tipo,Capa) |> 
+  adorn_totals(where = c('row','col')) |> 
+  adorn_percentages(denominator = 'col') |> 
   adorn_pct_formatting()
 
-A.tb %>% filter(Capa=='A') %>% tabyl(Tipo)
-A.tb %>% filter(Tipo=='Y') %>% tabyl(Capa)
+A.tb |> filter(Capa=='A') |> tabyl(Tipo)
+A.tb |> filter(Tipo=='Y') |> tabyl(Capa)
 ```

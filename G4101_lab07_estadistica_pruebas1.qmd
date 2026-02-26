@@ -51,7 +51,7 @@ $$H_0 : \sigma^2 = \sigma_0^2$$
 
 ```{r}
 alfa = .05
-w = airquality %>% pull(Temp)
+w = airquality |> pull(Temp)
 
 chi1 = VarTest(x = w, sigma.squared = 7^2, conf.level = 1-alfa) # DescTools
 chi1
@@ -68,14 +68,14 @@ $$H_0 : \frac{\sigma_1^2}{\sigma_2^2} = 1$$
 ```{r}
 alfa = .05
 
-mpg %>% pull(manufacturer) %>% unique()
+mpg |> pull(manufacturer) |> unique()
 
-x = mpg %>% filter(manufacturer=='audi') %>% pull(cty)
-y = mpg %>% filter(manufacturer=='ford') %>% pull(cty)
+x = mpg |> filter(manufacturer=='audi') |> pull(cty)
+y = mpg |> filter(manufacturer=='ford') |> pull(cty)
 
 # usando vectores
 chi2 = var.test(x,y,ratio = 1,conf = 1-alfa)
-chi2 %>% 
+chi2 |> 
   tidy()
 
 ci_F(s1 = sd(x), n1 = length(x), s2 = sd(y), n2 = length(y)) # GMisc
@@ -110,7 +110,7 @@ verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
 
 t1 = t.test(x = verm, mu=mu, alt = "two.sided", conf = 1-alfa)
 t1
-t1 %>% tidy()
+t1 |> tidy()
 
 (tcrit = c(qt(alfa/2,length(verm)-1),
            qt(1-alfa/2,length(verm)-1)))
@@ -133,7 +133,7 @@ $$
 d1 = d.single.t(m = mean(verm), u = mu, sd = sd(verm), 
            n = length(verm), a = alfa)
 
-d1 %>% 
+d1 |> 
   as_tibble_row()
 
 # effectsize
@@ -182,18 +182,18 @@ alfa = .05
 A = c(25, 40, 34, 37, 38, 35, 29, 32, 35, 44, 27, 33, 37, 38, 36)
 B = c(45, 37, 36, 38, 49, 47, 32, 41, 38, 45, 33, 39, 46, 47, 40)
 
-DF = stack(list(A=A,B=B)) %>% 
+DF = stack(list(A=A,B=B)) |> 
   as_tibble()
 ```
 
 ### Graficas
 
 ```{r}
-DF %>% 
+DF |> 
   ggplot() + 
   geom_boxplot(aes(ind,values,col=ind))
 
-DF %>% 
+DF |> 
   ggplot(aes(ind,values,col=ind)) + 
   stat_summary(geom = 'pointrange',
                fun.data = mean_cl_normal,
@@ -203,8 +203,8 @@ DF %>%
 ### Estadisticas por grupo
 
 ```{r}
-DF %>% 
-  group_by(ind) %>% 
+DF |> 
+  group_by(ind) |> 
   get_summary_stats()
 ```
 
@@ -220,13 +220,13 @@ Si las varianzas son diferentes la prueba se llama prueba-t de Welch, si son igu
 
 ```{r}
 # usando vectores
-t.test(A, B, mu=0, conf.level = 1-alfa) %>% 
+t.test(A, B, mu=0, conf.level = 1-alfa) |> 
   tidy()
 
-t.test(B, A, mu=0, conf.level = 1-alfa) %>% 
+t.test(B, A, mu=0, conf.level = 1-alfa) |> 
   tidy()
 
-t.test(A, B, mu=0, conf.level = 1-alfa, var.equal = T) %>% 
+t.test(A, B, mu=0, conf.level = 1-alfa, var.equal = T) |> 
   tidy()
 
 ci_t2(x1 = mean(A), s1 = sd(A), n1 = length(A), 
@@ -266,7 +266,7 @@ d2.ind = d.ind.t(m1 = mean(A), m2 = mean(B),
         sd1 = sd(A), sd2 = sd(B), 
         n1 = length(A), n2 = length(B), a = alfa)
 
-d2.ind %>% 
+d2.ind |> 
   as_tibble_row()
 
 # effectsize 
@@ -281,7 +281,7 @@ g2.ind = g.ind.t(m1 = mean(A), m2 = mean(B),
         sd1 = sd(A), sd2 = sd(B), 
         n1 = length(A), n2 = length(B), a = alfa)
 
-g2.ind %>% 
+g2.ind |> 
   as_tibble_row()
 
 # effectsize
@@ -323,14 +323,14 @@ alfa = .05
 Antes = c(13.5,14.6,12.7,15.5,11.1,16.4,13.2,19.3,16.7,18.4)
 Despues = c(13.6,14.6,12.6,15.7,11.1,16.6,13.2,19.5,16.8,18.6)
 
-DF2 = stack(list(Antes=Antes,Despues=Despues)) %>% 
+DF2 = stack(list(Antes=Antes,Despues=Despues)) |> 
   as_tibble()
 ```
 
 ### Prueba
 
 ```{r}
-t.test(Despues,Antes,mu=0,paired = T) %>% 
+t.test(Despues,Antes,mu=0,paired = T) |> 
   tidy()
 
 ci_t(x = mean(Despues-Antes), s = sd(Despues-Antes), 
@@ -359,7 +359,7 @@ d2.av = d.dep.t.avg(m1 = mean(Antes),m2 = mean(Despues),
             sd1 = sd(Antes),sd2 = sd(Despues),
             n = length(Antes),a = alfa)
 
-d2.av %>% 
+d2.av |> 
   as_tibble_row()
 
 # itns
@@ -373,7 +373,7 @@ itns::cohensd_rm(Despues, Antes)
 d2.z = d.dep.t.diff(mdiff = mean(Antes-Despues),sddiff = sd(Antes-Despues),
              n = length(Antes),a = alfa)
 
-d2.z %>% 
+d2.z |> 
   as_tibble_row()
 ```
 
@@ -386,7 +386,7 @@ d2.rm = d.dep.t.rm(m1 = mean(Antes),m2 = mean(Despues),
            r = cor(Antes,Despues),n = length(Antes),
            a = alfa)
 
-d2.rm %>% 
+d2.rm |> 
   as_tibble_row()
 ```
 
@@ -432,7 +432,7 @@ cordat = tibble(a,b,c)
 
 ```{r}
 r = cor.test(a,b,method = "pearson",conf.level = 1-alfa)
-r %>% 
+r |> 
   tidy()
 
 cor.test(~ a + b, cordat) # usando variables del dataframe

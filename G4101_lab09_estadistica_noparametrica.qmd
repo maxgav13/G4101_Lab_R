@@ -63,28 +63,28 @@ alfa = .1
 
 cordat = tibble(a,b,c)
 
-cordat %>% 
+cordat |> 
   mutate(across(where(is.numeric),
                 list(r=rank),
                 .names = '{.col}_{.fn}'),
-         dr = (a_r - b_r)^2) %>% 
+         dr = (a_r - b_r)^2) |> 
   summarise(n = n(),
             sr = sum(dr),
             r = 1 - ((6*sr)/(n*((n^2)-1))),
             r.low = CorCI(r,n,conf.level = 1-alfa)[2],
             r.high = CorCI(r,n,conf.level = 1-alfa)[3])
 
-cor.test(a,b, method = "spearman", conf = 1-alfa) %>% 
+cor.test(a,b, method = "spearman", conf = 1-alfa) |> 
   tidy()
 
 SpearmanRho(a,b, conf.level = 1-alfa) # DescTools
 
-cor.test(rank(a),rank(b), conf = 1-alfa) %>% 
+cor.test(rank(a),rank(b), conf = 1-alfa) |> 
   tidy()
 
 correlation::cor_test(cordat,'a','b',
                       method = 'spearman',
-                      ci = 1-alfa) %>% 
+                      ci = 1-alfa) |> 
   tibble()
 ```
 
@@ -105,10 +105,10 @@ ggscatterstats(cordat, a, b,
 set.seed(4101)
 x = rnorm(100, 1, 3)
 y = rnorm(100, 2, 10)
-ks.test(x, y) %>% tidy()
-ks.test(x, 'pnorm', 1, 3) %>% 
+ks.test(x, y) |> tidy()
+ks.test(x, 'pnorm', 1, 3) |> 
   tidy()
-ks.test(y, 'pnorm', 2, 10) %>% 
+ks.test(y, 'pnorm', 2, 10) |> 
   tidy()
 dat <- tibble(x = c(x, y), g = rep(c('1','2'), each = 100))
 ggplot(dat, aes(x, colour = g)) + 
@@ -127,16 +127,16 @@ verm = c(6.1, 5.5, 5.3, 6.8, 7.6, 5.3, 6.9, 6.1, 5.7)
 alfa = .05
 mu = 7
 
-verm %>% 
-  enframe() %>% 
-  mutate(diff = value-mu) %>% 
-  filter(diff != 0) %>% 
+verm |> 
+  enframe() |> 
+  mutate(diff = value-mu) |> 
+  filter(diff != 0) |> 
   mutate(signo = sign(diff), 
          ranking = rank(abs(diff)),
          signo = factor(signo,
                         levels = c(-1,1),
-                        labels = c('Negativo','Positivo'))) %>% 
-  group_by(signo) %>% 
+                        labels = c('Negativo','Positivo'))) |> 
+  group_by(signo) |> 
   summarise(w = sum(ranking))
 ```
 
@@ -144,7 +144,7 @@ verm %>%
 
 ```{r}
 wilcox.test(x = verm, mu=7, 
-            conf.int = T, conf.level = 1-alfa) %>% 
+            conf.int = T, conf.level = 1-alfa) |> 
   tidy()
 ```
 
@@ -204,17 +204,17 @@ A = c(25, 40, 34, 37, 38, 35, 29, 32, 35, 44, 27, 33, 37, 38, 36)
 B = c(45, 37, 36, 38, 49, 47, 32, 41, 38, 45, 33, 39, 46, 47, 40)
 alfa = .05
 
-mol = stack(list(A=A,B=B)) %>% 
+mol = stack(list(A=A,B=B)) |> 
   as_tibble()
 
-mol %>% 
-  mutate(ranking = rank(values)) %>% 
-  group_by(ind) %>% 
+mol |> 
+  mutate(ranking = rank(values)) |> 
+  group_by(ind) |> 
   summarise(n = n(), 
             valor_medio = mean(values),
             valor_mediana = median(values),
             rango_medio = mean(ranking), 
-            w = sum(ranking)) %>% 
+            w = sum(ranking)) |> 
   mutate(u = w - (n*(n+1))/2)
 ```
 
@@ -222,7 +222,7 @@ mol %>%
 
 ```{r}
 wilcox.test(values ~ ind, data = mol, 
-            conf.int = T, conf.level = 1-alfa) %>% 
+            conf.int = T, conf.level = 1-alfa) |> 
   tidy()
 ```
 
@@ -295,12 +295,12 @@ G2 = c(4,5,7,8) # Sebago Bath
 G3 = c(1,2,4,5) # Black Mt
 alfa = .05
 
-Stacked = stack(list(G1=G1,G2=G2,G3=G3)) %>% 
+Stacked = stack(list(G1=G1,G2=G2,G3=G3)) |> 
   as_tibble()
 
-Stacked %>% 
-  mutate(ranking = rank(values)) %>% 
-  group_by(ind) %>% 
+Stacked |> 
+  mutate(ranking = rank(values)) |> 
+  group_by(ind) |> 
   summarise(n = n(), 
             valor_medio = mean(values),
             valor_mediana = median(values),
@@ -311,7 +311,7 @@ Stacked %>%
 ## Prueba
 
 ```{r}
-kruskal.test(values ~ ind, data = Stacked) %>% 
+kruskal.test(values ~ ind, data = Stacked) |> 
   tidy()
 ```
 
@@ -358,17 +358,17 @@ DunnTest(values~ind, Stacked, method = 'holm') # DescTools
 
 ```{r}
 KW.post = dunn_test(Stacked, values ~ ind, 
-                    p.adjust.method = 'holm',detailed = T) %>% 
+                    p.adjust.method = 'holm',detailed = T) |> 
   mutate(r = map2_dbl(.x = group1, .y = group2,
                       ~wilcox_effsize(values ~ ind, 
-                                      data = Stacked %>% 
-                                        filter(ind %in% c(.x,.y)) %>% 
-                                        mutate(ind = fct_drop(ind))) %>% 
+                                      data = Stacked |> 
+                                        filter(ind %in% c(.x,.y)) |> 
+                                        mutate(ind = fct_drop(ind))) |> 
                         pull(effsize)),
          r.low = map2_dbl(.x = r, .y = (n1 + n2),
                           ~CorCI(.x, n = .y, conf.level = 1-alfa)[2]),
          r.high = map2_dbl(.x = r, .y = (n1 + n2),
-                           ~CorCI(.x, n = .y, conf.level = 1-alfa)[3])) %>% 
+                           ~CorCI(.x, n = .y, conf.level = 1-alfa)[3])) |> 
   relocate(starts_with('r'),.after = estimate)
 KW.post
 ```
@@ -399,31 +399,31 @@ set.seed(4101)
 m = bootstraps(data = tibble(verm), times = 1000)
 
 avg = function(split) {
-  split %>% 
-    analysis() %>% 
-    pull(1) %>% 
+  split |> 
+    analysis() |> 
+    pull(1) |> 
     mean()
 }
 
 d = function(split) {
-  vec = split %>% 
-    analysis() %>% 
+  vec = split |> 
+    analysis() |> 
     pull(1)  
   d = (mean(vec) - mu) / sd(vec)
   return(d)
 }
 
-# avg2 = as_mapper(~ .x %>% analysis %>% pull(1) %>% mean)
+# avg2 = as_mapper(~ .x |> analysis |> pull(1) |> mean)
 # avg3 = compose(mean, partial(pull, var=1), analysis)
 
-m = m %>% 
+m = m |> 
   mutate(avg = map_dbl(splits, ~avg(.)),
          d = map_dbl(splits, ~d(.)),
          )
 ```
 
 ```{r}
-m.s = m %>% 
+m.s = m |> 
   summarise(across(where(is.numeric),
                    list(media = ~mean(.x),
                         sd = ~sd(.x),
@@ -432,18 +432,18 @@ m.s = m %>%
                         q3 = ~quantile(.x,1-alfa/2)),
                    .names = '{.col}_{.fn}'))
 
-m.s %>% 
+m.s |> 
   pivot_longer(cols = everything(),
                names_to = c('param','stat'),
                names_sep = '_',
-               values_to = 'value') %>% 
+               values_to = 'value') |> 
   arrange(param)
 
 myvar = 'avg' # variable a graficar: avg, d
 
 ggplot(m, aes(get(myvar))) +
   geom_histogram(bins = 20, col = 'black', fill = 'grey80') +
-  geom_vline(xintercept = unlist(m.s %>% select(starts_with(str_glue('{myvar}_q')))), 
+  geom_vline(xintercept = unlist(m.s |> select(starts_with(str_glue('{myvar}_q')))), 
              col = c('blue','red','blue')) +
   labs(x = myvar)
 
@@ -459,19 +459,19 @@ alfa = .05
 R2 = bootstraps(data = mol, times = 1000, strata = 'ind')
 
 r2 = function(split) {
-  split %>% 
-    analysis() %>% 
-    lm(values ~ ind, data = .) %>% 
-    glance() %>% 
+  split |> 
+    analysis() |> 
+    lm(values ~ ind, data = .) |> 
+    glance() |> 
     pull(r.squared)
 }
 
-R2 = R2 %>% 
+R2 = R2 |> 
   mutate(r2 = map_dbl(splits, ~r2(.)))
 ```
 
 ```{r}
-R2.s = R2 %>% 
+R2.s = R2 |> 
   summarise(across(where(is.numeric),
                    list(media = ~mean(.x),
                         q1 = ~quantile(.,alfa/2),
@@ -482,7 +482,7 @@ R2.s
 
 ggplot(R2, aes(r2)) +
   geom_histogram(bins = 20, col = 'black', fill = 'grey80') +
-  geom_vline(xintercept = R2.s[-1] %>% unlist(), 
+  geom_vline(xintercept = R2.s[-1] |> unlist(), 
              col = c('blue','red','blue'))
 ```
 
@@ -494,10 +494,10 @@ alfa = .05
 eta2 = bootstraps(data = Stacked, times = 1000, strata = 'ind')
 
 eta = function(split) {
-  dat = split %>% 
+  dat = split |> 
     analysis() 
-  H = kruskal.test(values ~ ind, data=dat) %>% 
-    tidy() %>% 
+  H = kruskal.test(values ~ ind, data=dat) |> 
+    tidy() |> 
     pull(statistic)
   N = nrow(dat)
   k = nlevels(dat$ind)
@@ -505,12 +505,12 @@ eta = function(split) {
   return(eta)
 }
 
-eta2 = eta2 %>% 
+eta2 = eta2 |> 
   mutate(eta2 = map_dbl(splits, ~eta(.)))
 ```
 
 ```{r}
-eta2.s = eta2 %>% 
+eta2.s = eta2 |> 
   summarise(across(where(is.numeric),
                    list(media = ~mean(.x),
                         q1 = ~quantile(.,alfa/2),
@@ -521,6 +521,6 @@ eta2.s
 
 ggplot(eta2, aes(eta2)) +
   geom_histogram(bins = 20, col = 'black', fill = 'grey80') +
-  geom_vline(xintercept = eta2.s[-1] %>% unlist(), 
+  geom_vline(xintercept = eta2.s[-1] |> unlist(), 
              col = c('blue','red','blue'))
 ```
