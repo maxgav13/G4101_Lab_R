@@ -1,0 +1,189 @@
+---
+title: "tmap"
+format: html
+---
+
+# Paquetes
+
+```{r}
+library(tmap)
+library(terra)         # objetos espaciales raster
+library(stars)        # objetos espaciales raster y vectoriales
+library(sf)          # objetos espaciales vectoriales
+library(tidyverse)   # manipulación de datos
+```
+
+# Datos vectoriales
+
+```{r}
+datos = rio::import("data/BroomsBarn3.csv", setclass = 'tibble')
+```
+
+```{r}
+datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) %>% 
+  mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) %>% 
+  select(X, Y, everything()) |> 
+  mutate(.point_id = row_number())
+datos_sf
+```
+
+## Colores
+
+```{r}
+cols4all::c4a_gui()
+```
+
+## Poligono que contiene los datos
+
+```{r outline}
+outline = st_convex_hull(st_union(datos_sf))
+```
+
+```{r}
+tm_shape(outline) + 
+  tm_polygons(fill_alpha = 0.1, col = 'red') +
+  tm_shape(datos_sf) + 
+  tm_symbols(fill = 'K', size = 1, fill_alpha = 0.8, 
+             fill.scale = tm_scale(values = 'viridis'), 
+             fill.legend = tm_legend(title = 'K', reverse = F)) + 
+  tm_grid(lines = F) +
+  tm_xlab('X') +
+  tm_ylab('Y', rotation = 90)
+```
+
+```{r}
+tm_shape(outline) + 
+  tm_borders(lwd = 2, col = '#FF0000') +
+  tm_shape(datos_sf) + 
+  tm_symbols(fill = 'K', size = 1, fill_alpha = 0.8, 
+             fill.scale = tm_scale_continuous(values = 'viridis'), 
+             fill.legend = tm_legend(title = 'K', reverse = F)) + 
+  tm_grid(lines = F) +
+  tm_xlab('X') +
+  tm_ylab('Y', rotation = 90)
+```
+
+# Datos raster
+
+## Una banda
+
+```{r}
+ras = terra::rast("data/pacifico.tif") |> 
+  setNames("elevacion")
+ras
+```
+
+```{r}
+hillmulti = function(x, angles = c(270, 15, 60, 330), units = "radians"){
+  
+  top = terrain(x, v = c('slope',"aspect"), unit = units) #slope and aspect
+  
+  hst = sapply(angles, function(dir){ #hillshade 
+    shade(top[[1]], top[[2]],
+          angle = 45,
+          direction = dir,
+          normalize = TRUE)
+  })
+  sum(rast(hst)) #sum all angles
+}
+```
+
+```{r}
+coordenadas = 'geog' # geog o proj
+ev = .5
+z_factor = ifelse(coordenadas == 'geog', min(res(ras)) * 1/ev, 1/ev)
+ras_exag = ras / z_factor
+```
+
+```{r}
+hh = hillmulti(ras_exag)
+```
+
+```{r}
+ras_stars = stars::read_stars("data/pacifico.tif") |> 
+  setNames("elevacion")
+ras_stars
+```
+
+```{r}
+contour0 = as.contour(ras, levels = 0)
+
+ras_contours = as.contour(
+    ras, 
+    # nlevels = 4,
+    levels = seq(-4000, -1000, by = 1000)
+    )
+
+ras_contours_sf = st_as_sf(ras_contours)
+
+ras_contours_stars = st_contour(ras_stars, contour_lines = T, breaks = seq(-4000, -1000, by = 1000))
+```
+
+```{r}
+tm_shape(ras) + 
+  tm_raster(col.scale = tm_scale_continuous(values = "-carto.earth",
+    midpoint = 0, n=5), 
+            col.legend = tm_legend(title = "Elevación", reverse = F)) + 
+  tm_shape(hh) +
+  tm_raster(col.scale = tm_scale_continuous(values = "gray"), 
+            col.legend = tm_legend_hide(), col_alpha = .15) +
+  tm_shape(contour0) + 
+  tm_lines(col = "black", lwd = 1.5) +
+  tm_shape(ras_contours) + 
+  tm_lines(col = "white", lwd = 1) +
+  tm_labels(text = "level", col = "blue", size = .75, bg.color = NA) +
+  tm_xlab("Longitud") + 
+  tm_ylab("Latitud", rotation = 90) + 
+  tm_grid(lines = F) +
+  tm_title('Mapa de elevación del Pacífico')
+```
+
+```{r}
+tm_shape(ras_stars) + 
+  tm_raster(col.scale = tm_scale_continuous(values = "-carto.earth", midpoint = 0, n=5), 
+            col.legend = tm_legend(title = "Elevación", reverse = F)) + 
+  tm_shape(contour0) + 
+  tm_lines(col = "black", lwd = 1.5) +
+  tm_shape(ras_contours_stars) + 
+  # tm_lines(col = "white", lwd = 'elevacion', 
+  #          lwd.scale = tm_scale_discrete(values = seq(1.5, .5, -.25)),
+  #          lwd.legend = tm_legend(title = "Contornos", reverse = T)) +
+  tm_lines(col = "white", lwd = 1) +
+#   tm_labels(text = "elevacion", col = "blue", size = .5, bg.color = NA) +
+  tm_xlab("Longitud") + 
+  tm_ylab("Latitud", rotation = 90) + 
+  tm_grid(lines = F) +
+  tm_title('Mapa de elevación del Pacífico')
+```
+
+## Varias bandas (Imagen satélite)
+
+```{r}
+ras_rgb = terra::rast("data/imagen_satelite.tif")
+ras_rgb_stars = stars::read_stars("data/imagen_satelite.tif")
+
+ras_rgb
+ras_rgb_stars
+```
+
+```{r}
+tm_shape(ras_rgb) + 
+  tm_rgb(tm_vars(x = c(3, 2, 1),  multivariate = TRUE),
+         col.scale = tm_scale_rgb(stretch = TRUE, probs = c(0.02, 0.98))) + 
+  tm_xlab("Longitud") + 
+  tm_ylab("Latitud", rotation = 90) + 
+  tm_grid(lines = F) +
+  tm_title('Imagen satélite')
+```
+
+
+```{r}
+tm_shape(ras_rgb_stars) + 
+  tm_rgb(tm_vars(dimvalues = c(3, 2, 1),  
+                 multivariate = TRUE),
+         col.scale = tm_scale_rgb(stretch = 'histogram')) + 
+  tm_xlab("Longitud") + 
+  tm_ylab("Latitud", rotation = 90) + 
+  tm_grid(lines = F) +
+  tm_title('Imagen satélite')
+```
