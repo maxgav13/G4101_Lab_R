@@ -85,7 +85,7 @@ N = length(theta)
 S = sum(sin(thetarad))
 C = sum(cos(thetarad))
 meanrad = atan(S/C) # direccion media en radianes
-meandeg = degs(meanrad) # direccion media en grados
+meandeg = deg(meanrad) # direccion media en grados
 ```
 
 ### Verdadera direccion media
@@ -189,13 +189,13 @@ theta2 = case_when(d==1 ~ theta2, .default = theta2*2)
 
 theta2c = circular(theta2,units = 'degrees')
 
-theta2rad = rads(theta2)
+theta2rad = rad(theta2)
 ```
 
 ```{r}
 thetaall = c(theta,theta2)
 thetaallc = circular(thetaall,units = 'degrees')
-thetaallrad = rads(thetaall)
+thetaallrad = rad(thetaall)
 Nall = length(thetaall)
 circ.disp(thetaallrad)
 ```

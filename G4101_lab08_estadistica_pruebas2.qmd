@@ -177,7 +177,7 @@ omega_squared(aov.fit2, ci = 1-alfa, alternative = 'two')
 # F_to_omega2(9.72,2,6,alternative = 'two')
 
 # MOTE (solo si varianzas son iguales)
-aov.omega = omega.F(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = alfa)
+aov.omega = omega_f(dfm = 2, dfe = 9, Fvalue = 10.8, n = 12, a = alfa)
 
 aov.omega |> 
   as_tibble_row()
@@ -194,7 +194,7 @@ effectsize::eta_squared(aov.fit2, ci = 1-alfa, alternative = 'two')
 # F_to_eta2(9.72,2,6,alternative = 'two')
 
 # MOTE
-aov.eta = eta.F(dfm = 2, dfe = 9, Fvalue = 10.8, a = alfa)
+aov.eta = eta_f(dfm = 2, dfe = 9, Fvalue = 10.8, a = alfa)
 
 aov.eta |> 
   as_tibble_row()
@@ -307,7 +307,7 @@ $$
 
 ```{r}
 # MOTE
-v.gof = v.chi.sq(x2 = CHI.gof$statistic, n = N.gof, 
+v.gof = v_chi_sq(x2 = CHI.gof$statistic, n = N.gof, 
                  r = 2, c = length(obs), a = alfa)
 
 v.gof |> 
@@ -318,7 +318,7 @@ v.gof |>
 
 ```{r}
 ncomp.gof = (length(obs)*(length(obs)-1))/2
-new.a.gof = a/ncomp.gof
+new.a.gof = alfa/ncomp.gof
 z.crit.gof = qnorm(new.a.gof/2) |> abs()
 z.crit.gof
 ```
@@ -398,7 +398,7 @@ $$
 
 ```{r}
 # MOTE
-v.h = v.chi.sq(x2 = CHI.h$statistic, n = N.h, 
+v.h = v_chi_sq(x2 = CHI.h$statistic, n = N.h, 
                r = nrow(clastos), c = ncol(clastos), 
                a = alfa)
 
@@ -421,7 +421,7 @@ chisq_to_cramers_v(chisq = CHI.h$statistic,
 
 ```{r}
 ncomp.h = prod(dim(clastos))
-new.a.h = a/ncomp.h
+new.a.h = alfa/ncomp.h
 z.crit.h = qnorm(new.a.h/2) |> abs()
 z.crit.h
 ```
@@ -542,7 +542,7 @@ $$
 
 ```{r}
 # MOTE
-v.i = v.chi.sq(x2 = CHI.i$statistic, n = N.i, 
+v.i = v_chi_sq(x2 = CHI.i$statistic, n = N.i, 
                r = nrow(round.dist), c = ncol(round.dist), 
                a = alfa)
 

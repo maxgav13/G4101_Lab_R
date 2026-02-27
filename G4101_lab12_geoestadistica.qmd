@@ -34,10 +34,8 @@ library(MOTE)
 library(papaja)
 library(spatialsample)  # validacion cruzada espacial
 library(gstat)          # geoestadistica
-# library(sp)             # objetos espaciales vectoriales
 library(sf)             # objetos espaciales vectoriales
 library(plotly)         # graficos interactivos
-# library(raster)         # objetos espaciales raster
 # library(terra)         # objetos espaciales raster
 library(stars)          # arreglos de objetos espaciales
 library(tmap)
@@ -183,7 +181,8 @@ Se le indica cuales son las columnas que tienen las coordenadas (X,Y) y de conoc
 
 ```{r datos-sf}
 datos_sf = st_as_sf(datos, coords = 1:2, crs = NA) |> 
-  mutate(X = st_coordinates(.)[,1], Y = st_coordinates(.)[,2]) |> 
+  mutate(X = st_coordinates(geometry)[,1], 
+         Y = st_coordinates(geometry)[,2]) |> 
   select(X, Y, everything()) |> 
   mutate(.point_id = row_number())
 datos_sf
@@ -194,7 +193,7 @@ datos_sf
 Se calculan las distancias para tener una idea de la distancia maxima y por ende la distancia maxima a la cual calcular el variograma
 
 ```{r distancias}
-dists = st_distance(datos_sf) |> .[lower.tri(.)] |> unclass()
+dists = st_distance(datos_sf) |> (\(m) m[lower.tri(m)])() |> unclass()
 distancias = signif(c(min(dists), mean(dists), max(dists)),6) # rango de distancias
 names(distancias) = c('min', 'media', 'max') 
 distancias
@@ -242,11 +241,11 @@ ggplot() +
 
 ```{r}
 tm_shape(outline) + 
-  tm_borders(fill_alpha = 0.1, border.col = 'cyan') +
+  tm_borders(fill_alpha = 0.1, col = 'cyan') +
   tm_shape(datos_sf) + 
-  tm_dots(fill = myvar, size = 1, fill_alpha = 0.8, 
-          fill.scale = tm_scale_continuous(values = 'brewer.spectral'), 
-          fill.legend = tm_legend(title = myvar, reverse = TRUE)) + 
+  tm_symbols(fill = myvar, size = 1, fill_alpha = 0.8, 
+             fill.scale = tm_scale_continuous(values = 'brewer.spectral'), 
+             fill.legend = tm_legend(title = myvar, reverse = TRUE)) + 
   tm_grid(lines = F) +
   tm_xlab(x_map) +
   tm_ylab(y_map, rotation = 90)

@@ -130,7 +130,7 @@ $$
 
 ```{r}
 # MOTE
-d1 = d.single.t(m = mean(verm), u = mu, sd = sd(verm), 
+d1 = d_single_t(m = mean(verm), u = mu, sd = sd(verm), 
            n = length(verm), a = alfa)
 
 d1 |> 
@@ -262,7 +262,7 @@ $$
 
 ```{r}
 # MOTE
-d2.ind = d.ind.t(m1 = mean(A), m2 = mean(B), 
+d2.ind = d_ind_t(m1 = mean(A), m2 = mean(B), 
         sd1 = sd(A), sd2 = sd(B), 
         n1 = length(A), n2 = length(B), a = alfa)
 
@@ -277,7 +277,7 @@ cohens_d(A, B, ci = 1-alfa, pooled_sd = T) # con vectores
 
 ```{r}
 # MOTE
-g2.ind = g.ind.t(m1 = mean(A), m2 = mean(B), 
+g2.ind = g_ind_t(m1 = mean(A), m2 = mean(B), 
         sd1 = sd(A), sd2 = sd(B), 
         n1 = length(A), n2 = length(B), a = alfa)
 
@@ -355,7 +355,7 @@ $$
 
 ```{r}
 # MOTE
-d2.av = d.dep.t.avg(m1 = mean(Antes),m2 = mean(Despues),
+d2.av = d_dep_t_avg(m1 = mean(Antes),m2 = mean(Despues),
             sd1 = sd(Antes),sd2 = sd(Despues),
             n = length(Antes),a = alfa)
 
@@ -381,7 +381,7 @@ d2.z |>
 
 ```{r}
 # MOTE
-d2.rm = d.dep.t.rm(m1 = mean(Antes),m2 = mean(Despues),
+d2.rm = d_dep_t_rm(m1 = mean(Antes),m2 = mean(Despues),
            sd1 = sd(Antes),sd2 = sd(Despues),
            r = cor(Antes,Despues),n = length(Antes),
            a = alfa)

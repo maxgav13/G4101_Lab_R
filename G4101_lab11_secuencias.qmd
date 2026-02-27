@@ -343,8 +343,9 @@ ggplot(DF2, aes(index,.resid)) +
 ### Sin remover tendencia
 
 ```{r acf-trend}
+lag_max <- nrow(DF) / 3
 DF |> plot_acf_diagnostics(index,value,
-                            .lags = nrow(.)/3,
+                            .lags = lag_max,
                             .show_white_noise_bars = T,
                             .interactive = T)
 ```
@@ -353,7 +354,7 @@ DF |> plot_acf_diagnostics(index,value,
 
 ```{r acf-no-trend}
 DF2 |> plot_acf_diagnostics(index,.resid,
-                             .lags = nrow(.)/3,
+                             .lags = lag_max,
                              .show_white_noise_bars = T,
                              .interactive = T)
 ```
@@ -434,7 +435,7 @@ ac_res
 
 ```{r}
 car::durbinWatsonTest(mod,lag.max) |> 
-  tidy |> 
+  tidy() |> 
   rownames_to_column('lag') |> 
   # filter(autocorrelation > 0) |> 
   slice_max(abs(autocorrelation), n = 10)

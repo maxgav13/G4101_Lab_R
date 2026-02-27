@@ -461,13 +461,13 @@ R2 = bootstraps(data = mol, times = 1000, strata = 'ind')
 r2 = function(split) {
   split |> 
     analysis() |> 
-    lm(values ~ ind, data = .) |> 
+    lm(values ~ ind, data = _) |> 
     glance() |> 
     pull(r.squared)
 }
 
 R2 = R2 |> 
-  mutate(r2 = map_dbl(splits, ~r2(.)))
+  mutate(r2 = map_dbl(splits, r2))
 ```
 
 ```{r}
