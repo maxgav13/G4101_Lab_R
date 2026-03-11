@@ -15,7 +15,7 @@ format:
     code-summary: "Codigo"
     code-tools: true
     html-math-method: katex
-  pdf: 
+  typst: 
     prefer-html: false
   docx: default
 execute:
