@@ -181,6 +181,7 @@ La @fig-dygraph muestra un grafico interactivo de una serie temporal, creado con
 ```{r}
 #| label: fig-dygraph
 #| fig-cap: "Grafico interactivo creado con **dygraph**."
+#| eval: !expr knitr::is_html_output()
 
 dygraph(nhtemp, main = "Temperaturas de New Haven") |> 
   dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
@@ -191,6 +192,7 @@ La @fig-plotly es la version interactiva del grafico de ggplot anteriormente gen
 ```{r}
 #| label: fig-plotly
 #| fig-cap: "Grafico interactivo creado con **plotly**."
+#| eval: !expr knitr::is_html_output()
 
 ggplotly(q)
 ```
