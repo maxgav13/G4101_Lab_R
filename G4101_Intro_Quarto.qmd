@@ -203,7 +203,9 @@ ggplotly(q)
 
 Expresiones matematicas y formulas se pueden desplegar en linea, dentro del cuerpo del texto ($A = \pi*r^{2}$) o por separado
 
-$E = mc^{2}$ Para escribir estas expresiones se usa lenguaje `LaTeX`.
+$$E = mc^{2}$$ 
+
+Para escribir estas expresiones se usa lenguaje `LaTeX`.
 
 # Importando datos
 
@@ -217,7 +219,7 @@ dat <- rio::import("data/PORPERM.csv")
 
 # Desplegar/formatear valores
 
-Siempre que un valor exista dentro de un objeto guardado, este se puede acceder para ser desplegado en el cuerpo del documento. Por ejemplo: La porosidad media es de `r mean(dat$Porosity)`%, que se escribe de la siguiente manera: `` `r knitr::inline_expr('mean(dat$Porosity)')` ``.
+Siempre que un valor exista dentro de un objeto guardado, este se puede acceder para ser desplegado en el cuerpo del documento. Por ejemplo: La porosidad media es de `r mean(dat$Porosity)`%, que se escribe de la siguiente manera: ``{r} mean(dat$Porosity)``.
 
 Para dar formato a valores se pueden usar funciones como `apa()` del paquete **MOTE**, `printnum` o `printp` (valores-*p*) del paquete **papaja**. Volviendo a desplegar la porosidad media se tiene `r apa(mean(dat$Porosity), 1)`%, usando `apa()` con 1 decimal.
 
