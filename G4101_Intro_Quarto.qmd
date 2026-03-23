@@ -235,6 +235,10 @@ La mejor manera es usando el paquete **knitr**. Aqui se ajusta no el ancho de la
 knitr::include_graphics('imgs/r_rocks.jpg')
 ```
 
+Otra forma de importar figuras externas (guardadas previamente) es usando la sintaxis de markdown ([Figuras Quarto](https://quarto.org/docs/authoring/figures.html)): ``![descripcion](ubicacion-de-la-imagen){#fig-label fig-align="center" width="60%"}``.
+
+![Paletas de viridis](imgs/viridis.png){#fig-viridis fig-align="center" width="60%"}
+
 # Salvando y compartiendo
 
 Los documentos *Quarto* tienen como extension `.qmd`. Cuando se compila (renderiza) se crea un archivo adjunto con extension `.html` por defecto. Este archivo contiene una copia renderizada del documento, que puede ser visualizada en cualquier navegador.
