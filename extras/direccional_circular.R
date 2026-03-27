@@ -105,9 +105,11 @@ dir_stats_circ = function (x, data = NULL, dir = 1, conf.level = 0.95) {
   
   a = 1 - conf.level
   se = (1/sqrt(N * Rbar * k))
+  se = ifelse(dir == 0, se/2, se)
   cono = suppressWarnings(asin(se*stats::qnorm(1-a/2))*180/pi)
   if (is.na(cono)) {
     se = (1/sqrt(N * Rbar * k))*180/pi
+    se = ifelse(dir == 0, se/2, se)
     cono = (se*stats::qnorm(1-a/2))
   }
   
