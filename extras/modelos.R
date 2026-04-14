@@ -34,7 +34,7 @@ emmeans(m, pairwise ~ cyl)$emmeans %>% plot
 emmeans(m, pairwise ~ cyl)$contrasts %>% plot
 
 estimate_means(m, by = 'cyl')
-estimate_contrasts(m, by = 'cyl', p_adjust = 'tukey')
+estimate_contrasts(m, variables = 'cyl', p_adjust = 'tukey')
 
 # single numerical predictor
 
@@ -266,10 +266,12 @@ estimate_contrasts(m, contrast=list(qsec=c(15,18,21)),
 plot_model(m, type = 'pred', terms = c('hp','qsec[15,18,21]'))
 plot_predictions(m, condition = list('hp','qsec'=c(15,18,21)))
 
-predict_response(m, c('hp','qsec')) %>% johnson_neyman() %>% plot()
+# predict_response(m, c('hp','qsec')) %>% johnson_neyman() %>% plot()
 plot_model(m, type = 'pred', terms = c('hp','qsec[15,18,21]'),grid = T)
 
-predict_response(m, c('qsec','hp')) %>% johnson_neyman() %>% plot()
+# predict_response(m, c('qsec','hp')) %>% johnson_neyman() %>% plot()
 plot_model(m, type = 'pred', terms = c('qsec','hp[100,140,250]'),grid = T)
 
+interactions::johnson_neyman(m, pred = 'qsec', modx = 'hp')
+interactions::johnson_neyman(m, pred = 'hp', modx = 'qsec')
 
