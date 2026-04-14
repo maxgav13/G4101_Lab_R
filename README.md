@@ -10,6 +10,7 @@ El curso introduce el uso de herramientas computacionales y métodos cuantitativ
 
 ### Introducción
 
+- `instalar_R.qmd` — Instrucciones para instalar R
 - `G4101_Intro_R.qmd` — Introducción al lenguaje R
 - `G4101_Intro_Quarto.qmd` — Introducción a Quarto
 
@@ -32,12 +33,20 @@ El curso introduce el uso de herramientas computacionales y métodos cuantitativ
 
 ### Otros materiales
 
-- `G4101_lab_estadistica_pruebas_modelos.qmd` — Modelos y pruebas estadísticas (material complementario)
-- `StructuralGeologyAlgorithms.R` — Algoritmos de geología estructural en R
 - `StructuralGeologyAlgorithms-R/` — Scripts adicionales de geología estructural en R
 - `data/` — Conjuntos de datos utilizados en los laboratorios
 - `figs/` e `imgs/` — Figuras e imágenes de apoyo
 - `extras/` — Material adicional
+    - `bootstrao_anova.qmd` — Bootstrap de ANOVA
+    - `direccional_circular.qmd` — Análisis de datos direccionales circulares
+    - `direccional_esferica.qmd` — Análisis de datos direccionales esféricos
+    - `modelos.qmd` — Modelos estadísticos
+    - `modelos_mixed.qmd` — Modelos estadísticos mixtos
+    - `non_linear_fns.qmd` — Funciones no lineales
+    - `pruebas_modelos.qmd` — Modelos y pruebas estadísticas
+    - `self_stating_fns.qmd` — Funciones de autoestimación
+    - `StructuralGeologyAlgorithms.R` — Algoritmos de geología estructural en R
+    - `tmap.qmd` — Mapas con `tmap`
 
 ## Tecnologías
 

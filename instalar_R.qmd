@@ -1,0 +1,133 @@
+---
+title: "Instalar R para ciencia de datos"
+format: 
+  html: default
+  typst: default
+execute: 
+  eval: false
+---
+
+# Introducción
+
+En esta sección, aprenderás cómo instalar R y RStudio/Positron, dos herramientas esenciales para la ciencia de datos. R es un lenguaje de programación y entorno de software para análisis estadístico y gráficos, mientras que RStudio/Positron es un entorno de desarrollo integrado (IDE) que facilita el uso de R.
+
+# Paso 1: Instalar R
+
+## Manualmente
+
+1. Visita el sitio web del [Proyecto R](https://cloud.r-project.org/).
+2. Haz clic en "Download R" (Descargar R).
+3. Elige un espejo (mirror) cercano a ti para descargar R.
+4. Sigue las instrucciones específicas para tu sistema operativo (Windows, macOS o Linux) para instalar R.
+5. Adicionalmente, para Windows descargar e instalar [Rtools](https://cran.r-project.org/bin/windows/Rtools/). Hacer click en la versión correspondiente y después donde dice "RtoolsXX Installer" hacer click para descargar el instalador. Para Mac, adicionalmente instalar Xcode command line tools, en la terminal correr: `xcode-select –install`
+
+## Usando la terminal o PowerShell (rig)
+
+Una forma más práctica de instalar R y manejar diferentes versiones es utilizando herramientas de gestión de paquetes como Scoop en Windows o Homebrew en macOS, especialmente con el paquete `rig` que facilita la instalación y gestión de versiones de R.
+
+El instalador de `rig` se puede encontrar en [rig](https://github.com/r-lib/rig/releases). Sigue las instrucciones para tu sistema operativo para instalar `rig` y luego podrás usarlo para instalar y gestionar versiones de R fácilmente. Pero sería más sencillo usar los comandos que se muestran a continuación para instalar `rig` directamente desde la terminal o PowerShell.
+
+### En Windows (usando Scoop)
+
+```{powershell}
+scoop bucket add r-bucket https://github.com/cderv/r-bucket.git
+scoop install rig
+```
+
+Para actualizar rig a la última versión, puedes usar:
+
+```{powershell}
+scoop update rig
+```
+
+### En macOS (usando Homebrew)
+
+```{bash}
+brew tap r-lib/rig
+brew install --cask r
+```
+
+Para actualizar rig a la última versión, puedes usar:
+
+```{bash}
+brew upgrade --cask rig
+```
+
+### Instalar y gestionar versiones de R con rig
+
+Para instalar la ultima versión de R, puedes usar:
+
+```{bash}
+rig add release
+```
+
+Para instalar una versión específica de R, puedes usar:
+
+```{bash}
+rig add 4.2
+```
+
+Para listar las versiones de R instaladas, puedes usar:
+
+```{bash}
+#| eval: true
+
+rig list
+```
+
+Para cambiar la versión por defecto de R, puedes usar:
+
+```{bash}
+rig default 4.2
+```
+
+Para Windows se puede instalar Rtools con:
+
+```{powershell}
+rig add rtools
+```
+
+O una versión específica de Rtools con:
+
+```{powershell}
+rig add rtools42
+```
+
+## Paso 2: Instalar RStudio/Positron
+
+1. Visita el sitio web de [RStudio](https://posit.co/download/rstudio-desktop/) o [Positron](https://positron.posit.co/download.html).
+2. Descarga la versión para tu sistema operativo.
+3. Sigue las instrucciones de instalación para completar el proceso.
+
+## Paso 3: Instalar GMisc
+
+Para instalar el paquete GMisc (que yo hice), pueden ir a [GMisc](https://github.com/maxgav13/GMisc) y seguir las instrucciones de instalación, o ejecutar el siguiente código en R:
+
+```{r}
+pak::pkg_install("maxgav13/GMisc")
+```
+
+Paquetes adicionales se pueden instalar con el siguiente código:
+
+```{r}
+GMisc::additional_pks()
+```
+
+## Paso 4: Instalar Quarto
+
+Ir a [Quarto](https://quarto.org/docs/get-started/) y seguir las instrucciones para instalar Quarto en tu sistema operativo.
+
+# Verificar la instalación
+
+Una vez que hayas instalado R y RStudio/Positron, abre RStudio/Positron y ejecuta el siguiente código en la consola para verificar que R esté funcionando correctamente:
+
+```{r}
+#| eval: true
+
+version
+```
+
+Si ves la información de la versión de R, ¡felicidades! Has instalado R correctamente y estás listo para comenzar tu viaje en la ciencia de datos.
+
+
+
